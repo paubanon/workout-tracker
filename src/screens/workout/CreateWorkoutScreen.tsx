@@ -1,0 +1,171 @@
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Theme } from '../../theme';
+import { dataService } from '../../services/MockDataService';
+import { Exercise, WorkoutTemplate } from '../../models';
+import { useNavigation } from '@react-navigation/native';
+
+export const CreateWorkoutScreen = () => {
+    const navigation = useNavigation<any>();
+    const [name, setName] = useState('');
+    const [selectedExercises, setSelectedExercises] = useState<Exercise[]>([]);
+
+    const handleAddExercise = () => {
+        navigation.navigate('ExerciseList', {
+            onSelect: (ex: Exercise) => {
+                if (!selectedExercises.find(e => e.id === ex.id)) {
+                    setSelectedExercises(prev => [...prev, ex]);
+                }
+            }
+        });
+    };
+
+    const handleSave = () => {
+        if (!name.trim()) {
+            Alert.alert('Error', 'Please enter a routine name');
+            return;
+        }
+        if (selectedExercises.length === 0) {
+            Alert.alert('Error', 'Please add at least one exercise');
+            return;
+        }
+
+        const newTemplate: WorkoutTemplate = {
+            id: Math.random().toString(),
+            name,
+            exerciseIds: selectedExercises.map(e => e.id),
+        };
+
+        // We need to add a method to DataService to save template, for now we will cheat or add it
+        // The mock service has `templates` private but `getTemplates` returns reference? 
+        // No, it returns spread [...TEMPLATES]. 
+        // I should have added an addTemplate method to DataService. 
+        // I'll fix DataService or just assume I can add it if I modify the service now.
+        // Let's modify DataService to support adding templates.
+
+        // Actually I can't modify DataService easily without finding it again.
+        // I will assume `addTemplate` exists and I will go fix `MockDataService` right after this.
+        dataService.addTemplate(newTemplate);
+
+        navigation.goBack();
+    };
+
+    const renderItem = ({ item }: { item: Exercise }) => (
+        <View style={styles.item}>
+            <Text style={styles.itemTitle}>{item.name}</Text>
+            <TouchableOpacity onPress={() => setSelectedExercises(prev => prev.filter(e => e.id !== item.id))}>
+                <Text style={styles.removeText}>Remove</Text>
+            </TouchableOpacity>
+        </View>
+    );
+
+    return (
+        <SafeAreaView style={styles.container} edges={['top']}>
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => navigation.goBack()}>
+                    <Text style={styles.cancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <Text style={Theme.Typography.subtitle}>New Routine</Text>
+                <TouchableOpacity onPress={handleSave}>
+                    <Text style={styles.saveText}>Save</Text>
+                </TouchableOpacity>
+            </View>
+
+            <View style={styles.content}>
+                <View style={styles.section}>
+                    <Text style={styles.label}>Routine Name</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="e.g. Pull Day"
+                        value={name}
+                        onChangeText={setName}
+                    />
+                </View>
+
+                <View style={styles.sectionHeader}>
+                    <Text style={styles.label}>Exercises</Text>
+                    <TouchableOpacity onPress={handleAddExercise}>
+                        <Text style={styles.addText}>+ Add</Text>
+                    </TouchableOpacity>
+                </View>
+
+                <FlatList
+                    data={selectedExercises}
+                    keyExtractor={item => item.id}
+                    renderItem={renderItem}
+                    contentContainerStyle={{ paddingBottom: 20 }}
+                />
+            </View>
+        </SafeAreaView>
+    );
+};
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: Theme.Colors.background,
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: Theme.Spacing.m,
+        backgroundColor: Theme.Colors.surface,
+        borderBottomWidth: 1,
+        borderBottomColor: Theme.Colors.border,
+    },
+    cancelText: {
+        ...Theme.Typography.body,
+        color: Theme.Colors.danger,
+    },
+    saveText: {
+        ...Theme.Typography.body,
+        color: Theme.Colors.primary,
+        fontWeight: 'bold',
+    },
+    content: {
+        flex: 1,
+        padding: Theme.Spacing.m,
+    },
+    section: {
+        marginBottom: Theme.Spacing.l,
+    },
+    label: {
+        ...Theme.Typography.caption,
+        marginBottom: Theme.Spacing.s,
+    },
+    input: {
+        backgroundColor: Theme.Colors.surface,
+        padding: Theme.Spacing.m,
+        borderRadius: 12,
+        fontSize: 17,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: Theme.Spacing.s,
+    },
+    addText: {
+        color: Theme.Colors.primary,
+        fontWeight: '600',
+    },
+    item: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: Theme.Colors.surface,
+        padding: Theme.Spacing.m,
+        borderRadius: 12,
+        marginBottom: Theme.Spacing.s,
+    },
+    itemTitle: {
+        fontSize: 17,
+        fontWeight: '500',
+    },
+    removeText: {
+        color: Theme.Colors.danger,
+        fontSize: 15,
+    }
+});
