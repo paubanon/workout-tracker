@@ -1,4 +1,4 @@
-import { Exercise, WorkoutTemplate, WorkoutSession } from '../models';
+import { Exercise, WorkoutTemplate, WorkoutSession, UserProfile, WeightEntry } from '../models';
 
 export const MOCK_EXERCISES: Exercise[] = [
     {
@@ -49,8 +49,40 @@ class DataService {
     private templates: WorkoutTemplate[] = [...MOCK_TEMPLATES];
     private sessions: WorkoutSession[] = [];
 
+    // Default Mock Profile
+    private userProfile: UserProfile = {
+        id: 'u1',
+        firstName: 'Pablo',
+        lastName: 'Banon',
+        email: 'pablo@example.com',
+        sex: 'male',
+        weightHistory: [
+            { id: 'w1', date: new Date(Date.now() - 86400000 * 7).toISOString(), weightKg: 75.5 },
+            { id: 'w2', date: new Date().toISOString(), weightKg: 76.0 },
+        ]
+    };
+
     getExercises(): Exercise[] {
         return this.exercises;
+    }
+
+    getUserProfile(): UserProfile {
+        return this.userProfile;
+    }
+
+    updateUserProfile(updates: Partial<UserProfile>) {
+        this.userProfile = { ...this.userProfile, ...updates };
+    }
+
+    addWeightEntry(weightKg: number) {
+        const entry: WeightEntry = {
+            id: Math.random().toString(),
+            date: new Date().toISOString(),
+            weightKg
+        };
+        this.userProfile.weightHistory.push(entry);
+        // Sort by date descending
+        this.userProfile.weightHistory.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }
 
     getTemplates(): WorkoutTemplate[] {

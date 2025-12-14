@@ -15,16 +15,45 @@ import { CreateWorkoutScreen } from '../screens/workout/CreateWorkoutScreen';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+import { Ionicons } from '@expo/vector-icons';
+import { CreateScreen } from '../screens/create/CreateScreen';
+import { AnalysisScreen } from '../screens/analysis/AnalysisScreen';
+
 function TabNavigator() {
     return (
         <Tab.Navigator
-            screenOptions={{
+            screenOptions={({ route }) => ({
                 headerShown: false,
                 tabBarActiveTintColor: Theme.Colors.primary,
                 tabBarInactiveTintColor: Theme.Colors.textSecondary,
-            }}
+                tabBarStyle: {
+                    borderTopColor: Theme.Colors.border,
+                    backgroundColor: Theme.Colors.surface,
+                },
+                tabBarIcon: ({ focused, color, size }) => {
+                    let iconName: any;
+
+                    if (route.name === 'Start') {
+                        iconName = focused ? 'play-circle' : 'play-circle-outline';
+                    } else if (route.name === 'Create') {
+                        iconName = focused ? 'add-circle' : 'add-circle-outline';
+                    } else if (route.name === 'Analysis') {
+                        iconName = focused ? 'bar-chart' : 'bar-chart-outline';
+                    } else if (route.name === 'Profile') {
+                        iconName = focused ? 'person' : 'person-outline';
+                    }
+
+                    return <Ionicons name={iconName} size={size} color={color} />;
+                },
+            })}
         >
-            <Tab.Screen name="Workouts" component={WorkoutListScreen} />
+            <Tab.Screen
+                name="Start"
+                component={WorkoutListScreen}
+                options={{ title: 'Start' }}
+            />
+            <Tab.Screen name="Create" component={CreateScreen} />
+            <Tab.Screen name="Analysis" component={AnalysisScreen} />
             <Tab.Screen name="Profile" component={ProfileScreen} />
         </Tab.Navigator>
     );

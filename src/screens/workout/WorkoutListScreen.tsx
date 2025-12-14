@@ -33,9 +33,6 @@ export const WorkoutListScreen = () => {
 
             <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Routines</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('CreateWorkout')}>
-                    <Text style={styles.iconButton}>+</Text>
-                </TouchableOpacity>
             </View>
         </View>
     );

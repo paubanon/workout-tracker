@@ -56,6 +56,22 @@ export interface WorkoutSession {
     // Flat list is easier for "active" view where order changes
 }
 
+export interface WeightEntry {
+    id: string;
+    date: string;
+    weightKg: number;
+}
+
+export interface UserProfile {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    sex: 'male' | 'female' | 'other';
+    avatarUrl?: string; // Optional
+    weightHistory: WeightEntry[];
+}
+
 export interface WorkoutTemplate {
     id: string;
     name: string;
