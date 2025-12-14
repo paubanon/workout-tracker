@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
-import { dataService } from '../../services/MockDataService';
+import { supabaseService } from '../../services/SupabaseDataService';
 import { WorkoutTemplate } from '../../models';
 import { useNavigation } from '@react-navigation/native';
 
@@ -12,10 +12,17 @@ export const WorkoutListScreen = () => {
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('focus', () => {
-            setTemplates([...dataService.getTemplates()]);
+            loadTemplates();
         });
+        loadTemplates(); // Initial load
         return unsubscribe;
     }, [navigation]);
+
+    const loadTemplates = async () => {
+        const data = await supabaseService.getTemplates();
+        setTemplates(data);
+    };
+
 
     const renderHeader = () => (
         <View style={styles.header}>

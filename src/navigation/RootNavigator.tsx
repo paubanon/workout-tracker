@@ -3,7 +3,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Theme } from '../theme';
-import { View, Text } from 'react-native';
+// Removed for clarity, logic moved to App.tsx or inside RootNavigator component if I combined them.
+// Actually I will keep specific RootNavigator component clean and wrap in App.tsx
 
 import { WorkoutListScreen } from '../screens/workout/WorkoutListScreen';
 import { ActiveSessionScreen } from '../screens/workout/ActiveSessionScreen';
@@ -12,12 +13,15 @@ import { CreateExerciseScreen } from '../screens/exercises/CreateExerciseScreen'
 import { ExerciseListScreen } from '../screens/exercises/ExerciseListScreen';
 import { CreateWorkoutScreen } from '../screens/workout/CreateWorkoutScreen';
 
-const Stack = createNativeStackNavigator();
-const Tab = createBottomTabNavigator();
-
 import { Ionicons } from '@expo/vector-icons';
 import { CreateScreen } from '../screens/create/CreateScreen';
 import { AnalysisScreen } from '../screens/analysis/AnalysisScreen';
+import { AuthScreen } from '../screens/auth/AuthScreen';
+import { useAuth } from '../context/AuthContext';
+import { View, ActivityIndicator } from 'react-native';
+
+const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
 
 function TabNavigator() {
     return (
@@ -60,30 +64,46 @@ function TabNavigator() {
 }
 
 export const RootNavigator = () => {
+    const { session, isLoading } = useAuth();
+
+    if (isLoading) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={Theme.Colors.primary} />
+            </View>
+        );
+    }
+
     return (
         <NavigationContainer>
             <Stack.Navigator screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="Tabs" component={TabNavigator} />
-                <Stack.Screen
-                    name="ActiveSession"
-                    component={ActiveSessionScreen}
-                    options={{ presentation: 'fullScreenModal' }}
-                />
-                <Stack.Screen
-                    name="CreateExercise"
-                    component={CreateExerciseScreen}
-                    options={{ presentation: 'modal' }}
-                />
-                <Stack.Screen
-                    name="ExerciseList"
-                    component={ExerciseListScreen}
-                    options={{ presentation: 'modal' }}
-                />
-                <Stack.Screen
-                    name="CreateWorkout"
-                    component={CreateWorkoutScreen}
-                    options={{ presentation: 'modal' }}
-                />
+                {!session ? (
+                    <Stack.Screen name="Auth" component={AuthScreen} />
+                ) : (
+                    <>
+                        <Stack.Screen name="Tabs" component={TabNavigator} />
+                        <Stack.Screen
+                            name="ActiveSession"
+                            component={ActiveSessionScreen}
+                            options={{ presentation: 'fullScreenModal' }}
+                        />
+                        <Stack.Screen
+                            name="CreateExercise"
+                            component={CreateExerciseScreen}
+                            options={{ presentation: 'modal' }}
+                        />
+                        <Stack.Screen
+                            name="ExerciseList"
+                            component={ExerciseListScreen}
+                            options={{ presentation: 'modal' }}
+                        />
+                        <Stack.Screen
+                            name="CreateWorkout"
+                            component={CreateWorkoutScreen}
+                            options={{ presentation: 'modal' }}
+                        />
+                    </>
+                )}
             </Stack.Navigator>
         </NavigationContainer>
     );

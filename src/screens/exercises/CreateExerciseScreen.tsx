@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, Switch, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
-import { dataService } from '../../services/MockDataService';
+import { supabaseService } from '../../services/SupabaseDataService';
 import { useNavigation } from '@react-navigation/native';
 import { MetricType, RepsType } from '../../models';
 
@@ -25,7 +25,7 @@ export const CreateExerciseScreen = () => {
         setMetrics(prev => ({ ...prev, [m]: !prev[m] }));
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!name.trim()) {
             Alert.alert('Error', 'Please enter an exercise name');
             return;
@@ -33,8 +33,8 @@ export const CreateExerciseScreen = () => {
 
         const enabledMetrics = (Object.keys(metrics) as MetricType[]).filter(k => metrics[k]);
 
-        dataService.addExercise({
-            id: Math.random().toString(),
+        await supabaseService.addExercise({
+            id: '', // DB generates ID
             name,
             enabledMetrics,
             repsType: metrics.reps ? repsType : undefined,

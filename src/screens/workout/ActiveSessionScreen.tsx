@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Theme } from '../../theme';
 import { Exercise, SetLog, WorkoutSession } from '../../models';
-import { dataService } from '../../services/MockDataService';
+import { supabaseService } from '../../services/SupabaseDataService';
 
 // Helper to generate a new set
 const createSet = (exerciseId: string, setNumber: number): SetLog => ({
@@ -28,30 +28,38 @@ export const ActiveSessionScreen = () => {
     const [duration, setDuration] = useState(0);
 
     useEffect(() => {
-        // Initialize Session
-        const template = templateId ? dataService.getTemplates().find(t => t.id === templateId) : null;
-        const allExercises = dataService.getExercises();
+        const initSession = async () => {
+            // Initialize Session
+            let template = null;
+            if (templateId) {
+                const templates = await supabaseService.getTemplates();
+                template = templates.find(t => t.id === templateId);
+            }
 
-        // Determine initial exercises
-        let initialExercises: Exercise[] = [];
-        if (template) {
-            initialExercises = template.exerciseIds
-                .map(id => allExercises.find(e => e.id === id))
-                .filter(Boolean) as Exercise[];
-        }
+            const allExercises = await supabaseService.getExercises();
 
-        // Create initial sets (1 empty set per exercise)
-        const initialSets: SetLog[] = initialExercises.map(ex => createSet(ex.id, 1));
+            // Determine initial exercises
+            let initialExercises: Exercise[] = [];
+            if (template) {
+                initialExercises = template.exerciseIds
+                    .map(id => allExercises.find(e => e.id === id))
+                    .filter(Boolean) as Exercise[];
+            }
 
-        setSession({
-            id: Math.random().toString(),
-            date: new Date().toISOString(),
-            name: template ? template.name : 'Custom Workout',
-            painEntries: [],
-            sets: initialSets,
-        });
+            // Create initial sets (1 empty set per exercise)
+            const initialSets: SetLog[] = initialExercises.map(ex => createSet(ex.id, 1));
 
-        setExercises(initialExercises); // For now just visible exercises
+            setSession({
+                id: Math.random().toString(),
+                date: new Date().toISOString(),
+                name: template ? template.name : 'Custom Workout',
+                painEntries: [],
+                sets: initialSets,
+            });
+
+            setExercises(initialExercises); // For now just visible exercises
+        };
+        initSession();
     }, [templateId]);
 
     useEffect(() => {

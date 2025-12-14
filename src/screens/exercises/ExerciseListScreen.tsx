@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
-import { dataService } from '../../services/MockDataService';
+import { supabaseService } from '../../services/SupabaseDataService';
 import { Exercise } from '../../models';
 import { useNavigation } from '@react-navigation/native';
 
@@ -14,13 +14,15 @@ export const ExerciseListScreen = ({ route }: any) => {
     const [exercises, setExercises] = useState<Exercise[]>([]);
 
     useEffect(() => {
-        setExercises(dataService.getExercises());
-        // Subscribe to focus to refresh list if new exercise added
-        const unsubscribe = navigation.addListener('focus', () => {
-            setExercises(dataService.getExercises());
-        });
+        loadExercises();
+        const unsubscribe = navigation.addListener('focus', loadExercises);
         return unsubscribe;
     }, [navigation]);
+
+    const loadExercises = async () => {
+        const data = await supabaseService.getExercises();
+        setExercises(data);
+    };
 
     const filtered = exercises.filter(e => e.name.toLowerCase().includes(search.toLowerCase()));
 

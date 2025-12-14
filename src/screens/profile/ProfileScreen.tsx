@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Modal, TextInput, Alert, ActionSheetIOS, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
-import { dataService } from '../../services/MockDataService';
+import { supabaseService } from '../../services/SupabaseDataService';
 import { UserProfile } from '../../models';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -28,19 +28,22 @@ export const ProfileScreen = () => {
         return unsubscribe;
     }, [navigation]);
 
-    const loadProfile = () => {
-        const p = dataService.getUserProfile();
-        setProfile({ ...p }); // Clone to trigger re-render
-
-        // Init form state
-        setFirstName(p.firstName);
-        setLastName(p.lastName);
-        setEmail(p.email);
-        setSex(p.sex);
+    const loadProfile = async () => {
+        const p = await supabaseService.getUserProfile();
+        if (p) {
+            setProfile(p);
+            // Only update form if NOT editing, to avoid overwriting user input while typing if focus happens
+            if (!isEditing) {
+                setFirstName(p.firstName);
+                setLastName(p.lastName);
+                setEmail(p.email);
+                setSex(p.sex);
+            }
+        }
     };
 
-    const handleSaveProfile = () => {
-        dataService.updateUserProfile({
+    const handleSaveProfile = async () => {
+        await supabaseService.updateUserProfile({
             firstName,
             lastName,
             email,
@@ -50,13 +53,13 @@ export const ProfileScreen = () => {
         loadProfile();
     };
 
-    const handleAddWeight = () => {
+    const handleAddWeight = async () => {
         const w = parseFloat(newWeight);
         if (!w || isNaN(w)) {
             Alert.alert("Invalid Weight", "Please enter a valid number.");
             return;
         }
-        dataService.addWeightEntry(w);
+        await supabaseService.addWeightEntry(w);
         setNewWeight('');
         setWeightModalVisible(false);
         loadProfile();
