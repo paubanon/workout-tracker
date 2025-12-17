@@ -69,7 +69,7 @@ export const WorkoutHistoryDetailScreen = () => {
                     <Text style={[styles.col, styles.headerText]}>SET</Text>
                     <Text style={[styles.col, styles.headerText]}>KG</Text>
                     <Text style={[styles.col, styles.headerText]}>REPS</Text>
-                    {/* Simplified view: Just showing standard metrics for history */}
+                    <Text style={[styles.col, styles.headerText]}>RPE</Text>
                 </View>
 
                 {sets.map((set, i) => (
@@ -79,6 +79,7 @@ export const WorkoutHistoryDetailScreen = () => {
                         </View>
                         <Text style={[styles.col, styles.cellText]}>{set.loadKg || '-'}</Text>
                         <Text style={[styles.col, styles.cellText]}>{set.reps || '-'}</Text>
+                        <Text style={[styles.col, styles.cellText]}>{set.rpe || '-'}</Text>
                     </View>
                 ))}
             </View>

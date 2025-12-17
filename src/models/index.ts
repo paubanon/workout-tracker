@@ -79,6 +79,9 @@ export interface UserProfile {
     email: string;
     sex: 'male' | 'female' | 'other';
     avatarUrl?: string; // Optional
+    preferences?: {
+        trackRpe: boolean;
+    };
     weightHistory: WeightEntry[];
 }
 

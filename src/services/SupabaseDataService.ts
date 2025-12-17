@@ -109,6 +109,7 @@ class SupabaseDataService {
             firstName: data.first_name || '',
             lastName: data.last_name || '',
             sex: data.sex || 'male',
+            preferences: data.preferences || {},
             weightHistory: data.weight_history || [],
             avatarUrl: data.avatar_url
         };
@@ -122,6 +123,7 @@ class SupabaseDataService {
         if (updates.firstName !== undefined) dbUpdates.first_name = updates.firstName;
         if (updates.lastName !== undefined) dbUpdates.last_name = updates.lastName;
         if (updates.sex !== undefined) dbUpdates.sex = updates.sex;
+        if (updates.preferences !== undefined) dbUpdates.preferences = updates.preferences;
 
         const { error } = await supabase
             .from('profiles')

@@ -9,6 +9,7 @@ import { Theme } from '../theme';
 import { WorkoutListScreen } from '../screens/workout/WorkoutListScreen';
 import { ActiveSessionScreen } from '../screens/workout/ActiveSessionScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
+import { SettingsScreen } from '../screens/profile/SettingsScreen';
 import { CreateExerciseScreen } from '../screens/exercises/CreateExerciseScreen';
 import { ExerciseListScreen } from '../screens/exercises/ExerciseListScreen';
 import { CreateWorkoutScreen } from '../screens/workout/CreateWorkoutScreen';
@@ -108,6 +109,11 @@ export const RootNavigator = () => {
                             name="History"
                             component={HistoryScreen}
                             options={{ title: 'History' }}
+                        />
+                        <Stack.Screen
+                            name="Settings"
+                            component={SettingsScreen}
+                            options={{ title: 'Settings' }}
                         />
                         <Stack.Screen
                             name="WorkoutHistoryDetail"

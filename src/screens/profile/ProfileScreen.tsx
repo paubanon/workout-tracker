@@ -234,6 +234,16 @@ export const ProfileScreen = () => {
                     </>
                 )}
 
+                <View style={{ marginTop: Theme.Spacing.l, paddingBottom: Theme.Spacing.xl }}>
+                    <TouchableOpacity
+                        style={styles.settingsButton}
+                        onPress={() => (navigation as any).navigate('Settings')}
+                    >
+                        <Ionicons name="settings-outline" size={20} color={Theme.Colors.primary} style={{ marginRight: 8 }} />
+                        <Text style={styles.settingsButtonText}>Settings</Text>
+                    </TouchableOpacity>
+                </View>
+
                 <View style={{ height: 40 }} />
             </ScrollView>
 
@@ -541,5 +551,18 @@ const styles = StyleSheet.create({
     emptyText: {
         color: Theme.Colors.textSecondary,
         textAlign: 'center',
+    },
+    settingsButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 16,
+        backgroundColor: Theme.Colors.surface,
+        borderRadius: 12,
+    },
+    settingsButtonText: {
+        fontSize: 17,
+        fontWeight: '600',
+        color: Theme.Colors.primary,
     }
 });

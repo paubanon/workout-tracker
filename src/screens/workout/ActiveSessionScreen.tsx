@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform, Keyboard, Animated, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform, Keyboard, Animated, Modal, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Theme } from '../../theme';
 import { Exercise, SetLog, WorkoutSession } from '../../models';
 import { supabaseService } from '../../services/SupabaseDataService';
+import { performSetUpdate, toggleSetComplete, handleSaveRpe } from '../../utils/setLogicHelper';
 
 // Helper to generate a new set
 const createSet = (exerciseId: string, setNumber: number, defaults?: {
@@ -45,6 +46,12 @@ export const ActiveSessionScreen = () => {
     const [currentNote, setCurrentNote] = useState('');
     const [exerciseNotes, setExerciseNotes] = useState<{ [key: string]: string }>({});
 
+    // RPE State
+    const [trackRpePreference, setTrackRpePreference] = useState(false);
+    const [showRpeModal, setShowRpeModal] = useState(false);
+    const [currentRpe, setCurrentRpe] = useState(5); // Default start
+    const [pendingSetId, setPendingSetId] = useState<string | null>(null);
+
     // Toast State
     const [showToast, setShowToast] = useState(false);
     const fadeAnim = useState(new Animated.Value(0))[0];
@@ -52,7 +59,15 @@ export const ActiveSessionScreen = () => {
     // Timer state
     const [duration, setDuration] = useState(0);
 
+    const loadProfilePrefs = async () => {
+        const profile = await supabaseService.getUserProfile();
+        if (profile?.preferences?.trackRpe) {
+            setTrackRpePreference(true);
+        }
+    };
+
     useEffect(() => {
+        loadProfilePrefs();
         if (showToast) {
             Animated.timing(fadeAnim, {
                 toValue: 1, duration: 300, useNativeDriver: true
@@ -242,6 +257,37 @@ export const ActiveSessionScreen = () => {
             }));
         }
         setShowNoteModal(false);
+    };
+
+    // Consolidating the logic to mark a set as complete (including ghost values)
+    const onPerformSetUpdate = (setId: string, completed: boolean, additionalUpdates: any = {}) => {
+        performSetUpdate(session, setSession, setId, completed, additionalUpdates);
+    };
+
+    const onToggleSetComplete = (setId: string, currentCompleted: boolean) => {
+        toggleSetComplete({
+            setId,
+            currentCompleted,
+            trackRpePreference,
+            setPendingSetId,
+            setCurrentRpe,
+            setShowRpeModal,
+            session,
+            setSession
+        });
+    };
+
+    const onSaveRpe = () => {
+        handleSaveRpe({
+            pendingSetId,
+            currentRpe,
+            handleUpdateSet,
+            performSetUpdate, // Passed but unused in simplified version
+            setShowRpeModal,
+            setPendingSetId,
+            session,
+            setSession
+        });
     };
 
     const handleFinish = async () => {
@@ -466,25 +512,7 @@ export const ActiveSessionScreen = () => {
 
                                         <TouchableOpacity
                                             style={[styles.colCheck, styles.checkBox, set.completed && styles.checkBoxChecked]}
-                                            // Updated: If completing, and values are empty, fill with targets (Ghost Logic)
-                                            onPress={() => {
-                                                const isActive = !set.completed;
-                                                let updates: any = { completed: isActive };
-
-                                                if (isActive) {
-                                                    // Fill with defaults if empty
-                                                    if (!set.loadKg && set.targetLoad) updates.loadKg = set.targetLoad;
-                                                    if (!set.reps && set.targetReps) updates.reps = parseFloat(set.targetReps) || 0; // Simple parse, might need robust handling for "8-12"
-                                                    if (!set.timeSeconds && set.targetTime) updates.timeSeconds = set.targetTime;
-                                                    if (!set.distanceMeters && set.targetDistance) updates.distanceMeters = set.targetDistance;
-                                                    if (!set.romCm && set.targetRom) updates.romCm = parseFloat(set.targetRom) || 0;
-                                                    if (!set.tempo && set.targetTempo) updates.tempo = set.targetTempo;
-                                                }
-
-                                                // Actually update
-                                                const updatedSets = session.sets.map(s => s.id === set.id ? { ...s, ...updates } : s);
-                                                setSession({ ...session, sets: updatedSets });
-                                            }}
+                                            onPress={() => onToggleSetComplete(set.id, set.completed)}
                                         >
                                             {set.completed && <Text style={{ color: 'white' }}>✓</Text>}
                                         </TouchableOpacity>
@@ -579,6 +607,60 @@ export const ActiveSessionScreen = () => {
                                 <Text style={styles.cancelButtonText}>Cancel</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.saveButton} onPress={handleSaveNote}>
+                                <Text style={styles.saveButtonText}>Save</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </KeyboardAvoidingView>
+            </Modal>
+            {/* RPE Modal */}
+            <Modal
+                visible={showRpeModal}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowRpeModal(false)}
+            >
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={styles.modalOverlay}
+                >
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Rate RPE (1-10)</Text>
+                        <Text style={{ ...Theme.Typography.caption, color: Theme.Colors.textSecondary, marginBottom: 16, textAlign: 'center' }}>
+                            1 = Very Easy, 10 = Max Effort
+                        </Text>
+
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginBottom: 24 }}>
+                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                                <TouchableOpacity
+                                    key={num}
+                                    style={{
+                                        width: 40,
+                                        height: 40,
+                                        borderRadius: 20,
+                                        backgroundColor: currentRpe === num ? Theme.Colors.primary : Theme.Colors.background,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        borderWidth: 1,
+                                        borderColor: currentRpe === num ? Theme.Colors.primary : Theme.Colors.border
+                                    }}
+                                    onPress={() => setCurrentRpe(num)}
+                                >
+                                    <Text style={{
+                                        color: currentRpe === num ? '#FFF' : Theme.Colors.text,
+                                        fontWeight: '600'
+                                    }}>
+                                        {num}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+
+                        <View style={styles.modalActions}>
+                            <TouchableOpacity style={styles.cancelButton} onPress={() => setShowRpeModal(false)}>
+                                <Text style={styles.cancelButtonText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.saveButton} onPress={onSaveRpe}>
                                 <Text style={styles.saveButtonText}>Save</Text>
                             </TouchableOpacity>
                         </View>
