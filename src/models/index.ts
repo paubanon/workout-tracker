@@ -56,6 +56,7 @@ export interface WorkoutSession {
     name?: string; // e.g., "Morning Upper Body"
 
     // Session Level
+    durationSeconds?: number;
     preSessionFatigue?: number; // 0-10
     painEntries: PainEntry[];
 

@@ -248,7 +248,10 @@ export const ActiveSessionScreen = () => {
         if (!session) return;
 
         // Prepare session for saving: Add body weight to load if applicable
-        const sessionToSave = { ...session };
+        const sessionToSave = {
+            ...session,
+            durationSeconds: duration
+        };
         sessionToSave.sets = session.sets.map(set => {
             const exercise = exercises.find(e => e.id === set.exerciseId);
             if (exercise?.trackBodyWeight && userWeight > 0) {

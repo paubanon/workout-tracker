@@ -58,6 +58,12 @@ export const HistoryScreen = () => {
                         <Ionicons name="layers-outline" size={16} color={Theme.Colors.textSecondary} />
                         <Text style={styles.statText}>{item.sets.length} Sets</Text>
                     </View>
+                    {item.durationSeconds ? (
+                        <View style={styles.stat}>
+                            <Ionicons name="time-outline" size={16} color={Theme.Colors.textSecondary} />
+                            <Text style={styles.statText}>{Math.floor(item.durationSeconds / 60)}m</Text>
+                        </View>
+                    ) : null}
                 </View>
             </TouchableOpacity>
         );

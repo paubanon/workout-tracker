@@ -36,16 +36,16 @@ export const MOCK_TEMPLATES: WorkoutTemplate[] = [
         id: 't1',
         name: 'Leg Day',
         exercises: [
-            { exerciseId: '1', targetSets: 3, targetReps: '5', targetLoad: 100 },
-            { exerciseId: '3', targetSets: 3, targetReps: '5', targetLoad: 120 },
-            { exerciseId: '5', targetSets: 3, targetTempo: '3010' }
+            { exerciseId: '1', targetSets: 3, targetReps: '5', targetLoad: 100, sets: [] },
+            { exerciseId: '3', targetSets: 3, targetReps: '5', targetLoad: 120, sets: [] },
+            { exerciseId: '5', targetSets: 3, targetTempo: '3010', sets: [] }
         ]
     },
     {
         id: 't2',
         name: 'Upper Body',
         exercises: [
-            { exerciseId: '2', targetSets: 4, targetReps: '8-10', targetLoad: 80 }
+            { exerciseId: '2', targetSets: 4, targetReps: '8-10', targetLoad: 80, sets: [] }
         ]
     },
 ];

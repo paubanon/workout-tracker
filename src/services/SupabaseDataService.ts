@@ -165,7 +165,8 @@ class SupabaseDataService {
             name: s.name,
             sets: s.sets || [],
             painEntries: s.pain_entries || [],
-            preSessionFatigue: s.pre_session_fatigue
+            preSessionFatigue: s.pre_session_fatigue,
+            durationSeconds: s.duration_seconds
         }));
     }
 
@@ -181,7 +182,8 @@ class SupabaseDataService {
                 name: session.name,
                 sets: session.sets,
                 pain_entries: session.painEntries,
-                pre_session_fatigue: session.preSessionFatigue
+                pre_session_fatigue: session.preSessionFatigue,
+                duration_seconds: session.durationSeconds
             });
 
         if (error) console.error('Error adding session:', error);
