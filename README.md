@@ -1,50 +1,63 @@
-# Welcome to your Expo app 👋
+# Workout Tracker
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+> [!NOTE]
+> 🚧 **This project is currently under active development.** 🚧
 
-## Get started
+A comprehensive mobile application for tracking workouts, monitoring progress, and analyzing fitness data. Built with React Native (Expo) and Supabase.
 
-1. Install dependencies
+## Features
 
-   ```bash
-   npm install
-   ```
+- **Authentication**: Secure user login and registration.
+- **Active Workout Tracking**: Log exercises, sets, and reps in real-time.
+- **Workout Creation**: Create and customize your own workout routines.
+- **Exercise Library**: Access a wide range of exercises.
+- **History**: View detailed history of past workouts.
+- **Analysis**: Visualize your progress with charts and statistics.
+- **Profile Management**: Manage your user profile and settings.
 
-2. Start the app
+## Tech Stack
 
-   ```bash
-   npx expo start
-   ```
+- **Framework**: [React Native](https://reactnative.dev/) with [Expo](https://expo.dev/)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Backend**: [Supabase](https://supabase.com/)
+- **Navigation**: [React Navigation](https://reactnavigation.org/)
 
-In the output, you'll find options to open the app in a
+## Getting Started
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Prerequisites
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- Node.js installed on your machine.
+- [Expo Go](https://expo.dev/go) app on your mobile device (iOS/Android) or an emulator.
 
-## Get a fresh project
+### Installation
 
-When you're ready, run:
+1.  Clone the repository or download the source code.
 
-```bash
-npm run reset-project
-```
+2.  Navigate to the project directory:
+    ```bash
+    cd workout-tracker
+    ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+3.  Install dependencies:
+    ```bash
+    npm install
+    ```
 
-## Learn more
+4.  Start the application:
+    ```bash
+    npx expo start
+    ```
 
-To learn more about developing your project with Expo, look at the following resources:
+5.  Scan the QR code with Expo Go (Android) or use the Camera app (iOS) to run the app on your device.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Scripts
 
-## Join the community
+- `npm start`: Starts the Expo development server.
+- `npm run android`: Opens the app in the Android emulator.
+- `npm run ios`: Opens the app in the iOS simulator.
+- `npm run web`: Opens the app in a web browser.
+- `npm run reset-project`: Resets the project to a blank state (Use with caution).
 
-Join our community of developers creating universal apps.
+## Contributing
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Contributions are welcome! As this project is still in development, we appreciate your feedback and suggestions.
