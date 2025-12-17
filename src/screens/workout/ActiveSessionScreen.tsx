@@ -409,6 +409,7 @@ export const ActiveSessionScreen = () => {
                                     ]}
                                     onLongPress={drag}
                                     delayLongPress={750}
+                                    activeOpacity={1}
                                     disabled={isActive}
                                 >
                                     <View style={styles.exerciseHeader}>
