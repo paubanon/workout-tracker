@@ -66,6 +66,8 @@ function TabNavigator() {
     );
 }
 
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
 export const RootNavigator = () => {
     const { session, isLoading } = useAuth();
 
@@ -78,51 +80,53 @@ export const RootNavigator = () => {
     }
 
     return (
-        <NavigationContainer>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
-                {!session ? (
-                    <Stack.Screen name="Auth" component={AuthScreen} />
-                ) : (
-                    <>
-                        <Stack.Screen name="Tabs" component={TabNavigator} />
-                        <Stack.Screen
-                            name="ActiveSession"
-                            component={ActiveSessionScreen}
-                            options={{ presentation: 'fullScreenModal' }}
-                        />
-                        <Stack.Screen
-                            name="CreateExercise"
-                            component={CreateExerciseScreen}
-                            options={{ presentation: 'modal' }}
-                        />
-                        <Stack.Screen
-                            name="ExerciseList"
-                            component={ExerciseListScreen}
-                            options={{ presentation: 'modal' }}
-                        />
-                        <Stack.Screen
-                            name="CreateWorkout"
-                            component={CreateWorkoutScreen}
-                            options={{ presentation: 'modal' }}
-                        />
-                        <Stack.Screen
-                            name="History"
-                            component={HistoryScreen}
-                            options={{ title: 'History' }}
-                        />
-                        <Stack.Screen
-                            name="Settings"
-                            component={SettingsScreen}
-                            options={{ title: 'Settings' }}
-                        />
-                        <Stack.Screen
-                            name="WorkoutHistoryDetail"
-                            component={WorkoutHistoryDetailScreen}
-                            options={{ presentation: 'modal', title: 'Workout Details' }}
-                        />
-                    </>
-                )}
-            </Stack.Navigator>
-        </NavigationContainer>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <NavigationContainer>
+                <Stack.Navigator screenOptions={{ headerShown: false }}>
+                    {!session ? (
+                        <Stack.Screen name="Auth" component={AuthScreen} />
+                    ) : (
+                        <>
+                            <Stack.Screen name="Tabs" component={TabNavigator} />
+                            <Stack.Screen
+                                name="ActiveSession"
+                                component={ActiveSessionScreen}
+                                options={{ presentation: 'fullScreenModal' }}
+                            />
+                            <Stack.Screen
+                                name="CreateExercise"
+                                component={CreateExerciseScreen}
+                                options={{ presentation: 'modal' }}
+                            />
+                            <Stack.Screen
+                                name="ExerciseList"
+                                component={ExerciseListScreen}
+                                options={{ presentation: 'modal' }}
+                            />
+                            <Stack.Screen
+                                name="CreateWorkout"
+                                component={CreateWorkoutScreen}
+                                options={{ presentation: 'modal' }}
+                            />
+                            <Stack.Screen
+                                name="History"
+                                component={HistoryScreen}
+                                options={{ title: 'History' }}
+                            />
+                            <Stack.Screen
+                                name="Settings"
+                                component={SettingsScreen}
+                                options={{ title: 'Settings' }}
+                            />
+                            <Stack.Screen
+                                name="WorkoutHistoryDetail"
+                                component={WorkoutHistoryDetailScreen}
+                                options={{ presentation: 'modal', title: 'Workout Details' }}
+                            />
+                        </>
+                    )}
+                </Stack.Navigator>
+            </NavigationContainer>
+        </GestureHandlerRootView>
     );
 };

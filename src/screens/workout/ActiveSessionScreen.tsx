@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform, Keyboard, Animated, Modal, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform, Keyboard, Animated, Modal, Switch } from 'react-native';
+import DraggableFlatList, { ScaleDecorator, RenderItemParams, ShadowDecorator } from 'react-native-draggable-flatlist';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -298,7 +299,17 @@ export const ActiveSessionScreen = () => {
             ...session,
             durationSeconds: duration
         };
-        sessionToSave.sets = session.sets.map(set => {
+
+        // Sort sets based on current visual exercise order
+        const exerciseOrder = exercises.map(e => e.id);
+        const sortedSets = [...session.sets].sort((a, b) => {
+            const idxA = exerciseOrder.indexOf(a.exerciseId);
+            const idxB = exerciseOrder.indexOf(b.exerciseId);
+            if (idxA === idxB) return a.setNumber - b.setNumber;
+            return idxA - idxB;
+        });
+
+        sessionToSave.sets = sortedSets.map(set => {
             const exercise = exercises.find(e => e.id === set.exerciseId);
             if (exercise?.trackBodyWeight && userWeight > 0) {
                 return {
@@ -357,189 +368,204 @@ export const ActiveSessionScreen = () => {
                 style={{ flex: 1 }}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
             >
-                <ScrollView
+                <DraggableFlatList
+                    data={exercises}
+                    onDragEnd={({ data }) => setExercises(data)}
+                    keyExtractor={(item) => item.id}
+                    contentContainerStyle={{ paddingBottom: 220 }}
                     style={styles.content}
-                    contentContainerStyle={{ paddingBottom: 220 }} // Extra padding for scrolling
                     keyboardShouldPersistTaps="handled"
-                >
-                    {/* Stats */}
-                    <View style={styles.statsRow}>
-                        <View>
-                            <Text style={Theme.Typography.caption}>Duration</Text>
-                            <Text style={styles.statValue}>{formatTime(duration)}</Text>
+                    ListHeaderComponent={
+                        <View style={styles.statsRow}>
+                            <View>
+                                <Text style={Theme.Typography.caption}>Duration</Text>
+                                <Text style={styles.statValue}>{formatTime(duration)}</Text>
+                            </View>
+                            <View>
+                                <Text style={Theme.Typography.caption}>Volume</Text>
+                                <Text style={styles.statValue}>
+                                    {session.sets.reduce((acc, s) => acc + (s.loadKg || 0) * (s.reps || 0), 0)} kg
+                                </Text>
+                            </View>
+                            <View>
+                                <Text style={Theme.Typography.caption}>Sets</Text>
+                                <Text style={styles.statValue}>{session.sets.length}</Text>
+                            </View>
                         </View>
-                        <View>
-                            <Text style={Theme.Typography.caption}>Volume</Text>
-                            <Text style={styles.statValue}>
-                                {session.sets.reduce((acc, s) => acc + (s.loadKg || 0) * (s.reps || 0), 0)} kg
-                            </Text>
-                        </View>
-                        <View>
-                            <Text style={Theme.Typography.caption}>Sets</Text>
-                            <Text style={styles.statValue}>{session.sets.length}</Text>
-                        </View>
-                    </View>
-
-                    {exercises.map((exercise) => {
+                    }
+                    renderItem={({ item: exercise, getIndex, drag, isActive }: RenderItemParams<Exercise>) => {
                         const exerciseSets = session.sets.filter(s => s.exerciseId === exercise.id);
                         const hasTempo = exercise.repsType === 'tempo';
                         const hasIsometric = exercise.repsType === 'isometric';
+                        const index = getIndex();
 
                         return (
-                            <View key={exercise.id} style={styles.exerciseCard}>
-                                <View style={styles.exerciseHeader}>
-                                    <View>
-                                        <Text style={styles.exerciseTitle}>{exercise.name}</Text>
-                                        {exerciseNotes[exercise.id] ? (
-                                            <Text style={styles.noteText}>📝 {exerciseNotes[exercise.id]}</Text>
-                                        ) : null}
-                                    </View>
-                                    <TouchableOpacity onPress={() => handleExerciseAction(exercise.id)}>
-                                        <Ionicons name="ellipsis-horizontal" size={24} color={Theme.Colors.textSecondary} />
-                                    </TouchableOpacity>
-                                </View>
-
-                                {/* Table Header */}
-                                <View style={styles.setRow}>
-                                    <Text style={[styles.colSet, styles.headerText]}>SET</Text>
-
-                                    {/* Dynamic Headers */}
-                                    {(exercise.enabledMetrics || []).includes('load') && (
-                                        <Text style={[styles.colInput, styles.headerText]}>KG</Text>
-                                    )}
-                                    {(exercise.enabledMetrics || []).includes('reps') && (
-                                        <Text style={[styles.colInput, styles.headerText]}>REPS</Text>
-                                    )}
-                                    {(hasTempo || hasIsometric) && (exercise.enabledMetrics || []).includes('reps') && (
-                                        <Text style={[styles.colInput, styles.headerText]}>
-                                            {hasIsometric ? 'TIME' : 'TEMPO'}
-                                        </Text>
-                                    )}
-                                    {(exercise.enabledMetrics || []).includes('time') && (
-                                        <Text style={[styles.colInput, styles.headerText]}>TIME</Text>
-                                    )}
-                                    {(exercise.enabledMetrics || []).includes('distance') && (
-                                        <Text style={[styles.colInput, styles.headerText]}>DIST</Text>
-                                    )}
-                                    {(exercise.enabledMetrics || []).includes('rom') && (
-                                        <Text style={[styles.colInput, styles.headerText]}>ROM</Text>
-                                    )}
-
-                                    <View style={styles.colCheck} />
-                                </View>
-
-                                {exerciseSets.map((set, index) => (
-                                    <View key={set.id} style={[styles.setRow, set.completed && styles.setCompleted]}>
-                                        <View style={styles.colSet}>
-                                            <View style={styles.setBadge}>
-                                                <Text style={styles.setText}>{index + 1}</Text>
-                                            </View>
+                            <ScaleDecorator>
+                                <TouchableOpacity
+                                    key={exercise.id}
+                                    style={[
+                                        styles.exerciseCard,
+                                        { backgroundColor: isActive ? Theme.Colors.surface : Theme.Colors.surface }
+                                    ]}
+                                    onLongPress={drag}
+                                    delayLongPress={750}
+                                    disabled={isActive}
+                                >
+                                    <View style={styles.exerciseHeader}>
+                                        <View>
+                                            <Text style={styles.exerciseTitle}>{exercise.name}</Text>
+                                            {exerciseNotes[exercise.id] ? (
+                                                <Text style={styles.noteText}>📝 {exerciseNotes[exercise.id]}</Text>
+                                            ) : null}
                                         </View>
-
-                                        {/* Load Input */}
-                                        {(exercise.enabledMetrics || []).includes('load') && (
-                                            <TextInput
-                                                style={styles.input}
-                                                keyboardType="numeric"
-                                                placeholder={
-                                                    exercise.trackBodyWeight
-                                                        ? `${set.targetLoad || 0} (+${userWeight})`
-                                                        : (set.targetLoad ? set.targetLoad.toString() : "-")
-                                                }
-                                                placeholderTextColor="#C7C7CC"
-                                                value={set.loadKg === 0 ? '' : set.loadKg?.toString()}
-                                                onChangeText={(val) => handleUpdateSet(set.id, 'loadKg', parseFloat(val) || 0)}
-                                            />
-                                        )}
-
-                                        {/* Reps Input */}
-                                        {(exercise.enabledMetrics || []).includes('reps') && (
-                                            <TextInput
-                                                style={styles.input}
-                                                keyboardType="numeric"
-                                                placeholder={set.targetReps || "-"}
-                                                placeholderTextColor="#C7C7CC"
-                                                value={set.reps === 0 ? '' : set.reps?.toString()}
-                                                onChangeText={(val) => handleUpdateSet(set.id, 'reps', parseFloat(val) || 0)}
-                                            />
-                                        )}
-
-                                        {/* Tempo/Time Input (Associated with Reps usually) */}
-                                        {(hasTempo || hasIsometric) && (exercise.enabledMetrics || []).includes('reps') && (
-                                            <TextInput
-                                                style={styles.input}
-                                                placeholder={set.targetTempo || (hasIsometric ? "0s" : "3010")}
-                                                placeholderTextColor="#C7C7CC"
-                                                value={set.tempo}
-                                                onChangeText={(val) => handleUpdateSet(set.id, 'tempo', val)}
-                                            />
-                                        )}
-
-                                        {/* Pure Time Input */}
-                                        {(exercise.enabledMetrics || []).includes('time') && (
-                                            <TextInput
-                                                style={styles.input}
-                                                keyboardType="numeric"
-                                                placeholder={set.targetTime ? set.targetTime.toString() : "-"}
-                                                placeholderTextColor="#C7C7CC"
-                                                value={set.timeSeconds === 0 ? '' : set.timeSeconds?.toString()}
-                                                onChangeText={(val) => handleUpdateSet(set.id, 'timeSeconds', parseFloat(val) || 0)}
-                                            />
-                                        )}
-
-                                        {/* Distance Input */}
-                                        {(exercise.enabledMetrics || []).includes('distance') && (
-                                            <TextInput
-                                                style={styles.input}
-                                                keyboardType="numeric"
-                                                placeholder={set.targetDistance ? set.targetDistance.toString() : "-"}
-                                                placeholderTextColor="#C7C7CC"
-                                                value={set.distanceMeters === 0 ? '' : set.distanceMeters?.toString()}
-                                                onChangeText={(val) => handleUpdateSet(set.id, 'distanceMeters', parseFloat(val) || 0)}
-                                            />
-                                        )}
-
-                                        {/* ROM Input */}
-                                        {(exercise.enabledMetrics || []).includes('rom') && (
-                                            <TextInput
-                                                style={styles.input}
-                                                placeholder={set.targetRom || "-"}
-                                                placeholderTextColor="#C7C7CC"
-                                                value={set.romCm ? set.romCm.toString() : ''}
-                                                onChangeText={(val) => handleUpdateSet(set.id, 'romCm', parseFloat(val) || 0)} // Or string? Model says romCm is number.
-                                            />
-                                        )}
-
-                                        <TouchableOpacity
-                                            style={[styles.colCheck, styles.checkBox, set.completed && styles.checkBoxChecked]}
-                                            onPress={() => onToggleSetComplete(set.id, set.completed)}
-                                        >
-                                            {set.completed && <Text style={{ color: 'white' }}>✓</Text>}
+                                        <TouchableOpacity onPress={() => handleExerciseAction(exercise.id)}>
+                                            <Ionicons name="ellipsis-horizontal" size={24} color={Theme.Colors.textSecondary} />
                                         </TouchableOpacity>
                                     </View>
-                                ))}
 
-                                <TouchableOpacity style={styles.addSetButton} onPress={() => handleAddSet(exercise.id)}>
-                                    <Text style={styles.addSetText}>+ Add Set</Text>
+                                    {/* Table Header */}
+                                    <View style={styles.setRow}>
+                                        <Text style={[styles.colSet, styles.headerText]}>SET</Text>
+
+                                        {/* Dynamic Headers */}
+                                        {(exercise.enabledMetrics || []).includes('load') && (
+                                            <Text style={[styles.colInput, styles.headerText]}>KG</Text>
+                                        )}
+                                        {(exercise.enabledMetrics || []).includes('reps') && (
+                                            <Text style={[styles.colInput, styles.headerText]}>REPS</Text>
+                                        )}
+                                        {(hasTempo || hasIsometric) && (exercise.enabledMetrics || []).includes('reps') && (
+                                            <Text style={[styles.colInput, styles.headerText]}>
+                                                {hasIsometric ? 'TIME' : 'TEMPO'}
+                                            </Text>
+                                        )}
+                                        {(exercise.enabledMetrics || []).includes('time') && (
+                                            <Text style={[styles.colInput, styles.headerText]}>TIME</Text>
+                                        )}
+                                        {(exercise.enabledMetrics || []).includes('distance') && (
+                                            <Text style={[styles.colInput, styles.headerText]}>DIST</Text>
+                                        )}
+                                        {(exercise.enabledMetrics || []).includes('rom') && (
+                                            <Text style={[styles.colInput, styles.headerText]}>ROM</Text>
+                                        )}
+
+                                        <View style={styles.colCheck} />
+                                    </View>
+
+                                    {exerciseSets.map((set, index) => (
+                                        <View key={set.id} style={[styles.setRow, set.completed && styles.setCompleted]}>
+                                            <View style={styles.colSet}>
+                                                <View style={styles.setBadge}>
+                                                    <Text style={styles.setText}>{index + 1}</Text>
+                                                </View>
+                                            </View>
+
+                                            {/* Load Input */}
+                                            {(exercise.enabledMetrics || []).includes('load') && (
+                                                <TextInput
+                                                    style={styles.input}
+                                                    keyboardType="numeric"
+                                                    placeholder={
+                                                        exercise.trackBodyWeight
+                                                            ? `${set.targetLoad || 0} (+${userWeight})`
+                                                            : (set.targetLoad ? set.targetLoad.toString() : "-")
+                                                    }
+                                                    placeholderTextColor="#C7C7CC"
+                                                    value={set.loadKg === 0 ? '' : set.loadKg?.toString()}
+                                                    onChangeText={(val) => handleUpdateSet(set.id, 'loadKg', parseFloat(val) || 0)}
+                                                />
+                                            )}
+
+                                            {/* Reps Input */}
+                                            {(exercise.enabledMetrics || []).includes('reps') && (
+                                                <TextInput
+                                                    style={styles.input}
+                                                    keyboardType="numeric"
+                                                    placeholder={set.targetReps || "-"}
+                                                    placeholderTextColor="#C7C7CC"
+                                                    value={set.reps === 0 ? '' : set.reps?.toString()}
+                                                    onChangeText={(val) => handleUpdateSet(set.id, 'reps', parseFloat(val) || 0)}
+                                                />
+                                            )}
+
+                                            {/* Tempo/Time Input (Associated with Reps usually) */}
+                                            {(hasTempo || hasIsometric) && (exercise.enabledMetrics || []).includes('reps') && (
+                                                <TextInput
+                                                    style={styles.input}
+                                                    placeholder={set.targetTempo || (hasIsometric ? "0s" : "3010")}
+                                                    placeholderTextColor="#C7C7CC"
+                                                    value={set.tempo}
+                                                    onChangeText={(val) => handleUpdateSet(set.id, 'tempo', val)}
+                                                />
+                                            )}
+
+                                            {/* Pure Time Input */}
+                                            {(exercise.enabledMetrics || []).includes('time') && (
+                                                <TextInput
+                                                    style={styles.input}
+                                                    keyboardType="numeric"
+                                                    placeholder={set.targetTime ? set.targetTime.toString() : "-"}
+                                                    placeholderTextColor="#C7C7CC"
+                                                    value={set.timeSeconds === 0 ? '' : set.timeSeconds?.toString()}
+                                                    onChangeText={(val) => handleUpdateSet(set.id, 'timeSeconds', parseFloat(val) || 0)}
+                                                />
+                                            )}
+
+                                            {/* Distance Input */}
+                                            {(exercise.enabledMetrics || []).includes('distance') && (
+                                                <TextInput
+                                                    style={styles.input}
+                                                    keyboardType="numeric"
+                                                    placeholder={set.targetDistance ? set.targetDistance.toString() : "-"}
+                                                    placeholderTextColor="#C7C7CC"
+                                                    value={set.distanceMeters === 0 ? '' : set.distanceMeters?.toString()}
+                                                    onChangeText={(val) => handleUpdateSet(set.id, 'distanceMeters', parseFloat(val) || 0)}
+                                                />
+                                            )}
+
+                                            {/* ROM Input */}
+                                            {(exercise.enabledMetrics || []).includes('rom') && (
+                                                <TextInput
+                                                    style={styles.input}
+                                                    placeholder={set.targetRom || "-"}
+                                                    placeholderTextColor="#C7C7CC"
+                                                    value={set.romCm ? set.romCm.toString() : ''}
+                                                    onChangeText={(val) => handleUpdateSet(set.id, 'romCm', parseFloat(val) || 0)}
+                                                />
+                                            )}
+
+                                            <TouchableOpacity
+                                                style={[styles.colCheck, styles.checkBox, set.completed && styles.checkBoxChecked]}
+                                                onPress={() => onToggleSetComplete(set.id, set.completed)}
+                                            >
+                                                {set.completed && <Text style={{ color: 'white' }}>✓</Text>}
+                                            </TouchableOpacity>
+                                        </View>
+                                    ))}
+
+                                    <TouchableOpacity style={styles.addSetButton} onPress={() => handleAddSet(exercise.id)}>
+                                        <Text style={styles.addSetText}>+ Add Set</Text>
+                                    </TouchableOpacity>
                                 </TouchableOpacity>
-                            </View>
+                            </ScaleDecorator>
                         );
-                    })}
-
-                    <TouchableOpacity
-                        style={styles.addExerciseButton}
-                        onPress={() => navigation.navigate('ExerciseList', {
-                            onSelect: (ex: Exercise) => {
-                                if (!exercises.find(e => e.id === ex.id)) {
-                                    setExercises(prev => [...prev, ex]);
-                                    handleAddSet(ex.id);
+                    }}
+                    ListFooterComponent={
+                        <TouchableOpacity
+                            style={styles.addExerciseButton}
+                            onPress={() => navigation.navigate('ExerciseList', {
+                                onSelect: (ex: Exercise) => {
+                                    if (!exercises.find(e => e.id === ex.id)) {
+                                        setExercises(prev => [...prev, ex]);
+                                        handleAddSet(ex.id);
+                                    }
                                 }
-                            }
-                        } as any)}
-                    >
-                        <Text style={styles.addExerciseText}>+ Add Exercise</Text>
-                    </TouchableOpacity>
-                </ScrollView>
+                            } as any)}
+                        >
+                            <Text style={styles.addExerciseText}>+ Add Exercise</Text>
+                        </TouchableOpacity>
+                    }
+                />
             </KeyboardAvoidingView>
 
             {/* Toast Notification */}

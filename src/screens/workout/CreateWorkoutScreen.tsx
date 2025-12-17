@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Alert, Modal, ScrollView, Animated, Keyboard, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Animated, Keyboard, KeyboardAvoidingView, Platform, StyleSheet as RNStyleSheet } from 'react-native';
+import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
 import { supabaseService } from '../../services/SupabaseDataService';
@@ -13,7 +14,7 @@ export const CreateWorkoutScreen = () => {
     const { templateToEdit } = route.params || {};
 
     const [name, setName] = useState(templateToEdit?.name || '');
-    const [selectedExercises, setSelectedExercises] = useState<(TemplateExercise & { name: string, enabledMetrics: string[], repsType?: RepsType })[]>([]);
+    const [selectedExercises, setSelectedExercises] = useState<(TemplateExercise & { name: string, enabledMetrics: string[], repsType?: RepsType, _id: string })[]>([]);
     const [keyboardOffset, setKeyboardOffset] = useState(0);
 
     // Toast State
@@ -61,7 +62,6 @@ export const CreateWorkoutScreen = () => {
         const all = await supabaseService.getExercises();
         const enriched = templateToEdit.exercises.map((te: any) => {
             const ex = all.find(e => e.id === te.exerciseId);
-            // Initialize sets if legacy
             let sets = te.sets || [];
             if (sets.length === 0 && te.targetSets) {
                 for (let i = 0; i < te.targetSets; i++) {
@@ -76,7 +76,6 @@ export const CreateWorkoutScreen = () => {
                 }
             }
             if (sets.length === 0) {
-                // Default 1 set
                 sets.push({});
             }
 
@@ -85,7 +84,8 @@ export const CreateWorkoutScreen = () => {
                 name: ex?.name || 'Unknown Exercise',
                 enabledMetrics: ex?.enabledMetrics || [],
                 repsType: ex?.repsType,
-                sets
+                sets,
+                _id: Math.random().toString(36).substr(2, 9)
             };
         });
         setSelectedExercises(enriched);
@@ -94,13 +94,13 @@ export const CreateWorkoutScreen = () => {
     const handleAddExercise = () => {
         navigation.navigate('ExerciseList', {
             onSelect: (ex: Exercise) => {
-                const newEx: TemplateExercise & { name: string, enabledMetrics: string[], repsType?: RepsType } = {
+                const newEx: TemplateExercise & { name: string, enabledMetrics: string[], repsType?: RepsType, _id: string } = {
                     exerciseId: ex.id,
                     name: ex.name,
-                    enabledMetrics: ex.enabledMetrics,
+                    enabledMetrics: ex.enabledMetrics || [],
                     repsType: ex.repsType,
-                    sets: [{}], // Start with 1 empty set
-                    targetSets: 0, // Legacy ignored
+                    sets: [{}],
+                    _id: Math.random().toString(36).substr(2, 9)
                 };
                 setSelectedExercises(prev => [...prev, newEx]);
             }
@@ -115,7 +115,6 @@ export const CreateWorkoutScreen = () => {
 
     const addSet = (exerciseIndex: number) => {
         const updated = [...selectedExercises];
-        // Duplicate last set if exists
         const sets = updated[exerciseIndex].sets;
         const lastSet = sets.length > 0 ? sets[sets.length - 1] : {};
         sets.push({ ...lastSet });
@@ -128,7 +127,7 @@ export const CreateWorkoutScreen = () => {
         setSelectedExercises(updated);
     };
 
-    const updateSet = (exerciseIndex: number, setIndex: number, field: keyof any, value: any) => {
+    const updateSet = (exerciseIndex: number, setIndex: number, field: string, value: any) => {
         const updated = [...selectedExercises];
         updated[exerciseIndex].sets[setIndex] = {
             ...updated[exerciseIndex].sets[setIndex],
@@ -149,22 +148,17 @@ export const CreateWorkoutScreen = () => {
 
         const newTemplate: WorkoutTemplate = {
             id: templateToEdit?.id || '',
-
             name,
-            exercises: selectedExercises.map(({ name, enabledMetrics, repsType, ...rest }) => rest),
+            exercises: selectedExercises.map(({ name, enabledMetrics, repsType, _id, ...rest }) => rest),
         };
 
         await supabaseService.addTemplate(newTemplate);
         setShowToast(true);
     };
 
-    const renderItem = ({ item, index }: { item: TemplateExercise & { name: string, enabledMetrics: string[], repsType?: RepsType }, index: number }) => {
+    const renderItem = ({ item, getIndex, drag, isActive }: RenderItemParams<any>) => {
+        const index = getIndex();
         const metrics = item.enabledMetrics || [];
-        // Determine label for the 4th column (Tempo/Time)
-        // If reps is enabled, and it's isometric -> Time (s)
-        // If reps is enabled, and it's tempo -> Tempo
-        // If reps is NOT enabled, but time IS enabled -> Time (s) (handled by 5th col usually, but let's check structure)
-
         let showTempoCol = false;
         let tempoLabel = "TEMPO";
         let isIsometric = item.repsType === 'isometric';
@@ -179,10 +173,24 @@ export const CreateWorkoutScreen = () => {
         }
 
         return (
-            <View style={styles.itemContainer}>
-                <View style={styles.itemHeader}>
-                    <Text style={styles.itemTitle}>{item.name}</Text>
-                    <TouchableOpacity onPress={() => removeExercise(index)}>
+            <TouchableOpacity
+                onLongPress={drag}
+                delayLongPress={750}
+                activeOpacity={1}
+                disabled={isActive}
+                style={[
+                    styles.itemContainer,
+                    { backgroundColor: isActive ? Theme.Colors.surface : Theme.Colors.surface, opacity: isActive ? 0.9 : 1 }
+                ]}
+            >
+                <View style={[styles.itemHeader, { justifyContent: 'space-between' }]}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                        <TouchableOpacity onPressIn={drag} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                            <Ionicons name="menu" size={24} color={Theme.Colors.textSecondary} style={{ marginRight: 10 }} />
+                        </TouchableOpacity>
+                        <Text style={styles.itemTitle}>{item.name}</Text>
+                    </View>
+                    <TouchableOpacity onPress={() => index !== undefined && removeExercise(index)}>
                         <Ionicons name="trash-outline" size={20} color={Theme.Colors.danger} />
                     </TouchableOpacity>
                 </View>
@@ -192,19 +200,14 @@ export const CreateWorkoutScreen = () => {
                     <Text style={[styles.colSet, styles.headerText]}>SET</Text>
                     {metrics.includes('load') && <Text style={[styles.colInput, styles.headerText]}>KG</Text>}
                     {metrics.includes('reps') && <Text style={[styles.colInput, styles.headerText]}>REPS</Text>}
-
-                    {/* Tempo / Static Time Col */}
                     {showTempoCol && <Text style={[styles.colInput, styles.headerText]}>{tempoLabel}</Text>}
-
-                    {/* Pure Time Col (if not covering isometric logic above) */}
                     {metrics.includes('time') && <Text style={[styles.colInput, styles.headerText]}>TIME</Text>}
-
                     {metrics.includes('distance') && <Text style={[styles.colInput, styles.headerText]}>DIST</Text>}
-                    <View style={{ width: 30 }} />{/* Delete Set Col */}
+                    <View style={{ width: 30 }} />
                 </View>
 
                 {/* Sets Rows */}
-                {item.sets.map((set, setIndex) => (
+                {item.sets.map((set: any, setIndex: number) => (
                     <View key={setIndex} style={styles.setRow}>
                         <View style={styles.colSet}>
                             <View style={styles.setBadge}><Text style={styles.setText}>{setIndex + 1}</Text></View>
@@ -214,65 +217,62 @@ export const CreateWorkoutScreen = () => {
                             <TextInput
                                 style={styles.input}
                                 keyboardType="numeric"
-                                placeholder={set.targetLoad ? set.targetLoad.toString() : "-"}
+                                placeholder={set.targetLoad?.toString() || "-"}
                                 placeholderTextColor={Theme.Colors.textSecondary}
                                 value={set.targetLoad?.toString()}
-                                onChangeText={v => updateSet(index, setIndex, 'targetLoad', parseFloat(v))}
+                                onChangeText={v => index !== undefined && updateSet(index, setIndex, 'targetLoad', parseFloat(v))}
                             />
                         )}
                         {metrics.includes('reps') && (
                             <TextInput
                                 style={styles.input}
                                 keyboardType="numeric"
-                                placeholder={set.targetReps ? set.targetReps.toString() : "-"}
+                                placeholder={set.targetReps?.toString() || "-"}
                                 placeholderTextColor={Theme.Colors.textSecondary}
                                 value={set.targetReps?.toString()}
-                                onChangeText={v => updateSet(index, setIndex, 'targetReps', v)}
+                                onChangeText={v => index !== undefined && updateSet(index, setIndex, 'targetReps', v)}
                             />
                         )}
-
-                        {/* Tempo Input */}
                         {showTempoCol && (
                             <TextInput
                                 style={styles.input}
                                 placeholder={isIsometric ? (set.targetTime?.toString() || "-") : (set.targetTempo || "-")}
                                 placeholderTextColor={Theme.Colors.textSecondary}
                                 value={isIsometric ? set.targetTime?.toString() : set.targetTempo}
-                                onChangeText={v => updateSet(index, setIndex, isIsometric ? 'targetTime' : 'targetTempo', isIsometric ? parseFloat(v) : v)}
+                                onChangeText={v => index !== undefined && updateSet(index, setIndex, isIsometric ? 'targetTime' : 'targetTempo', isIsometric ? parseFloat(v) : v)}
                             />
                         )}
-
                         {metrics.includes('time') && (
                             <TextInput
                                 style={styles.input}
                                 keyboardType="numeric"
-                                placeholder={set.targetTime ? set.targetTime.toString() : "-"}
+                                placeholder={set.targetTime?.toString() || "-"}
                                 placeholderTextColor={Theme.Colors.textSecondary}
                                 value={set.targetTime?.toString()}
-                                onChangeText={v => updateSet(index, setIndex, 'targetTime', parseFloat(v))}
+                                onChangeText={v => index !== undefined && updateSet(index, setIndex, 'targetTime', parseFloat(v))}
                             />
                         )}
                         {metrics.includes('distance') && (
                             <TextInput
                                 style={styles.input}
                                 keyboardType="numeric"
-                                placeholder={set.targetDistance ? set.targetDistance.toString() : "-"}
+                                placeholder={set.targetDistance?.toString() || "-"}
                                 placeholderTextColor={Theme.Colors.textSecondary}
                                 value={set.targetDistance?.toString()}
-                                onChangeText={v => updateSet(index, setIndex, 'targetDistance', parseFloat(v))}
+                                onChangeText={v => index !== undefined && updateSet(index, setIndex, 'targetDistance', parseFloat(v))}
                             />
                         )}
 
-                        <TouchableOpacity onPress={() => removeSet(index, setIndex)} style={{ width: 30, alignItems: 'center' }}>
+                        <TouchableOpacity onPress={() => index !== undefined && removeSet(index, setIndex)} style={{ width: 30, alignItems: 'center' }}>
                             <Ionicons name="close-circle" size={20} color={Theme.Colors.textSecondary} />
                         </TouchableOpacity>
                     </View>
                 ))}
 
-                <TouchableOpacity style={styles.addSetButton} onPress={() => addSet(index)}>
+                <TouchableOpacity style={styles.addSetButton} onPress={() => index !== undefined && addSet(index)}>
                     <Text style={styles.addSetText}>+ Add Set</Text>
                 </TouchableOpacity>
-            </View>
+            </TouchableOpacity>
         );
     };
 
@@ -282,7 +282,7 @@ export const CreateWorkoutScreen = () => {
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Text style={styles.cancelText}>Cancel</Text>
                 </TouchableOpacity>
-                <Text style={Theme.Typography.subtitle}>New Routine</Text>
+                <Text style={Theme.Typography.subtitle}>{templateToEdit ? 'Edit Routine' : 'New Routine'}</Text>
                 <TouchableOpacity onPress={handleSave}>
                     <Text style={styles.saveText}>Save</Text>
                 </TouchableOpacity>
@@ -293,7 +293,7 @@ export const CreateWorkoutScreen = () => {
                 style={{ flex: 1 }}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
             >
-                <View style={styles.content}>
+                <View style={{ flex: 1, paddingHorizontal: Theme.Spacing.m }}>
                     <TextInput
                         style={styles.nameInput}
                         placeholder="Routine Name"
@@ -302,24 +302,33 @@ export const CreateWorkoutScreen = () => {
                     />
 
                     <Text style={styles.sectionTitle}>Exercises</Text>
-                    <FlatList
+
+                    <DraggableFlatList
                         data={selectedExercises}
-                        keyExtractor={(item, index) => `${item.exerciseId}-${index}`}
+                        onDragEnd={({ data }) => setSelectedExercises(data)}
+                        keyExtractor={(item) => item._id}
                         renderItem={renderItem}
-                        contentContainerStyle={{ paddingBottom: 160 }} // Increased space even more
-                        style={{ flex: 1 }}
+                        keyboardShouldPersistTaps="handled"
+                        contentContainerStyle={{ paddingBottom: 160, flexGrow: 1 }}
+                        containerStyle={{ flex: 1 }}
+                        ListEmptyComponent={
+                            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', opacity: 0.5, paddingTop: 100 }}>
+                                <Ionicons name="barbell-outline" size={48} color={Theme.Colors.textSecondary} />
+                                <Text style={{ marginTop: 16, color: Theme.Colors.textSecondary }}>No exercises added yet</Text>
+                                <Text style={{ marginTop: 4, color: Theme.Colors.textSecondary, fontSize: 12 }}>Tap + to add one</Text>
+                            </View>
+                        }
                     />
                 </View>
             </KeyboardAvoidingView>
 
             <TouchableOpacity
-                style={[styles.fab, { bottom: Math.max(30, keyboardOffset + 20) }]} // Slightly higher shift
+                style={[styles.fab, { bottom: Math.max(30, keyboardOffset + 20) }]}
                 onPress={handleAddExercise}
             >
                 <Ionicons name="add" size={30} color="white" />
             </TouchableOpacity>
 
-            {/* Toast Notification */}
             {showToast && (
                 <Animated.View style={[styles.toast, { opacity: fadeAnim }]}>
                     <Text style={styles.toastText}>Routine Saved</Text>
@@ -354,14 +363,13 @@ const styles = StyleSheet.create({
     },
     content: {
         flex: 1,
-        padding: Theme.Spacing.m,
     },
     nameInput: {
         backgroundColor: Theme.Colors.surface,
         padding: Theme.Spacing.m,
         borderRadius: 12,
         fontSize: 18,
-        marginBottom: Theme.Spacing.l,
+        marginBottom: Theme.Spacing.m,
     },
     sectionTitle: {
         ...Theme.Typography.subtitle,
@@ -383,8 +391,6 @@ const styles = StyleSheet.create({
         fontSize: 17,
         fontWeight: '600',
     },
-
-    // Table Styles
     setRow: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -398,23 +404,20 @@ const styles = StyleSheet.create({
     },
     colSet: { width: 40, alignItems: 'center' },
     colInput: { flex: 1, textAlign: 'center' },
-
     setBadge: {
         width: 24, height: 24, borderRadius: 12, backgroundColor: '#F2F2F7', justifyContent: 'center', alignItems: 'center'
     },
     setText: { fontSize: 12, fontWeight: 'bold' },
-
     input: {
         flex: 1,
         backgroundColor: Theme.Colors.background,
         borderRadius: 8,
-        height: 40, // Increased height
+        height: 40,
         marginHorizontal: 4,
         textAlign: 'center',
         fontSize: 16,
-        paddingVertical: 8, // Added padding
+        paddingVertical: 8,
     },
-
     addSetButton: {
         paddingVertical: 10,
         alignItems: 'center',
@@ -426,7 +429,6 @@ const styles = StyleSheet.create({
         color: Theme.Colors.primary,
         fontWeight: '600'
     },
-
     fab: {
         position: 'absolute',
         bottom: 30,
@@ -443,7 +445,6 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 8,
     },
-    // Toast
     toast: {
         position: 'absolute',
         bottom: 40,
