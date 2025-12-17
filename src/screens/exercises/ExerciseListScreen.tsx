@@ -63,7 +63,7 @@ export const ExerciseListScreen = ({ route }: any) => {
                     <TouchableOpacity style={styles.item} onPress={() => handleSelect(item)}>
                         <Text style={styles.itemTitle}>{item.name}</Text>
                         <Text style={styles.itemSubtitle}>
-                            {item.enabledMetrics.join(', ')}
+                            {(item.enabledMetrics || []).join(', ')}
                         </Text>
                     </TouchableOpacity>
                 )}

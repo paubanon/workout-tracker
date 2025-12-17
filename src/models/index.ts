@@ -7,6 +7,7 @@ export interface Exercise {
     name: string;
     enabledMetrics: MetricType[];
     repsType?: RepsType; // Only relevant if 'reps' is in enabledMetrics
+    trackBodyWeight?: boolean;
     description?: string;
     // Future: tags, muscle groups
 }
@@ -32,6 +33,14 @@ export interface SetLog {
 
     completed: boolean;
     notes?: string;
+
+    // Targets (for ghost values/reference)
+    targetLoad?: number;
+    targetReps?: string;
+    targetTempo?: string;
+    targetTime?: number;
+    targetDistance?: number;
+    targetRom?: string;
 }
 
 export interface PainEntry {
@@ -72,8 +81,37 @@ export interface UserProfile {
     weightHistory: WeightEntry[];
 }
 
+export interface TemplateSet {
+    targetReps?: string;
+    targetLoad?: number;
+    targetTempo?: string;
+    targetTime?: number;
+    targetDistance?: number;
+    targetRom?: string;
+}
+
+export interface TemplateExercise {
+    exerciseId: string;
+    // We now support individual sets. If 'sets' is present, it overrides 'targetSets'.
+    // Use targetSets count for backward compatibility or simple initialization 
+    // if 'sets' array is empty.
+    sets: TemplateSet[];
+
+    // Deprecated but potentially kept for legacy template migration?
+    // Actually, let's just use 'sets' length to determine set count.
+
+    // Legacy support (optional)
+    targetSets?: number;
+    targetReps?: string;
+    targetLoad?: number;
+    targetTempo?: string;
+    targetTime?: number;
+    targetDistance?: number;
+    targetRom?: string;
+}
+
 export interface WorkoutTemplate {
     id: string;
     name: string;
-    exerciseIds: string[]; // Ordered list of exercises
+    exercises: TemplateExercise[];
 }

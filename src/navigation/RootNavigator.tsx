@@ -12,6 +12,8 @@ import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { CreateExerciseScreen } from '../screens/exercises/CreateExerciseScreen';
 import { ExerciseListScreen } from '../screens/exercises/ExerciseListScreen';
 import { CreateWorkoutScreen } from '../screens/workout/CreateWorkoutScreen';
+import { HistoryScreen } from '../screens/history/HistoryScreen';
+import { WorkoutHistoryDetailScreen } from '../screens/history/WorkoutHistoryDetailScreen';
 
 import { Ionicons } from '@expo/vector-icons';
 import { CreateScreen } from '../screens/create/CreateScreen';
@@ -101,6 +103,16 @@ export const RootNavigator = () => {
                             name="CreateWorkout"
                             component={CreateWorkoutScreen}
                             options={{ presentation: 'modal' }}
+                        />
+                        <Stack.Screen
+                            name="History"
+                            component={HistoryScreen}
+                            options={{ title: 'History' }}
+                        />
+                        <Stack.Screen
+                            name="WorkoutHistoryDetail"
+                            component={WorkoutHistoryDetailScreen}
+                            options={{ presentation: 'modal', title: 'Workout Details' }}
                         />
                     </>
                 )}

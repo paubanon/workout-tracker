@@ -28,11 +28,22 @@ export const ProfileScreen = () => {
         return unsubscribe;
     }, [navigation]);
 
+    const [recentSessions, setRecentSessions] = useState<any[]>([]);
+
+    useEffect(() => {
+        loadProfile();
+        loadRecentSessions();
+        const unsubscribe = navigation.addListener('focus', () => {
+            loadProfile();
+            loadRecentSessions();
+        });
+        return unsubscribe;
+    }, [navigation]);
+
     const loadProfile = async () => {
         const p = await supabaseService.getUserProfile();
         if (p) {
             setProfile(p);
-            // Only update form if NOT editing, to avoid overwriting user input while typing if focus happens
             if (!isEditing) {
                 setFirstName(p.firstName);
                 setLastName(p.lastName);
@@ -40,6 +51,11 @@ export const ProfileScreen = () => {
                 setSex(p.sex);
             }
         }
+    };
+
+    const loadRecentSessions = async () => {
+        const data = await supabaseService.getWorkoutSessions(5, 0);
+        setRecentSessions(data);
     };
 
     const handleSaveProfile = async () => {
@@ -163,6 +179,41 @@ export const ProfileScreen = () => {
                             ))}
                         </View>
                     )}
+                </View>
+
+                {/* Recent Workouts Section */}
+                <Text style={styles.sectionTitle}>Recent Workouts</Text>
+                <View style={[styles.card, { padding: 0, overflow: 'hidden' }]}>
+                    {recentSessions.length === 0 ? (
+                        <View style={{ padding: 16 }}>
+                            <Text style={styles.emptyText}>No workouts yet.</Text>
+                        </View>
+                    ) : (
+                        recentSessions.map((session, index) => (
+                            <View key={session.id}>
+                                <View style={styles.sessionRow}>
+                                    <View>
+                                        <Text style={styles.sessionTitle}>{session.name || 'Untitled Workout'}</Text>
+                                        <Text style={styles.sessionDate}>{new Date(session.date).toLocaleDateString()}</Text>
+                                    </View>
+                                    <View style={{ alignItems: 'flex-end' }}>
+                                        <Text style={styles.sessionVolume}>
+                                            {session.sets.reduce((acc: number, s: any) => acc + (s.loadKg || 0) * (s.reps || 0), 0)} kg
+                                        </Text>
+                                        <Text style={styles.sessionSets}>{session.sets.length} Sets</Text>
+                                    </View>
+                                </View>
+                                {index < recentSessions.length - 1 && <View style={styles.divider} />}
+                            </View>
+                        ))
+                    )}
+
+                    <TouchableOpacity
+                        style={styles.showMoreButton}
+                        onPress={() => (navigation as any).navigate('History')}
+                    >
+                        <Text style={styles.showMoreText}>Show More</Text>
+                    </TouchableOpacity>
                 </View>
 
                 {/* Other Info Display (Read Only when not editing) */}
@@ -451,5 +502,44 @@ const styles = StyleSheet.create({
         fontSize: 17,
         fontWeight: '600',
         color: Theme.Colors.primary,
+    },
+    sessionRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        padding: Theme.Spacing.m,
+        alignItems: 'center',
+    },
+    sessionTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 2,
+    },
+    sessionDate: {
+        fontSize: 13,
+        color: Theme.Colors.textSecondary,
+    },
+    sessionVolume: {
+        fontSize: 15,
+        fontWeight: '500',
+    },
+    sessionSets: {
+        fontSize: 13,
+        color: Theme.Colors.textSecondary,
+    },
+    showMoreButton: {
+        padding: Theme.Spacing.m,
+        alignItems: 'center',
+        borderTopWidth: 1,
+        borderTopColor: '#F2F2F7',
+        backgroundColor: '#FAFAFA'
+    },
+    showMoreText: {
+        color: Theme.Colors.primary,
+        fontWeight: '600',
+        fontSize: 15,
+    },
+    emptyText: {
+        color: Theme.Colors.textSecondary,
+        textAlign: 'center',
     }
 });

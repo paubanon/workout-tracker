@@ -12,7 +12,14 @@ class SupabaseDataService {
             console.error('Error fetching exercises:', error);
             return [];
         }
-        return data || [];
+        return (data || []).map((e: any) => ({
+            id: e.id,
+            name: e.name,
+            enabledMetrics: e.enabled_metrics || [],
+            repsType: e.reps_type,
+            trackBodyWeight: e.track_body_weight,
+            description: e.description
+        }));
     }
 
     async addExercise(exercise: Exercise): Promise<void> {
@@ -21,7 +28,8 @@ class SupabaseDataService {
             .insert({
                 name: exercise.name,
                 enabled_metrics: exercise.enabledMetrics,
-                reps_type: exercise.repsType
+                reps_type: exercise.repsType,
+                track_body_weight: exercise.trackBodyWeight
             });
 
         if (error) console.error('Error adding exercise:', error);
@@ -43,7 +51,7 @@ class SupabaseDataService {
         return (data || []).map((t: any) => ({
             id: t.id,
             name: t.name,
-            exerciseIds: t.exercise_ids
+            exercises: t.exercises || []
         }));
     }
 
@@ -51,15 +59,35 @@ class SupabaseDataService {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
+        if (template.id) {
+            // Update existing
+            const { error } = await supabase
+                .from('workout_templates')
+                .update({
+                    name: template.name,
+                    exercises: template.exercises
+                })
+                .eq('id', template.id);
+            if (error) console.error('Error updating template:', error);
+        } else {
+            // Create new
+            const { error } = await supabase
+                .from('workout_templates')
+                .insert({
+                    user_id: user.id,
+                    name: template.name,
+                    exercises: template.exercises
+                });
+            if (error) console.error('Error adding template:', error);
+        }
+    }
+
+    async deleteTemplate(id: string): Promise<void> {
         const { error } = await supabase
             .from('workout_templates')
-            .insert({
-                user_id: user.id,
-                name: template.name,
-                exercise_ids: template.exerciseIds
-            });
-
-        if (error) console.error('Error adding template:', error);
+            .delete()
+            .eq('id', id);
+        if (error) console.error('Error deleting template:', error);
     }
 
     // --- Profile ---
@@ -103,28 +131,60 @@ class SupabaseDataService {
         if (error) console.error('Error updating profile:', error);
     }
 
-    async addWeightEntry(weightKg: number): Promise<void> {
+    async addWeightEntry(weight: number): Promise<void> {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        // We need to fetch current history, append, and update (atomic update for jsonb in PG is better, but this is simple)
-        const current = await this.getUserProfile();
-        if (!current) return;
-
-        const newEntry: WeightEntry = {
-            id: Math.random().toString(36).substr(2, 9),
-            date: new Date().toISOString(),
-            weightKg
-        };
-
-        const newHistory = [newEntry, ...current.weightHistory];
-
         const { error } = await supabase
-            .from('profiles')
-            .update({ weight_history: newHistory })
-            .eq('id', user.id);
+            .from('weight_history')
+            .insert({
+                user_id: user.id,
+                weight_kg: weight,
+                date: new Date().toISOString()
+            });
 
         if (error) console.error('Error adding weight:', error);
+    }
+
+    // --- History ---
+    async getWorkoutSessions(limit = 20, offset = 0): Promise<WorkoutSession[]> {
+        const { data, error } = await supabase
+            .from('workout_sessions')
+            .select('*')
+            .order('date', { ascending: false })
+            .range(offset, offset + limit - 1);
+
+        if (error) {
+            console.error('Error fetching sessions:', error);
+            return [];
+        }
+
+        return data.map((s: any) => ({
+            id: s.id,
+            date: s.date,
+            name: s.name,
+            sets: s.sets || [],
+            painEntries: s.pain_entries || [],
+            preSessionFatigue: s.pre_session_fatigue
+        }));
+    }
+
+    async addWorkoutSession(session: WorkoutSession): Promise<void> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { error } = await supabase
+            .from('workout_sessions')
+            .insert({
+                user_id: user.id,
+                date: session.date,
+                name: session.name,
+                sets: session.sets,
+                pain_entries: session.painEntries,
+                pre_session_fatigue: session.preSessionFatigue
+            });
+
+        if (error) console.error('Error adding session:', error);
     }
 }
 

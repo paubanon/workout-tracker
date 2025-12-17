@@ -20,6 +20,7 @@ export const CreateExerciseScreen = () => {
     });
 
     const [repsType, setRepsType] = useState<RepsType>('standard');
+    const [trackBodyWeight, setTrackBodyWeight] = useState(false);
 
     const toggleMetric = (m: MetricType) => {
         setMetrics(prev => ({ ...prev, [m]: !prev[m] }));
@@ -38,6 +39,7 @@ export const CreateExerciseScreen = () => {
             name,
             enabledMetrics,
             repsType: metrics.reps ? repsType : undefined,
+            trackBodyWeight: metrics.load ? trackBodyWeight : undefined,
         });
 
         Alert.alert('Success', 'Exercise created!', [
@@ -73,35 +75,57 @@ export const CreateExerciseScreen = () => {
                     <Text style={styles.hint}>Select what you want to log for this exercise.</Text>
 
                     {['load', 'reps', 'time', 'distance', 'rom'].map((m) => (
-                        <View key={m} style={styles.row}>
-                            <Text style={styles.rowLabel}>{m.charAt(0).toUpperCase() + m.slice(1)}</Text>
-                            <Switch
-                                value={metrics[m as MetricType]}
-                                onValueChange={() => toggleMetric(m as MetricType)}
-                                trackColor={{ true: Theme.Colors.primary }}
-                            />
+                        <View key={m}>
+                            <View style={styles.row}>
+                                <Text style={styles.rowLabel}>
+                                    {m === 'rom' ? 'Range of Motion (ROM)' : m.charAt(0).toUpperCase() + m.slice(1)}
+                                </Text>
+                                <Switch
+                                    value={metrics[m as MetricType]}
+                                    onValueChange={() => toggleMetric(m as MetricType)}
+                                    trackColor={{ true: Theme.Colors.primary }}
+                                />
+                            </View>
+
+                            {/* "Unfolding" Repetition Type Section - directly under Reps toggle */}
+                            {m === 'reps' && metrics.reps && (
+                                <View style={styles.unfoldingSection}>
+                                    <Text style={styles.subLabel}>Repetition Type</Text>
+                                    <View style={styles.segmentContainer}>
+                                        {(['standard', 'tempo', 'isometric'] as RepsType[]).map((type) => (
+                                            <TouchableOpacity
+                                                key={type}
+                                                style={[styles.segment, repsType === type && styles.segmentActive]}
+                                                onPress={() => setRepsType(type)}
+                                            >
+                                                <Text style={[styles.segmentText, repsType === type && styles.segmentTextActive]}>
+                                                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+                                </View>
+                            )}
+
+                            {/* "Unfolding" Body Weight Toggle - directly under Load toggle */}
+                            {m === 'load' && metrics.load && (
+                                <View style={styles.unfoldingSection}>
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Text style={styles.subLabel}>Add Body Weight?</Text>
+                                        <Switch
+                                            value={trackBodyWeight}
+                                            onValueChange={setTrackBodyWeight}
+                                            trackColor={{ true: Theme.Colors.primary }}
+                                        />
+                                    </View>
+                                    <Text style={{ fontSize: 12, color: Theme.Colors.textSecondary }}>
+                                        If checked, your body weight will be added to the logged load automatically.
+                                    </Text>
+                                </View>
+                            )}
                         </View>
                     ))}
                 </View>
-
-                {metrics.reps && (
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Repetition Type</Text>
-                        <View style={styles.segmentContainer}>
-                            {(['standard', 'tempo', 'isometric'] as RepsType[]).map((type) => (
-                                <TouchableOpacity
-                                    key={type}
-                                    style={[styles.segment, repsType === type && styles.segmentActive]}
-                                    onPress={() => setRepsType(type)}
-                                >
-                                    <Text style={[styles.segmentText, repsType === type && styles.segmentTextActive]}>
-                                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    </View>
-                )}
 
             </ScrollView>
         </SafeAreaView>
@@ -192,5 +216,18 @@ const styles = StyleSheet.create({
     },
     segmentTextActive: {
         fontWeight: '600',
-    }
+    },
+    unfoldingSection: {
+        backgroundColor: Theme.Colors.surface,
+        paddingHorizontal: Theme.Spacing.m,
+        paddingBottom: Theme.Spacing.m,
+        borderBottomWidth: 1,
+        borderColor: '#F2F2F7', // subtle separator
+    },
+    subLabel: {
+        fontSize: 13,
+        fontWeight: '600',
+        marginBottom: 8,
+        color: Theme.Colors.textSecondary,
+    },
 });
