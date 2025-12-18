@@ -7,7 +7,6 @@ import { useExerciseAnalytics, TimeFrame } from '../../hooks/useExerciseAnalytic
 import { supabaseService } from '../../services/SupabaseDataService';
 import { Exercise } from '../../models';
 import { LineChart } from "react-native-gifted-charts";
-import { seedAnalysisData } from '../../utils/seedData';
 
 export const AnalysisScreen = () => {
     // --- State ---
@@ -160,26 +159,6 @@ export const AnalysisScreen = () => {
     // Cap spacing to reasonable limits if needed, but user wants to fit ALL.
     // If too many points, spacing might be tiny.
 
-    // --- Actions ---
-    const handleSeedData = async () => {
-        Alert.alert(
-            "Seed Data",
-            "This will add mock workout sessions for 'Seated Inclined Shoulder Press'. Continue?",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Seed",
-                    onPress: async () => {
-                        const result = await seedAnalysisData();
-                        Alert.alert(result.success ? "Success" : "Error", result.message);
-                        // Reload data if needed - currently we rely on re-entering screen or some trigger.
-                        // Ideally we should trigger a refetch in useExerciseAnalytics, but for now this is just a quick fix helper.
-                    }
-                }
-            ]
-        );
-    };
-
     // Local constants
     const SECONDARY_COLOR = '#FF9500';
 
@@ -250,14 +229,6 @@ export const AnalysisScreen = () => {
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <Text style={styles.headerTitle}>Analysis</Text>
-
-                {/* TEMP: Seed Button */}
-                <TouchableOpacity
-                    style={{ backgroundColor: '#FF3B30', padding: 10, borderRadius: 8, marginBottom: 20, alignItems: 'center' }}
-                    onPress={handleSeedData}
-                >
-                    <Text style={{ color: 'white', fontWeight: 'bold' }}>⚠️ Seed Mock Data</Text>
-                </TouchableOpacity>
 
                 {/* Exercise Selector */}
                 <TouchableOpacity style={styles.selectorButton} onPress={() => setPickerVisible(true)}>
