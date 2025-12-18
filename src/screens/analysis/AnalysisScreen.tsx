@@ -113,8 +113,35 @@ export const AnalysisScreen = () => {
     const max2 = Math.max(...chartData2.map(d => d.value), ...regression2.map(d => d.value), 0);
 
     const chartData1Final = chartData1.map(d => ({ ...d }));
-    const chartData2Final = chartData2.map(d => ({ ...d, isSecondary: true }));
-    const regression1Final = regression1.map(d => ({ ...d }));
+
+    // For secondary data, we need to merge the actual data and regression data
+    // because data4 with isSecondary has library limitations
+    const chartData2Final = chartData2.map((d, i) => ({
+        ...d,
+        isSecondary: true
+    }));
+
+    const regression1Final = regression1.map((d, i) => ({
+        ...d,
+        label: rawChartData[i]?.label || '' // Ensure regression has same labels as data for correct X positioning
+    }));
+    const regression2Final = regression2.map((d, i) => ({
+        ...d,
+        isSecondary: true,
+        label: rawChartData[i]?.label || '' // Ensure regression has same labels as data for correct X positioning
+    }));
+
+    // Create combined secondary data with regression
+    // We'll use different styling on the regression points
+    const combinedSecondaryData = var2 !== 'none' ? [
+        ...chartData2Final,
+        ...regression2.map(d => ({
+            value: d.value,
+            isSecondary: true,
+            hideDataPoint: true, // Hide the dots for regression
+            // strokeDashArray can't be set per point, so we'll need another approach
+        }))
+    ] : [];
     // If var2 is none, max2 might be 0.
 
     // Layout
@@ -295,7 +322,7 @@ export const AnalysisScreen = () => {
                             data={chartData1Final}
                             secondaryData={var2 !== 'none' ? chartData2Final : undefined}
                             data3={regression1Final}
-                            // data4={regression2} // Disabled to avoid complexity with double axis regression for now
+                            data4={var2 !== 'none' ? regression2Final : undefined}
                             height={250}
                             width={chartWidth}
                             spacing={fitSpacing}
@@ -303,7 +330,7 @@ export const AnalysisScreen = () => {
                             color1={Theme.Colors.primary}
                             color2={SECONDARY_COLOR}
                             color3={Theme.Colors.primary} // Regression 1 same color
-                            // color4={SECONDARY_COLOR}
+                            color4={SECONDARY_COLOR} // Regression 2 orange
 
                             // Line Config
                             thickness1={3}
@@ -311,12 +338,17 @@ export const AnalysisScreen = () => {
                             thickness3={1} // Faint
                             strokeDashArray3={[4, 4]} // Dashed for regression
                             hideDataPoints3
+                            thickness4={1}
+                            strokeDashArray4={[4, 4]}
+                            hideDataPoints4
 
                             // Dots
                             dataPointsColor1={Theme.Colors.primary}
                             dataPointsColor2={SECONDARY_COLOR}
+                            dataPointsColor4={SECONDARY_COLOR}
                             textColor1={Theme.Colors.primary}
                             textColor2={SECONDARY_COLOR}
+                            textColor4={SECONDARY_COLOR}
 
                             // Axes
                             yAxisColor={Theme.Colors.border}
@@ -347,6 +379,15 @@ export const AnalysisScreen = () => {
                                 noOfSections: 5,
                                 yAxisLabelWidth: 40, // Explicit width for right axis labels
                             } : undefined}
+
+                            // Secondary line styling
+                            secondaryLineConfig={{
+                                color: SECONDARY_COLOR,
+                                thickness: 3,
+                                curved: true,
+                                dataPointsColor: SECONDARY_COLOR, // Orange dots for secondary data
+                                textColor: SECONDARY_COLOR, // Orange labels for secondary data
+                            }}
 
                             disableScroll // User requested compressed view without scroll
                         />

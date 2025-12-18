@@ -181,21 +181,24 @@ export const useExerciseAnalytics = (exerciseId: string | null) => {
             // RE-CALCULATE if aggType is different? Actually, let's just use what getSessionValue returns for that session
             const val = getSessionValue(d.originalSession, variable, aggType);
             return val || 0;
-        }).filter(v => v > 0);
+        }); // DO NOT FILTER - we need all sessions to match chart data
 
         if (values.length === 0) {
             return { max: 0, min: 0, avg: 0, volume: 0, trend: 'insufficient_data' };
         }
 
-        const max = Math.max(...values);
-        const min = Math.min(...values);
-        const avg = values.reduce((a, b) => a + b, 0) / values.length;
+        // For statistics, we DO want to filter zeros
+        const nonZeroValues = values.filter(v => v > 0);
+        const max = nonZeroValues.length > 0 ? Math.max(...nonZeroValues) : 0;
+        const min = nonZeroValues.length > 0 ? Math.min(...nonZeroValues) : 0;
+        const avg = nonZeroValues.length > 0 ? nonZeroValues.reduce((a, b) => a + b, 0) / nonZeroValues.length : 0;
         const totalVolume = getSessionDataHistory.reduce((acc, d) => acc + d.volume, 0);
 
+        // Regression uses ALL values (including zeros) to match chart positioning
         const { slope, regressionPoints } = calculateTrendStats(values.map(v => ({ y: v })));
 
         let trend: 'ascending' | 'descending' | 'plateauing' | 'insufficient_data' = 'insufficient_data';
-        if (values.length < 2) {
+        if (nonZeroValues.length < 2) {
             trend = 'insufficient_data';
         } else if (slope > 0.1) {
             trend = 'ascending';
