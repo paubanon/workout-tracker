@@ -121,14 +121,17 @@ export const AnalysisScreen = () => {
         isSecondary: true
     }));
 
-    const regression1Final = regression1.map((d, i) => ({
-        ...d,
-        label: rawChartData[i]?.label || '' // Ensure regression has same labels as data for correct X positioning
-    }));
-    const regression2Final = regression2.map((d, i) => ({
-        ...d,
-        isSecondary: true,
-        label: rawChartData[i]?.label || '' // Ensure regression has same labels as data for correct X positioning
+    const regression1Final = regression1.map(d => ({ ...d }));
+
+    // WORKAROUND: data4 doesn't respect isSecondary flag, so we manually scale
+    // the secondary regression values to the primary axis range
+    // This makes them appear at the correct visual position when plotted on primary axis
+    const primaryMax = max1 > 0 ? max1 * 1.2 : 100;
+    const secondaryMax = max2 > 0 ? max2 * 1.2 : 10;
+    const scaleFactor = primaryMax / secondaryMax;
+
+    const regression2Final = regression2.map(d => ({
+        value: d.value * scaleFactor, // Scale to primary axis range
     }));
 
     // Create combined secondary data with regression
