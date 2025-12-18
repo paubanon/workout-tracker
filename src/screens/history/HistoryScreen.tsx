@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Alert, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
 import { supabaseService } from '../../services/SupabaseDataService';
@@ -12,6 +12,8 @@ export const HistoryScreen = () => {
     const [sessions, setSessions] = useState<WorkoutSession[]>([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(0);
+    const [menuVisible, setMenuVisible] = useState<string | null>(null);
+    const [hasMore, setHasMore] = useState(true);
     const LIMIT = 20;
 
     useEffect(() => {
@@ -19,11 +21,18 @@ export const HistoryScreen = () => {
     }, []);
 
     const loadHistory = async (offset: number) => {
-        if (loading) return;
+        if (loading) return; // Only prevent if already loading
         setLoading(true);
         const data = await supabaseService.getWorkoutSessions(LIMIT, offset);
+
+        // If we got less data than requested, we've reached the end
+        if (data.length < LIMIT) {
+            setHasMore(false);
+        }
+
         if (offset === 0) {
             setSessions(data);
+            setHasMore(data.length >= LIMIT);
         } else {
             setSessions(prev => [...prev, ...data]);
         }
@@ -31,9 +40,34 @@ export const HistoryScreen = () => {
     };
 
     const handleLoadMore = () => {
+        if (!hasMore) return; // Don't try to load more if we know there's no more
         const nextPage = page + 1;
         setPage(nextPage);
         loadHistory(nextPage * LIMIT);
+    };
+
+    const handleDelete = (session: WorkoutSession) => {
+        Alert.alert(
+            "Delete Workout",
+            `Are you sure you want to delete "${session.name || 'Untitled Workout'}"?`,
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                        await supabaseService.deleteWorkoutSession(session.id);
+                        setSessions(prev => prev.filter(s => s.id !== session.id));
+                        setMenuVisible(null);
+                    }
+                }
+            ]
+        );
+    };
+
+    const handleEdit = (session: WorkoutSession) => {
+        setMenuVisible(null);
+        navigation.navigate('EditWorkout', { session });
     };
 
     const renderItem = ({ item }: { item: WorkoutSession }) => {
@@ -41,31 +75,51 @@ export const HistoryScreen = () => {
         const totalVolume = item.sets.reduce((acc, s) => acc + (s.loadKg || 0) * (s.reps || 0), 0);
 
         return (
-            <TouchableOpacity
-                style={styles.card}
-                onPress={() => navigation.navigate('WorkoutHistoryDetail', { session: item })}
-            >
-                <View style={styles.cardHeader}>
-                    <Text style={styles.cardTitle}>{item.name || 'Untitled Workout'}</Text>
-                    <Text style={styles.cardDate}>{date}</Text>
-                </View>
-                <View style={styles.statsRow}>
-                    <View style={styles.stat}>
-                        <Ionicons name="barbell-outline" size={16} color={Theme.Colors.textSecondary} />
-                        <Text style={styles.statText}>{totalVolume} kg</Text>
-                    </View>
-                    <View style={styles.stat}>
-                        <Ionicons name="layers-outline" size={16} color={Theme.Colors.textSecondary} />
-                        <Text style={styles.statText}>{item.sets.length} Sets</Text>
-                    </View>
-                    {item.durationSeconds ? (
-                        <View style={styles.stat}>
-                            <Ionicons name="time-outline" size={16} color={Theme.Colors.textSecondary} />
-                            <Text style={styles.statText}>{Math.floor(item.durationSeconds / 60)}m</Text>
+            <View style={styles.cardWrapper}>
+                <TouchableOpacity
+                    style={styles.card}
+                    onPress={() => navigation.navigate('WorkoutHistoryDetail', { session: item })}
+                >
+                    <View style={styles.cardContent}>
+                        <Text style={styles.cardTitle}>{item.name || 'Untitled Workout'}</Text>
+                        <View style={styles.statsRow}>
+                            <View style={styles.stat}>
+                                <Ionicons name="barbell-outline" size={16} color={Theme.Colors.textSecondary} />
+                                <Text style={styles.statText}>{totalVolume} kg</Text>
+                            </View>
+                            <View style={styles.stat}>
+                                <Ionicons name="layers-outline" size={16} color={Theme.Colors.textSecondary} />
+                                <Text style={styles.statText}>{item.sets.length} Sets</Text>
+                            </View>
+                            {item.durationSeconds ? (
+                                <View style={styles.stat}>
+                                    <Ionicons name="time-outline" size={16} color={Theme.Colors.textSecondary} />
+                                    <Text style={styles.statText}>{Math.floor(item.durationSeconds / 60)}m</Text>
+                                </View>
+                            ) : null}
                         </View>
-                    ) : null}
-                </View>
-            </TouchableOpacity>
+                        <Text style={styles.cardDate}>{date}</Text>
+                    </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.menuButton}
+                    onPress={() => setMenuVisible(menuVisible === item.id ? null : item.id)}
+                >
+                    <Ionicons name="ellipsis-vertical" size={20} color={Theme.Colors.textSecondary} />
+                </TouchableOpacity>
+                {menuVisible === item.id && (
+                    <View style={styles.menu}>
+                        <TouchableOpacity style={styles.menuItem} onPress={() => handleEdit(item)}>
+                            <Ionicons name="create-outline" size={18} color={Theme.Colors.text} />
+                            <Text style={styles.menuItemText}>Edit</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.menuItem} onPress={() => handleDelete(item)}>
+                            <Ionicons name="trash-outline" size={18} color="#FF3B30" />
+                            <Text style={[styles.menuItemText, { color: '#FF3B30' }]}>Delete</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+            </View>
         );
     };
 
@@ -109,24 +163,63 @@ const styles = StyleSheet.create({
     list: {
         padding: Theme.Spacing.m,
     },
+    cardWrapper: {
+        position: 'relative',
+        marginBottom: Theme.Spacing.m,
+    },
     card: {
         backgroundColor: Theme.Colors.surface,
         borderRadius: 12,
         padding: Theme.Spacing.m,
-        marginBottom: Theme.Spacing.m,
     },
-    cardHeader: {
+    menuButton: {
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        padding: 8,
+        zIndex: 10,
+    },
+    menu: {
+        position: 'absolute',
+        top: 40,
+        right: 8,
+        backgroundColor: Theme.Colors.surface,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: Theme.Colors.border,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+        zIndex: 20,
+    },
+    menuItem: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: Theme.Spacing.s,
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        gap: 12,
+        minWidth: 120,
+    },
+    menuItemText: {
+        fontSize: 15,
+        color: Theme.Colors.text,
+    },
+    cardContent: {
+        flex: 1,
     },
     cardTitle: {
         fontSize: 17,
         fontWeight: '600',
+        marginBottom: Theme.Spacing.s,
+        paddingRight: 32, // Space for menu button
     },
     cardDate: {
         fontSize: 14,
         color: Theme.Colors.textSecondary,
+        alignSelf: 'flex-end',
+        marginTop: 4,
     },
     statsRow: {
         flexDirection: 'row',

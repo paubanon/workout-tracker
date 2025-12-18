@@ -57,7 +57,3 @@ A comprehensive mobile application for tracking workouts, monitoring progress, a
 - `npm run ios`: Opens the app in the iOS simulator.
 - `npm run web`: Opens the app in a web browser.
 - `npm run reset-project`: Resets the project to a blank state (Use with caution).
-
-## Contributing
-
-Contributions are welcome! As this project is still in development, we appreciate your feedback and suggestions.

@@ -184,11 +184,69 @@ class SupabaseDataService {
                 name: session.name,
                 sets: session.sets,
                 pain_entries: session.painEntries,
-                pre_session_fatigue: session.preSessionFatigue,
+                // pre_session_fatigue: session.preSessionFatigue, // Column apparently missing in DB for now
                 duration_seconds: session.durationSeconds
             });
 
         if (error) console.error('Error adding session:', error);
+    }
+
+    async updateWorkoutSession(session: WorkoutSession): Promise<void> {
+        const { error } = await supabase
+            .from('workout_sessions')
+            .update({
+                date: session.date,
+                name: session.name,
+                sets: session.sets,
+                pain_entries: session.painEntries,
+                duration_seconds: session.durationSeconds
+            })
+            .eq('id', session.id);
+
+        if (error) console.error('Error updating session:', error);
+    }
+
+    async deleteWorkoutSession(id: string): Promise<void> {
+        const { error } = await supabase
+            .from('workout_sessions')
+            .delete()
+            .eq('id', id);
+
+        if (error) console.error('Error deleting session:', error);
+    }
+    async getExerciseHistory(exerciseId: string): Promise<WorkoutSession[]> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return [];
+
+        // Fetch all sessions. 
+        // OPTIMIZATION: In the future, we might want to filter by date range or use a distinct query
+        // but for now, we fetch all to perform client-side filtering/aggregation.
+        // We select 'sets' to check for exerciseId inclusion.
+        const { data, error } = await supabase
+            .from('workout_sessions')
+            .select('id, date, name, sets, duration_seconds')
+            .eq('user_id', user.id)
+            .order('date', { ascending: true });
+
+        if (error) {
+            console.error('Error fetching exercise history:', error);
+            return [];
+        }
+
+        // Filter sessions that actually contain the exercise
+        const relevantSessions = (data || []).filter((s: any) =>
+            Array.isArray(s.sets) && s.sets.some((set: any) => set.exerciseId === exerciseId)
+        );
+
+        return relevantSessions.map((s: any) => ({
+            id: s.id,
+            date: s.date,
+            name: s.name,
+            sets: s.sets || [],
+            painEntries: [], // distinct query didn't fetch this
+            preSessionFatigue: 0,
+            durationSeconds: s.duration_seconds
+        }));
     }
 }
 
