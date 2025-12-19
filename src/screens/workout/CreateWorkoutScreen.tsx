@@ -371,6 +371,7 @@ const styles = StyleSheet.create({
         padding: Theme.Spacing.m,
         borderRadius: 12,
         fontSize: 18,
+        marginTop: Theme.Spacing.m,
         marginBottom: Theme.Spacing.m,
         marginHorizontal: Theme.Spacing.m,
     },

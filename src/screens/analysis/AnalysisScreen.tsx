@@ -106,14 +106,44 @@ export const AnalysisScreen = () => {
     // If var2 is none, no regression for it
     const regression2 = (metrics2?.regressionData || []).map(d => ({ value: d.value }));
 
-    // Max values for scaling
-    // Add logic to handle negatives if needed for ROM? "Left axis to show values... can be negative"
-    // GiftedCharts should handle negative automatically if we don't force min=0?
-    // We explicitly set maxValue currently.
-    const max1 = Math.max(...chartData1.map(d => d.value), ...regression1.map(d => d.value), 0);
-    const min1 = Math.min(...chartData1.map(d => d.value), ...regression1.map(d => d.value), 0);
-    const max2 = Math.max(...chartData2.map(d => d.value), ...regression2.map(d => d.value), 0);
-    const min2 = Math.min(...chartData2.map(d => d.value), ...regression2.map(d => d.value), 0);
+    // Helper: compute nice axis parameters (10 ticks, multiples of 2 or 5)
+    const getNiceAxisParams = (dataMin: number, dataMax: number, minReasonableMax: number = 10) => {
+        // If all values >= 0, start at 0
+        const startAtZero = dataMin >= 0;
+        const minBound = startAtZero ? 0 : dataMin;
+        // Ensure we have at least minReasonableMax to avoid duplicate zeros / tiny ranges
+        const maxBound = Math.max(dataMax, minReasonableMax);
+
+        // Compute range
+        const rawRange = maxBound - minBound || 1; // avoid 0
+        // We want 10 sections, so step = range / 10
+        const rawStep = rawRange / 10;
+
+        // Find a "nice" step that is a multiple of 1, 2, or 5 × 10^n
+        const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+        const residual = rawStep / magnitude;
+        let niceStep: number;
+        if (residual <= 1) niceStep = magnitude;
+        else if (residual <= 2) niceStep = 2 * magnitude;
+        else if (residual <= 5) niceStep = 5 * magnitude;
+        else niceStep = 10 * magnitude;
+
+        // Round min down and max up to multiples of niceStep
+        const niceMin = startAtZero ? 0 : Math.floor(minBound / niceStep) * niceStep;
+        const niceMax = Math.ceil(maxBound / niceStep) * niceStep;
+
+        return { minValue: niceMin, maxValue: niceMax, noOfSections: 10 };
+    };
+
+    // Raw min/max for chart data
+    const rawMax1 = Math.max(...chartData1.map(d => d.value), ...regression1.map(d => d.value), 0);
+    const rawMin1 = Math.min(...chartData1.map(d => d.value), ...regression1.map(d => d.value), 0);
+    const rawMax2 = Math.max(...chartData2.map(d => d.value), ...regression2.map(d => d.value), 0);
+    const rawMin2 = Math.min(...chartData2.map(d => d.value), ...regression2.map(d => d.value), 0);
+
+    // Compute nice axis params
+    const axis1 = getNiceAxisParams(rawMin1, rawMax1);
+    const axis2 = getNiceAxisParams(rawMin2, rawMax2);
 
     const chartData1Final = chartData1.map(d => ({ ...d }));
 
@@ -128,20 +158,12 @@ export const AnalysisScreen = () => {
 
     // WORKAROUND: data4 doesn't respect isSecondary flag, so we manually scale
     // the secondary regression values to the primary axis range
-    // This makes them appear at the correct visual position when plotted on primary axis
-    const primaryRange = (max1 > 0 ? max1 * 1.2 : 100) - (min1 < 0 ? min1 * 1.2 : 0);
-    const secondaryRange = (max2 > 0 ? max2 * 1.2 : 10) - (min2 < 0 ? min2 * 1.2 : 0);
-    // Rough scaling if range 0
-    const pRangeSafe = primaryRange === 0 ? 100 : primaryRange;
-    const sRangeSafe = secondaryRange === 0 ? 10 : secondaryRange;
-
-    const scaleFactor = pRangeSafe / sRangeSafe;
+    const primaryRange = axis1.maxValue - axis1.minValue || 100;
+    const secondaryRange = axis2.maxValue - axis2.minValue || 10;
+    const scaleFactor = primaryRange / secondaryRange;
 
     const regression2Final = regression2.map(d => ({
-        value: d.value * scaleFactor, // Scale to primary axis range (simplistic linear scaling, assuming 0 aligned if no offset logic)
-        // Note: Real multi-axis regression scaling is complex if offsets differ. 
-        // Given complexity, regression lines on 2nd axis might be approximate or better hidden if logic is tough.
-        // For now, simple scaling.
+        value: (d.value - axis2.minValue) * scaleFactor + axis1.minValue,
     }));
 
     // Create combined secondary data with regression
@@ -396,30 +418,36 @@ export const AnalysisScreen = () => {
                             yAxisColor={Theme.Colors.border}
                             xAxisColor={Theme.Colors.border}
                             yAxisTextStyle={{ color: Theme.Colors.textSecondary, fontSize: 10 }}
-                            yAxisLabelWidth={40} // Default for primary axis
+                            yAxisLabelWidth={40}
                             xAxisLabelTextStyle={{
                                 color: Theme.Colors.textSecondary,
                                 fontSize: 9,
-                                transform: [{ rotate: '-45deg' }]
                             }}
-                            hideRules
+                            labelsExtraHeight={16} // Extra room for X-axis labels (avoids clipping)
+                            rotateLabel // Rotate labels to -45 degrees automatically
+
+                            // Grid
+                            rulesColor={'#E0E0E0'}
+                            rulesType="solid"
+
                             curved
 
-                            // Left Scaling: Allow negatives if needed, pad nicely
-                            maxValue={max1 > 0 ? max1 * 1.2 : 0}
-                            // Start at 0 if no negative values, otherwise allow negatives
-                            yAxisOffset={min1 < 0 ? min1 * 1.2 : 0}
+                            // Left Y-Axis Scaling (10 nice ticks)
+                            maxValue={axis1.maxValue}
+                            yAxisOffset={axis1.minValue}
+                            noOfSections={axis1.noOfSections}
 
                             // X Axis Labels - selective for readability
                             xAxisLabelTexts={xAxisLabelTexts}
 
-                            // Right Scaling
+                            // Right Y-Axis Scaling (10 nice ticks)
                             secondaryYAxis={var2 !== 'none' ? {
-                                maxValue: max2 > 0 ? max2 * 1.2 : 10,
+                                maxValue: axis2.maxValue,
+                                yAxisOffset: axis2.minValue,
+                                noOfSections: axis2.noOfSections,
                                 yAxisTextStyle: { color: SECONDARY_COLOR, fontSize: 10 },
                                 yAxisColor: SECONDARY_COLOR,
-                                noOfSections: 5,
-                                yAxisLabelWidth: 40, // Explicit width for right axis labels
+                                yAxisLabelWidth: 40,
                             } : undefined}
 
                             // Secondary line styling
@@ -590,9 +618,10 @@ const styles = StyleSheet.create({
     chartContainer: {
         backgroundColor: Theme.Colors.surface,
         padding: Theme.Spacing.s,
-        paddingRight: 70, // Extra padding for right axis - increased again to prevent clipping
+        paddingBottom: 8, // Extra room for rotated X-axis labels
         borderRadius: 12,
         marginBottom: Theme.Spacing.l,
+        alignItems: 'center', // Center the chart horizontally
     },
     emptyChart: {
         height: 200,

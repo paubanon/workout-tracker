@@ -6,7 +6,9 @@ import {
     ScrollView,
     TouchableOpacity,
     TextInput,
-    Alert
+    Alert,
+    KeyboardAvoidingView,
+    Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -81,102 +83,110 @@ export const EditWorkoutScreen = () => {
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Ionicons name="close" size={24} color={Theme.Colors.primary} />
-                </TouchableOpacity>
-                <Text style={Theme.Typography.subtitle}>Edit Workout</Text>
-                <TouchableOpacity onPress={handleSave} disabled={saving}>
-                    <Text style={[styles.saveButton, saving && styles.saveButtonDisabled]}>
-                        {saving ? 'Saving...' : 'Save'}
-                    </Text>
-                </TouchableOpacity>
-            </View>
-
-            <ScrollView contentContainerStyle={styles.content}>
-                {/* Workout Name */}
-                <View style={styles.field}>
-                    <Text style={styles.label}>Workout Name</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={workoutName}
-                        onChangeText={setWorkoutName}
-                        placeholder="Enter workout name"
-                        placeholderTextColor={Theme.Colors.textSecondary}
-                    />
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={{ flex: 1 }}
+            >
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => navigation.goBack()}>
+                        <Ionicons name="close" size={24} color={Theme.Colors.primary} />
+                    </TouchableOpacity>
+                    <Text style={Theme.Typography.subtitle}>Edit Workout</Text>
+                    <TouchableOpacity onPress={handleSave} disabled={saving}>
+                        <Text style={[styles.saveButton, saving && styles.saveButtonDisabled]}>
+                            {saving ? 'Saving...' : 'Save'}
+                        </Text>
+                    </TouchableOpacity>
                 </View>
 
-                {/* Date */}
-                <View style={styles.field}>
-                    <Text style={styles.label}>Date (YYYY-MM-DD)</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={workoutDate}
-                        onChangeText={setWorkoutDate}
-                        placeholder="YYYY-MM-DD"
-                        placeholderTextColor={Theme.Colors.textSecondary}
-                    />
-                </View>
+                <ScrollView
+                    contentContainerStyle={styles.content}
+                    automaticallyAdjustKeyboardInsets={true}
+                >
+                    {/* Workout Name */}
+                    <View style={styles.field}>
+                        <Text style={styles.label}>Workout Name</Text>
+                        <TextInput
+                            style={styles.input}
+                            value={workoutName}
+                            onChangeText={setWorkoutName}
+                            placeholder="Enter workout name"
+                            placeholderTextColor={Theme.Colors.textSecondary}
+                        />
+                    </View>
 
-                {/* Exercises */}
-                {Object.keys(groupedSets).map(exerciseId => {
-                    const { sets: exerciseSets, indices } = groupedSets[exerciseId];
-                    const exerciseName = exerciseNames[exerciseId] || 'Loading...';
+                    {/* Date */}
+                    <View style={styles.field}>
+                        <Text style={styles.label}>Date (YYYY-MM-DD)</Text>
+                        <TextInput
+                            style={styles.input}
+                            value={workoutDate}
+                            onChangeText={setWorkoutDate}
+                            placeholder="YYYY-MM-DD"
+                            placeholderTextColor={Theme.Colors.textSecondary}
+                        />
+                    </View>
 
-                    return (
-                        <View key={exerciseId} style={styles.exerciseCard}>
-                            <Text style={styles.exerciseTitle}>{exerciseName}</Text>
+                    {/* Exercises */}
+                    {Object.keys(groupedSets).map(exerciseId => {
+                        const { sets: exerciseSets, indices } = groupedSets[exerciseId];
+                        const exerciseName = exerciseNames[exerciseId] || 'Loading...';
 
-                            {exerciseSets.map((set, i) => {
-                                const globalIndex = indices[i];
-                                return (
-                                    <View key={globalIndex} style={styles.setRow}>
-                                        <Text style={styles.setNumber}>{i + 1}</Text>
-                                        <View style={styles.setInputs}>
-                                            <View style={styles.inputGroup}>
-                                                <Text style={styles.inputLabel}>KG</Text>
-                                                <TextInput
-                                                    style={styles.setInput}
-                                                    value={set.loadKg?.toString() || ''}
-                                                    onChangeText={(text) => updateSet(globalIndex, 'loadKg', parseFloat(text) || 0)}
-                                                    keyboardType="numeric"
-                                                    placeholderTextColor={Theme.Colors.textSecondary}
-                                                />
+                        return (
+                            <View key={exerciseId} style={styles.exerciseCard}>
+                                <Text style={styles.exerciseTitle}>{exerciseName}</Text>
+
+                                {exerciseSets.map((set, i) => {
+                                    const globalIndex = indices[i];
+                                    return (
+                                        <View key={globalIndex} style={styles.setRow}>
+                                            <Text style={styles.setNumber}>{i + 1}</Text>
+                                            <View style={styles.setInputs}>
+                                                <View style={styles.inputGroup}>
+                                                    <Text style={styles.inputLabel}>KG</Text>
+                                                    <TextInput
+                                                        style={styles.setInput}
+                                                        value={set.loadKg?.toString() || ''}
+                                                        onChangeText={(text) => updateSet(globalIndex, 'loadKg', parseFloat(text) || 0)}
+                                                        keyboardType="numeric"
+                                                        placeholderTextColor={Theme.Colors.textSecondary}
+                                                    />
+                                                </View>
+                                                <View style={styles.inputGroup}>
+                                                    <Text style={styles.inputLabel}>Reps</Text>
+                                                    <TextInput
+                                                        style={styles.setInput}
+                                                        value={set.reps?.toString() || ''}
+                                                        onChangeText={(text) => updateSet(globalIndex, 'reps', parseInt(text) || 0)}
+                                                        keyboardType="numeric"
+                                                        placeholderTextColor={Theme.Colors.textSecondary}
+                                                    />
+                                                </View>
+                                                <View style={styles.inputGroup}>
+                                                    <Text style={styles.inputLabel}>RPE</Text>
+                                                    <TextInput
+                                                        style={styles.setInput}
+                                                        value={set.rpe?.toString() || ''}
+                                                        onChangeText={(text) => updateSet(globalIndex, 'rpe', parseFloat(text) || 0)}
+                                                        keyboardType="numeric"
+                                                        placeholderTextColor={Theme.Colors.textSecondary}
+                                                    />
+                                                </View>
                                             </View>
-                                            <View style={styles.inputGroup}>
-                                                <Text style={styles.inputLabel}>Reps</Text>
-                                                <TextInput
-                                                    style={styles.setInput}
-                                                    value={set.reps?.toString() || ''}
-                                                    onChangeText={(text) => updateSet(globalIndex, 'reps', parseInt(text) || 0)}
-                                                    keyboardType="numeric"
-                                                    placeholderTextColor={Theme.Colors.textSecondary}
-                                                />
-                                            </View>
-                                            <View style={styles.inputGroup}>
-                                                <Text style={styles.inputLabel}>RPE</Text>
-                                                <TextInput
-                                                    style={styles.setInput}
-                                                    value={set.rpe?.toString() || ''}
-                                                    onChangeText={(text) => updateSet(globalIndex, 'rpe', parseFloat(text) || 0)}
-                                                    keyboardType="numeric"
-                                                    placeholderTextColor={Theme.Colors.textSecondary}
-                                                />
-                                            </View>
+                                            <TouchableOpacity
+                                                style={styles.deleteButton}
+                                                onPress={() => deleteSet(globalIndex)}
+                                            >
+                                                <Ionicons name="trash-outline" size={20} color="#FF3B30" />
+                                            </TouchableOpacity>
                                         </View>
-                                        <TouchableOpacity
-                                            style={styles.deleteButton}
-                                            onPress={() => deleteSet(globalIndex)}
-                                        >
-                                            <Ionicons name="trash-outline" size={20} color="#FF3B30" />
-                                        </TouchableOpacity>
-                                    </View>
-                                );
-                            })}
-                        </View>
-                    );
-                })}
-            </ScrollView>
+                                    );
+                                })}
+                            </View>
+                        );
+                    })}
+                </ScrollView>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 };

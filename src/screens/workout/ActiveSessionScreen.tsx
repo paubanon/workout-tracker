@@ -60,6 +60,9 @@ export const ActiveSessionScreen = () => {
     // Timer state
     const [duration, setDuration] = useState(0);
 
+    // Keyboard height for dynamic padding
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
+
     const loadProfilePrefs = async () => {
         const profile = await supabaseService.getUserProfile();
         if (profile?.preferences?.trackRpe) {
@@ -81,6 +84,22 @@ export const ActiveSessionScreen = () => {
             return () => clearTimeout(timer);
         }
     }, [showToast]);
+
+    // Listen to keyboard events
+    useEffect(() => {
+        const showSub = Keyboard.addListener(
+            Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+            (e) => setKeyboardHeight(e.endCoordinates.height)
+        );
+        const hideSub = Keyboard.addListener(
+            Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+            () => setKeyboardHeight(0)
+        );
+        return () => {
+            showSub.remove();
+            hideSub.remove();
+        };
+    }, []);
 
     useEffect(() => {
         const initSession = async () => {
@@ -210,6 +229,19 @@ export const ActiveSessionScreen = () => {
         setSession({
             ...session,
             sets: [...session.sets, newSet],
+        });
+    };
+
+    const handleRemoveSet = (exerciseId: string) => {
+        if (!session) return;
+        const exerciseSets = session.sets.filter(s => s.exerciseId === exerciseId);
+        if (exerciseSets.length === 0) return;
+
+        // Remove the last set for this exercise
+        const lastSet = exerciseSets[exerciseSets.length - 1];
+        setSession({
+            ...session,
+            sets: session.sets.filter(s => s.id !== lastSet.id)
         });
     };
 
@@ -372,7 +404,7 @@ export const ActiveSessionScreen = () => {
                     data={exercises}
                     onDragEnd={({ data }) => setExercises(data)}
                     keyExtractor={(item) => item.id}
-                    contentContainerStyle={{ paddingBottom: 220 }}
+                    contentContainerStyle={{ paddingBottom: Math.max(220, keyboardHeight + 100) }}
                     style={styles.content}
                     keyboardShouldPersistTaps="handled"
                     ListHeaderComponent={
@@ -544,9 +576,16 @@ export const ActiveSessionScreen = () => {
                                         </View>
                                     ))}
 
-                                    <TouchableOpacity style={styles.addSetButton} onPress={() => handleAddSet(exercise.id)}>
-                                        <Text style={styles.addSetText}>+ Add Set</Text>
-                                    </TouchableOpacity>
+                                    <View style={styles.setButtonsRow}>
+                                        {exerciseSets.length > 0 && (
+                                            <TouchableOpacity style={styles.removeSetButton} onPress={() => handleRemoveSet(exercise.id)}>
+                                                <Text style={styles.removeSetText}>− Remove Set</Text>
+                                            </TouchableOpacity>
+                                        )}
+                                        <TouchableOpacity style={styles.addSetButton} onPress={() => handleAddSet(exercise.id)}>
+                                            <Text style={styles.addSetText}>+ Add Set</Text>
+                                        </TouchableOpacity>
+                                    </View>
                                 </TouchableOpacity>
                             </ScaleDecorator>
                         );
@@ -803,16 +842,32 @@ const styles = StyleSheet.create({
     checkBoxChecked: {
         backgroundColor: Theme.Colors.success,
     },
+    setButtonsRow: {
+        flexDirection: 'row',
+        gap: 8,
+        marginTop: Theme.Spacing.s,
+    },
     addSetButton: {
+        flex: 1,
         backgroundColor: Theme.Colors.background,
         padding: Theme.Spacing.s,
         borderRadius: 8,
         alignItems: 'center',
-        marginTop: Theme.Spacing.s,
     },
     addSetText: {
         fontWeight: '600',
         color: Theme.Colors.text,
+    },
+    removeSetButton: {
+        flex: 1,
+        backgroundColor: Theme.Colors.background,
+        padding: Theme.Spacing.s,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    removeSetText: {
+        fontWeight: '600',
+        color: Theme.Colors.danger,
     },
     addExerciseButton: {
         backgroundColor: Theme.Colors.primary,
