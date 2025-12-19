@@ -133,6 +133,11 @@ class SupabaseDataService {
         if (error) console.error('Error updating profile:', error);
     }
 
+    async updateUserPassword(password: string): Promise<{ error: any }> {
+        const { error } = await supabase.auth.updateUser({ password });
+        return { error };
+    }
+
     async addWeightEntry(weight: number): Promise<void> {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
@@ -247,6 +252,120 @@ class SupabaseDataService {
             preSessionFatigue: 0,
             durationSeconds: s.duration_seconds
         }));
+    }
+    // --- Data Management ---
+    async exportAllUserData(): Promise<any> {
+        const profile = await this.getUserProfile();
+        const templates = await this.getTemplates();
+        const { data: userData } = await supabase.auth.getUser();
+
+        // Fetch all sessions (paginated fetch loop or just large limit) - for now large limit
+        // Using getWorkoutSessions(1000) for MVP export
+        const sessions = await this.getWorkoutSessions(1000);
+
+        // Fetch weight history (need new method or direct query)
+        const { data: weightHistory } = await supabase
+            .from('weight_history')
+            .select('*')
+            .eq('user_id', userData.user?.id);
+
+        return {
+            version: 1,
+            timestamp: new Date().toISOString(),
+            profile,
+            templates,
+            sessions,
+            weightHistory: weightHistory || []
+        };
+    }
+
+    async importUserData(jsonData: any): Promise<void> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // 1. Profile
+        if (jsonData.profile) {
+            await this.updateUserProfile(jsonData.profile);
+        }
+
+        // 2. Weight History
+        if (jsonData.weightHistory && Array.isArray(jsonData.weightHistory)) {
+            const { error } = await supabase
+                .from('weight_history')
+                .upsert(jsonData.weightHistory.map((w: any) => ({
+                    ...w,
+                    user_id: user.id // Ensure it belongs to current user
+                })));
+            if (error) console.error("Import Weight Error", error);
+        }
+
+        // 3. Templates
+        if (jsonData.templates && Array.isArray(jsonData.templates)) {
+            const { error } = await supabase
+                .from('workout_templates')
+                .upsert(jsonData.templates.map((t: any) => ({
+                    id: t.id,
+                    user_id: user.id,
+                    name: t.name,
+                    exercises: t.exercises
+                })));
+            if (error) console.error("Import Templates Error", error);
+        }
+
+        // 4. Sessions
+        if (jsonData.sessions && Array.isArray(jsonData.sessions)) {
+            const batchSize = 50;
+            const sessions = jsonData.sessions;
+            for (let i = 0; i < sessions.length; i += batchSize) {
+                const batch = sessions.slice(i, i + batchSize).map((s: any) => ({
+                    id: s.id,
+                    user_id: user.id,
+                    date: s.date,
+                    name: s.name,
+                    sets: s.sets,
+                    pain_entries: s.painEntries || s.pain_entries, // Support both if JSON format varies
+                    duration_seconds: s.durationSeconds || s.duration_seconds
+                }));
+
+                const { error } = await supabase
+                    .from('workout_sessions')
+                    .upsert(batch);
+
+                if (error) console.error("Import Sessions Error", error);
+            }
+        }
+    }
+
+    async deleteUserAccount(password: string): Promise<{ error: any }> {
+        // 1. Re-authenticate to confirm ownership
+        const { data: { user }, error: authError } = await supabase.auth.signInWithPassword({
+            email: (await supabase.auth.getUser()).data.user?.email || '',
+            password: password
+        });
+
+        if (authError || !user) {
+            return { error: authError || new Error("Authentication failed") };
+        }
+
+        // 2. Delete all data associated with user_id
+        const tables = ['workout_sessions', 'workout_templates', 'weight_history', 'profiles'];
+
+        for (const table of tables) {
+            const { error } = await supabase
+                .from(table)
+                .delete()
+                .eq(table === 'profiles' ? 'id' : 'user_id', user.id); // profiles uses 'id', others 'user_id'
+
+            if (error) {
+                console.error(`Error deleting from ${table}`, error);
+                return { error };
+            }
+        }
+
+        // 3. We cannot delete the Auth User from client side efficiently without admin key.
+        // Best practice is to sign them out.
+        await supabase.auth.signOut();
+        return { error: null };
     }
 }
 
