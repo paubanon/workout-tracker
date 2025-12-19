@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Modal, TextInput, Alert, ActionSheetIOS, Platform } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Modal, TextInput, Alert, Platform } from 'react-native';
+import { SimpleDropdown } from '../../components/SimpleDropdown';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
 import { supabaseService } from '../../services/SupabaseDataService';
@@ -81,27 +82,7 @@ export const ProfileScreen = () => {
         loadProfile();
     };
 
-    const toggleSex = () => {
-        const options: ('male' | 'female' | 'other')[] = ['male', 'female', 'other'];
-        if (Platform.OS === 'ios') {
-            ActionSheetIOS.showActionSheetWithOptions(
-                {
-                    options: ['Cancel', 'Male', 'Female', 'Other'],
-                    cancelButtonIndex: 0,
-                },
-                (buttonIndex) => {
-                    if (buttonIndex === 1) setSex('male');
-                    if (buttonIndex === 2) setSex('female');
-                    if (buttonIndex === 3) setSex('other');
-                }
-            );
-        } else {
-            // Rotate for Android simplicity for now, or use a picker
-            const currIdx = options.indexOf(sex);
-            const nextIdx = (currIdx + 1) % options.length;
-            setSex(options[nextIdx]);
-        }
-    };
+
 
     if (!profile) return null;
 
@@ -144,10 +125,13 @@ export const ProfileScreen = () => {
                                 <TextInput style={styles.inputHalf} value={lastName} onChangeText={setLastName} placeholder="Last Name" />
                             </View>
                             <TextInput style={styles.inputFull} value={email} onChangeText={setEmail} placeholder="Email" autoCapitalize="none" />
-                            <TouchableOpacity style={styles.sexInput} onPress={toggleSex}>
-                                <Text style={styles.inputText}>{sex.charAt(0).toUpperCase() + sex.slice(1)}</Text>
-                                <Ionicons name="chevron-down" size={16} color={Theme.Colors.textSecondary} />
-                            </TouchableOpacity>
+                            <SimpleDropdown
+                                value={sex}
+                                options={['male', 'female', 'other']}
+                                onSelect={(val) => setSex(val as any)}
+                                style={{ marginTop: 0 }}
+                                textStyle={{ fontSize: 16 }}
+                            />
                         </View>
                     )}
                 </View>

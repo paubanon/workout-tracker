@@ -7,6 +7,7 @@ import { useExerciseAnalytics, TimeFrame } from '../../hooks/useExerciseAnalytic
 import { supabaseService } from '../../services/SupabaseDataService';
 import { Exercise } from '../../models';
 import { LineChart } from "react-native-gifted-charts";
+import { SimpleDropdown } from '../../components/SimpleDropdown';
 
 export const AnalysisScreen = () => {
     // --- State ---
@@ -18,6 +19,8 @@ export const AnalysisScreen = () => {
     const [var2, setVar2] = useState<string>('reps');
     const [agg1, setAgg1] = useState<'max' | 'avg' | 'min'>('max');
     const [agg2, setAgg2] = useState<'max' | 'avg' | 'min'>('max');
+
+    const [isHelpVisible, setHelpVisible] = useState(false);
 
     // Picker Modal
     const [isPickerVisible, setPickerVisible] = useState(false);
@@ -110,6 +113,7 @@ export const AnalysisScreen = () => {
     const max1 = Math.max(...chartData1.map(d => d.value), ...regression1.map(d => d.value), 0);
     const min1 = Math.min(...chartData1.map(d => d.value), ...regression1.map(d => d.value), 0);
     const max2 = Math.max(...chartData2.map(d => d.value), ...regression2.map(d => d.value), 0);
+    const min2 = Math.min(...chartData2.map(d => d.value), ...regression2.map(d => d.value), 0);
 
     const chartData1Final = chartData1.map(d => ({ ...d }));
 
@@ -125,12 +129,19 @@ export const AnalysisScreen = () => {
     // WORKAROUND: data4 doesn't respect isSecondary flag, so we manually scale
     // the secondary regression values to the primary axis range
     // This makes them appear at the correct visual position when plotted on primary axis
-    const primaryMax = max1 > 0 ? max1 * 1.2 : 100;
-    const secondaryMax = max2 > 0 ? max2 * 1.2 : 10;
-    const scaleFactor = primaryMax / secondaryMax;
+    const primaryRange = (max1 > 0 ? max1 * 1.2 : 100) - (min1 < 0 ? min1 * 1.2 : 0);
+    const secondaryRange = (max2 > 0 ? max2 * 1.2 : 10) - (min2 < 0 ? min2 * 1.2 : 0);
+    // Rough scaling if range 0
+    const pRangeSafe = primaryRange === 0 ? 100 : primaryRange;
+    const sRangeSafe = secondaryRange === 0 ? 10 : secondaryRange;
+
+    const scaleFactor = pRangeSafe / sRangeSafe;
 
     const regression2Final = regression2.map(d => ({
-        value: d.value * scaleFactor, // Scale to primary axis range
+        value: d.value * scaleFactor, // Scale to primary axis range (simplistic linear scaling, assuming 0 aligned if no offset logic)
+        // Note: Real multi-axis regression scaling is complex if offsets differ. 
+        // Given complexity, regression lines on 2nd axis might be approximate or better hidden if logic is tough.
+        // For now, simple scaling.
     }));
 
     // Create combined secondary data with regression
@@ -208,68 +219,125 @@ export const AnalysisScreen = () => {
         );
     };
 
-    const renderAggToggle = (metric: string, current: string, setFunc: any) => {
-        if (metric === 'volume' || metric === 'none') return null;
-        return (
-            <View style={styles.aggContainer}>
-                {(['max', 'avg', 'min'] as const).map(agg => (
-                    <TouchableOpacity
-                        key={agg}
-                        style={[styles.aggPill, current === agg && styles.aggPillActive]}
-                        onPress={() => setFunc(agg)}
-                    >
-                        <Text style={[styles.aggText, current === agg && styles.aggTextActive]}>{agg.toUpperCase()}</Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
-        );
-    };
-
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <Text style={styles.headerTitle}>Analysis</Text>
 
                 {/* Exercise Selector */}
-                <TouchableOpacity style={styles.selectorButton} onPress={() => setPickerVisible(true)}>
-                    <Text style={styles.selectorButtonText}>
-                        {selectedExercise ? selectedExercise.name : "Select Exercise ▽"}
+                <TouchableOpacity style={styles.exerciseSelector} onPress={() => setPickerVisible(true)}>
+                    <Text style={styles.exerciseSelectorText}>
+                        {selectedExercise ? selectedExercise.name : "Select Exercise"}
                     </Text>
+                    <Ionicons name="chevron-down" size={18} color={Theme.Colors.text} />
                 </TouchableOpacity>
 
-                {/* Variable Selector: Left */}
-                <View style={styles.varRowContainer}>
-                    <Text style={styles.label}>Left Axis</Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
-                        {availableVariables.map(v => (
-                            <TouchableOpacity
-                                key={v}
-                                style={[styles.pillSmall, var1 === v && styles.pillSmallActive]}
-                                onPress={() => setVar1(v)}
-                            >
-                                <Text style={[styles.pillTextSmall, var1 === v && styles.pillTextActive]}>{v}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </ScrollView>
-                    {renderAggToggle(var1, agg1, setAgg1)}
+                {/* Left Axis Controls */}
+                <View style={styles.controlsRow}>
+                    <View style={[styles.controlsGroup, { flex: 1, marginRight: 8 }]}>
+                        <SimpleDropdown
+                            value={var1}
+                            options={availableVariables}
+                            onSelect={setVar1}
+                            style={{
+                                borderWidth: 0,
+                                borderRadius: 12,
+                                paddingVertical: 12, // Match bigger touch area
+                                backgroundColor: Theme.Colors.surface
+                            }}
+                            textStyle={{
+                                color: Theme.Colors.primary,
+                                fontWeight: '700',
+                                fontSize: 13,
+                                textTransform: 'uppercase'
+                            }}
+                        />
+                    </View>
+                    <View style={[styles.controlsGroup, { flex: 0.8 }]}>
+                        <SimpleDropdown
+                            value={agg1}
+                            options={['max', 'avg', 'min']}
+                            onSelect={(val) => setAgg1(val as any)}
+                            disabled={var1 === 'volume'}
+                            style={{
+                                borderWidth: 0,
+                                borderRadius: 12,
+                                paddingVertical: 12,
+                                backgroundColor: Theme.Colors.surface,
+                                ...(var1 === 'volume' ? { opacity: 0.5 } : {})
+                            }}
+                            textStyle={{
+                                fontSize: 13,
+                                fontWeight: '600',
+                                textTransform: 'uppercase'
+                            }}
+                        />
+                    </View>
+
+                    <TouchableOpacity
+                        style={styles.helpButton}
+                        onPress={() => {
+                            setHelpVisible(!isHelpVisible);
+                        }}
+                    >
+                        <Ionicons name="help-circle-outline" size={22} color={Theme.Colors.textSecondary} />
+                    </TouchableOpacity>
                 </View>
 
-                {/* Variable Selector: Right */}
-                <View style={[styles.varRowContainer, { marginTop: 10 }]}>
-                    <Text style={styles.label}>Right Axis</Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
-                        {availableVariablesRight.map(v => (
-                            <TouchableOpacity
-                                key={v}
-                                style={[styles.pillSmall, var2 === v && styles.pillSmallActive]}
-                                onPress={() => setVar2(v)}
-                            >
-                                <Text style={[styles.pillTextSmall, var2 === v && styles.pillTextActive]}>{v}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </ScrollView>
-                    {renderAggToggle(var2, agg2, setAgg2)}
+                {/* Help Bubble */}
+                {isHelpVisible && (
+                    <View style={styles.helpBubble}>
+                        <Text style={styles.helpText}>
+                            Select Max, Average, or Min to plot the corresponding value from each session's sets.
+                            {"\n"}Volume is a total sum per session.
+                        </Text>
+                    </View>
+                )}
+
+
+                {/* Right Axis Controls */}
+                <View style={[styles.controlsRow, { marginTop: 12 }]}>
+                    <View style={[styles.controlsGroup, { flex: 1, marginRight: 8 }]}>
+                        <SimpleDropdown
+                            value={var2}
+                            options={availableVariablesRight}
+                            onSelect={setVar2}
+                            style={{
+                                borderWidth: 0,
+                                borderRadius: 12,
+                                paddingVertical: 12,
+                                backgroundColor: Theme.Colors.surface
+                            }}
+                            textStyle={{
+                                color: SECONDARY_COLOR,
+                                fontWeight: '700',
+                                fontSize: 13,
+                                textTransform: 'uppercase'
+                            }}
+                        />
+                    </View>
+                    <View style={[styles.controlsGroup, { flex: 0.8, marginRight: 42 }]}>
+                        <SimpleDropdown
+                            value={agg2}
+                            options={['max', 'avg', 'min']}
+                            onSelect={(val) => setAgg2(val as any)}
+                            disabled={var2 === 'none' || var2 === 'volume'}
+                            style={{
+                                borderWidth: 0,
+                                borderRadius: 12,
+                                paddingVertical: 12,
+                                backgroundColor: Theme.Colors.surface,
+                                ...(var2 === 'none' || var2 === 'volume' ? { opacity: 0.5 } : {})
+                            }}
+                            textStyle={{
+                                fontSize: 13,
+                                fontWeight: '600',
+                                textTransform: 'uppercase'
+                            }}
+                        />
+                    </View>
                 </View>
+
 
                 {/* Time Frame */}
                 <View style={styles.timeFrameContainer}>
@@ -431,70 +499,77 @@ const styles = StyleSheet.create({
         marginTop: Theme.Spacing.s,
         marginBottom: Theme.Spacing.l,
     },
-    selectorButton: {
-        padding: Theme.Spacing.m,
-        backgroundColor: Theme.Colors.surface,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: Theme.Colors.border,
-        alignItems: 'center',
-        marginBottom: Theme.Spacing.m,
-    },
-    selectorButtonText: {
-        ...Theme.Typography.body,
-        fontWeight: '600',
-    },
-    variableRow: {
+    // New Styles
+    exerciseSelector: {
         flexDirection: 'row',
-        marginBottom: Theme.Spacing.s,
-    },
-    varContainer: {
-        flex: 1,
-    },
-    label: {
-        ...Theme.Typography.caption,
-        color: Theme.Colors.textSecondary,
-        marginBottom: 4,
-    },
-    pillSmall: {
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 14,
         backgroundColor: Theme.Colors.surface,
-        borderWidth: 1,
-        borderColor: Theme.Colors.border,
-        marginRight: 6,
+        borderRadius: 16,
+        marginBottom: 20,
     },
-    pillSmallActive: {
-        backgroundColor: Theme.Colors.primary,
-        borderColor: Theme.Colors.primary,
-    },
-    pillTextSmall: {
-        fontSize: 12,
+    exerciseSelectorText: {
+        fontSize: 16,
+        fontWeight: '600',
         color: Theme.Colors.text,
+        marginRight: 8,
     },
-    pillTextActive: {
-        color: '#FFF',
+    controlsRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    controlsGroup: {
+        // Flex handled inline
+    },
+    helpButton: {
+        padding: 8,
+        marginLeft: 4,
+    },
+    helpBubble: {
+        backgroundColor: Theme.Colors.surface,
+        padding: 12,
+        borderRadius: 8,
+        marginTop: 4,
+        marginBottom: 8,
+        // Remove border to match new minimal style, maybe just use bg
+    },
+    helpText: {
+        fontSize: 12,
+        color: Theme.Colors.textSecondary,
+        lineHeight: 16,
     },
     timeFrameContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginVertical: Theme.Spacing.m,
+        backgroundColor: Theme.Colors.surface,
+        borderRadius: 12,
+        padding: 4,
     },
     pill: {
         flex: 1,
         alignItems: 'center',
-        paddingVertical: 8,
+        paddingVertical: 10,
         marginHorizontal: 2,
-        borderRadius: 8,
-        backgroundColor: Theme.Colors.surface,
+        borderRadius: 10,
+        backgroundColor: 'transparent', // Transparent on container
     },
     pillActive: {
         backgroundColor: Theme.Colors.primary,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 3.84,
+        elevation: 2,
     },
     pillText: {
-        ...Theme.Typography.caption,
+        fontSize: 13,
         fontWeight: '600',
+        color: Theme.Colors.textSecondary,
+    },
+    pillTextActive: {
+        color: '#FFF',
     },
     aiCard: {
         height: 80,
@@ -592,33 +667,5 @@ const styles = StyleSheet.create({
     },
     exerciseName: {
         ...Theme.Typography.body,
-    },
-    varRowContainer: {
-        marginBottom: Theme.Spacing.s,
-    },
-    aggContainer: {
-        flexDirection: 'row',
-        marginTop: 4,
-    },
-    aggPill: {
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        borderRadius: 4,
-        marginRight: 6,
-        backgroundColor: Theme.Colors.background,
-        borderWidth: 1,
-        borderColor: Theme.Colors.border,
-    },
-    aggPillActive: {
-        backgroundColor: Theme.Colors.text, // Subtle dark/light indicator
-        borderColor: Theme.Colors.text,
-    },
-    aggText: {
-        fontSize: 10,
-        color: Theme.Colors.textSecondary,
-    },
-    aggTextActive: {
-        color: Theme.Colors.background,
-        fontWeight: 'bold',
     },
 });
