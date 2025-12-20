@@ -84,7 +84,12 @@ export const WorkoutListScreen = () => {
         <GlowCard style={styles.card} level="m">
             <View style={styles.cardHeader}>
                 <Text style={[styles.cardTitle, textStyle]}>{item.name}</Text>
-                <TouchableOpacity onPress={() => handleAction(item)} style={{ padding: 4 }}>
+                <TouchableOpacity
+                    onPress={() => handleAction(item)}
+                    style={{ padding: 4 }}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Options for ${item.name}`}
+                >
                     <Ionicons name="ellipsis-horizontal" size={20} color={colors.textMuted} />
                 </TouchableOpacity>
             </View>
@@ -93,6 +98,8 @@ export const WorkoutListScreen = () => {
             <TouchableOpacity
                 style={[styles.startButton, { backgroundColor: colors.primary }, shadowStyle]}
                 onPress={() => navigation.navigate('ActiveSession', { templateId: item.id })}
+                accessibilityRole="button"
+                accessibilityLabel={`Start ${item.name} routine`}
             >
                 <Text style={styles.startButtonText}>Start Routine</Text>
             </TouchableOpacity>
@@ -127,15 +134,30 @@ export const WorkoutListScreen = () => {
                         <Text style={[styles.modalSubtitle, subtitleStyle]}>{selectedTemplate?.name}</Text>
 
                         <View style={styles.modalActions}>
-                            <TouchableOpacity style={styles.modalButton} onPress={handleEdit}>
+                            <TouchableOpacity
+                                style={styles.modalButton}
+                                onPress={handleEdit}
+                                accessibilityRole="button"
+                                accessibilityLabel="Edit routine"
+                            >
                                 <Text style={[styles.modalButtonText, { color: colors.primary }]}>Edit</Text>
                             </TouchableOpacity>
                             <View style={[styles.divider, { backgroundColor: colors.border }]} />
-                            <TouchableOpacity style={styles.modalButton} onPress={handleDelete}>
+                            <TouchableOpacity
+                                style={styles.modalButton}
+                                onPress={handleDelete}
+                                accessibilityRole="button"
+                                accessibilityLabel="Delete routine"
+                            >
                                 <Text style={[styles.modalButtonText, { color: colors.danger }]}>Delete</Text>
                             </TouchableOpacity>
                         </View>
-                        <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
+                        <TouchableOpacity
+                            style={styles.cancelButton}
+                            onPress={() => setModalVisible(false)}
+                            accessibilityRole="button"
+                            accessibilityLabel="Cancel"
+                        >
                             <Text style={[styles.cancelButtonText, subtitleStyle]}>Cancel</Text>
                         </TouchableOpacity>
                     </View>

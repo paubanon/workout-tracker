@@ -83,7 +83,12 @@ export const ProfileScreen = () => {
         <SafeAreaView style={[styles.container, containerStyle]} edges={['top']}>
             <View style={styles.header}>
                 <Text style={[styles.headerTitle, textStyle]}>Profile</Text>
-                <TouchableOpacity onPress={handleEditProfile} style={styles.settingsButton}>
+                <TouchableOpacity
+                    onPress={handleEditProfile}
+                    style={styles.settingsButton}
+                    accessibilityRole="button"
+                    accessibilityLabel="Settings"
+                >
                     <Ionicons name="settings-outline" size={24} color={colors.text} />
                 </TouchableOpacity>
             </View>
@@ -99,7 +104,11 @@ export const ProfileScreen = () => {
                                 {displayName.charAt(0)}
                             </Text>
                         )}
-                        <TouchableOpacity style={[styles.cameraButton, { backgroundColor: colors.surface }]}>
+                        <TouchableOpacity
+                            style={[styles.cameraButton, { backgroundColor: colors.surface }]}
+                            accessibilityRole="button"
+                            accessibilityLabel="Change profile photo"
+                        >
                             <Ionicons name="camera" size={16} color={colors.primary} />
                         </TouchableOpacity>
                     </View>
@@ -117,7 +126,12 @@ export const ProfileScreen = () => {
                                 {currentWeightKg ? `${currentWeightKg} kg` : '-'}
                             </Text>
                         </View>
-                        <TouchableOpacity style={[styles.logButton, { backgroundColor: colors.background }]} onPress={handleLogWeight}>
+                        <TouchableOpacity
+                            style={[styles.logButton, { backgroundColor: colors.background }]}
+                            onPress={handleLogWeight}
+                            accessibilityRole="button"
+                            accessibilityLabel="Log weight"
+                        >
                             <Text style={[styles.logButtonText, { color: colors.primary }]}>Log Weight</Text>
                         </TouchableOpacity>
                     </View>
@@ -148,6 +162,8 @@ export const ProfileScreen = () => {
                                 <TouchableOpacity
                                     style={styles.historyItem}
                                     onPress={() => navigation.navigate('WorkoutHistoryDetail', { session })}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`View ${session.name} workout from ${new Date(session.date).toLocaleDateString()}`}
                                 >
                                     <View>
                                         <Text style={[styles.historyName, textStyle]}>{session.name}</Text>
@@ -171,6 +187,8 @@ export const ProfileScreen = () => {
                 <TouchableOpacity
                     style={[styles.secondaryButton, { borderColor: colors.border }]}
                     onPress={handleSeeAllHistory}
+                    accessibilityRole="button"
+                    accessibilityLabel="See all workout history"
                 >
                     <Text style={[styles.secondaryButtonText, { color: colors.text }]}>See All History</Text>
                 </TouchableOpacity>

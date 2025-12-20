@@ -189,12 +189,22 @@ export const CreateWorkoutScreen = () => {
                 >
                     <View style={[styles.itemHeader, { justifyContent: 'space-between' }]}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                            <TouchableOpacity onPressIn={drag} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                            <TouchableOpacity
+                                onPressIn={drag}
+                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                accessibilityRole="button"
+                                accessibilityLabel="Drag to reorder"
+                                accessibilityHint="Long press and drag to reorder exercise"
+                            >
                                 <Ionicons name="menu" size={24} color={colors.textMuted} style={{ marginRight: 10 }} />
                             </TouchableOpacity>
                             <Text style={[styles.itemTitle, { color: colors.text }]}>{item.name}</Text>
                         </View>
-                        <TouchableOpacity onPress={() => index !== undefined && removeExercise(index)}>
+                        <TouchableOpacity
+                            onPress={() => index !== undefined && removeExercise(index)}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Delete ${item.name}`}
+                        >
                             <Ionicons name="trash-outline" size={20} color={colors.danger} />
                         </TouchableOpacity>
                     </View>
@@ -267,7 +277,12 @@ export const CreateWorkoutScreen = () => {
                                 />
                             )}
 
-                            <TouchableOpacity onPress={() => index !== undefined && removeSet(index, setIndex)} style={{ width: 30, alignItems: 'center' }}>
+                            <TouchableOpacity
+                                onPress={() => index !== undefined && removeSet(index, setIndex)}
+                                style={{ width: 30, alignItems: 'center' }}
+                                accessibilityRole="button"
+                                accessibilityLabel={`Remove set ${setIndex + 1}`}
+                            >
                                 <Ionicons name="close-circle" size={20} color={colors.textMuted} />
                             </TouchableOpacity>
                         </View>
@@ -331,6 +346,8 @@ export const CreateWorkoutScreen = () => {
             <TouchableOpacity
                 style={[styles.fab, { bottom: Math.max(30, keyboardOffset + 20), backgroundColor: colors.primary }]}
                 onPress={handleAddExercise}
+                accessibilityRole="button"
+                accessibilityLabel="Add exercise"
             >
                 <Ionicons name="add" size={30} color="white" />
             </TouchableOpacity>

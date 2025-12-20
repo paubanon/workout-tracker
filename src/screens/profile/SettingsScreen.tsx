@@ -229,14 +229,24 @@ export const SettingsScreen = () => {
                 <View style={[styles.section, { marginTop: 24 }]}>
                     <Text style={[styles.sectionTitle, titleStyle]}>Data Management</Text>
                     <GlowCard style={[styles.row, { marginBottom: Theme.Spacing.s }]} level="m">
-                        <TouchableOpacity style={styles.rowContent} onPress={handleExportData}>
+                        <TouchableOpacity
+                            style={styles.rowContent}
+                            onPress={handleExportData}
+                            accessibilityRole="button"
+                            accessibilityLabel="Export data backup"
+                        >
                             <Text style={[styles.optionTitle, textStyle]}>Export Data (Backup)</Text>
                             <Ionicons name="download-outline" size={24} color={colors.primary} />
                         </TouchableOpacity>
                     </GlowCard>
 
                     <GlowCard style={styles.row} level="m">
-                        <TouchableOpacity style={styles.rowContent} onPress={handleImportData}>
+                        <TouchableOpacity
+                            style={styles.rowContent}
+                            onPress={handleImportData}
+                            accessibilityRole="button"
+                            accessibilityLabel="Import data"
+                        >
                             <Text style={[styles.optionTitle, textStyle]}>Import Data</Text>
                             <Ionicons name="cloud-upload-outline" size={24} color={colors.primary} />
                         </TouchableOpacity>
@@ -245,7 +255,12 @@ export const SettingsScreen = () => {
 
                 <View style={styles.section}>
                     <GlowCard style={styles.logoutButton} level="m">
-                        <TouchableOpacity style={styles.logoutContent} onPress={signOut}>
+                        <TouchableOpacity
+                            style={styles.logoutContent}
+                            onPress={signOut}
+                            accessibilityRole="button"
+                            accessibilityLabel="Log out"
+                        >
                             <Text style={styles.logoutText}>Log Out</Text>
                         </TouchableOpacity>
                     </GlowCard>
@@ -253,6 +268,8 @@ export const SettingsScreen = () => {
                     <TouchableOpacity
                         style={[styles.logoutButton, { backgroundColor: 'transparent', marginTop: 12, borderColor: colors.danger, borderWidth: 1 }]}
                         onPress={() => setIsDeleteModalVisible(true)}
+                        accessibilityRole="button"
+                        accessibilityLabel="Delete account"
                     >
                         <Text style={[styles.logoutText, { color: colors.danger, fontSize: 15 }]}>Delete Account</Text>
                     </TouchableOpacity>
@@ -279,7 +296,12 @@ export const SettingsScreen = () => {
                                 value={newPassword}
                                 onChangeText={setNewPassword}
                             />
-                            <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)} style={styles.eyeButton}>
+                            <TouchableOpacity
+                                onPress={() => setShowNewPassword(!showNewPassword)}
+                                style={styles.eyeButton}
+                                accessibilityRole="button"
+                                accessibilityLabel={showNewPassword ? 'Hide password' : 'Show password'}
+                            >
                                 <Ionicons name={showNewPassword ? "eye-outline" : "eye-off-outline"} size={20} color={colors.textMuted} />
                             </TouchableOpacity>
                         </View>
@@ -320,7 +342,12 @@ export const SettingsScreen = () => {
                                 value={confirmPassword}
                                 onChangeText={setConfirmPassword}
                             />
-                            <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeButton}>
+                            <TouchableOpacity
+                                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                                style={styles.eyeButton}
+                                accessibilityRole="button"
+                                accessibilityLabel={showConfirmPassword ? 'Hide password' : 'Show password'}
+                            >
                                 <Ionicons name={showConfirmPassword ? "eye-outline" : "eye-off-outline"} size={20} color={colors.textMuted} />
                             </TouchableOpacity>
                         </View>
@@ -371,7 +398,12 @@ export const SettingsScreen = () => {
                                 value={deletePassword}
                                 onChangeText={setDeletePassword}
                             />
-                            <TouchableOpacity onPress={() => setShowDeletePassword(!showDeletePassword)} style={styles.eyeButton}>
+                            <TouchableOpacity
+                                onPress={() => setShowDeletePassword(!showDeletePassword)}
+                                style={styles.eyeButton}
+                                accessibilityRole="button"
+                                accessibilityLabel={showDeletePassword ? 'Hide password' : 'Show password'}
+                            >
                                 <Ionicons name={showDeletePassword ? "eye-outline" : "eye-off-outline"} size={20} color={colors.textMuted} />
                             </TouchableOpacity>
                         </View>

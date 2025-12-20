@@ -109,16 +109,28 @@ export const HistoryScreen = () => {
                 <TouchableOpacity
                     style={styles.menuButton}
                     onPress={() => setMenuVisible(menuVisible === item.id ? null : item.id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`More options for ${item.name || 'workout'}`}
                 >
                     <Ionicons name="ellipsis-vertical" size={20} color={colors.textMuted} />
                 </TouchableOpacity>
                 {menuVisible === item.id && (
                     <View style={[styles.menu, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                        <TouchableOpacity style={styles.menuItem} onPress={() => handleEdit(item)}>
+                        <TouchableOpacity
+                            style={styles.menuItem}
+                            onPress={() => handleEdit(item)}
+                            accessibilityRole="button"
+                            accessibilityLabel="Edit workout"
+                        >
                             <Ionicons name="create-outline" size={18} color={colors.text} />
                             <Text style={[styles.menuItemText, { color: colors.text }]}>Edit</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.menuItem} onPress={() => handleDelete(item)}>
+                        <TouchableOpacity
+                            style={styles.menuItem}
+                            onPress={() => handleDelete(item)}
+                            accessibilityRole="button"
+                            accessibilityLabel="Delete workout"
+                        >
                             <Ionicons name="trash-outline" size={18} color={colors.danger} />
                             <Text style={[styles.menuItemText, { color: colors.danger }]}>Delete</Text>
                         </TouchableOpacity>
@@ -131,7 +143,11 @@ export const HistoryScreen = () => {
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
             <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
+                <TouchableOpacity
+                    onPress={() => navigation.goBack()}
+                    accessibilityRole="button"
+                    accessibilityLabel="Go back"
+                >
                     <Ionicons name="arrow-back" size={24} color={colors.primary} />
                 </TouchableOpacity>
                 <Text style={[styles.headerTitle, { color: colors.text }]}>History</Text>

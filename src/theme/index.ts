@@ -80,6 +80,20 @@ export const Typography = {
     semibold: '600' as '600',
     bold: '700' as '700',
   },
+  // Heading hierarchy
+  h1: {
+    fontSize: 28,
+    fontWeight: '700' as const,
+  },
+  h2: {
+    fontSize: 24,
+    fontWeight: '700' as const,
+  },
+  h3: {
+    fontSize: 20,
+    fontWeight: '600' as const,
+  },
+  // Existing presets
   header: {
     fontSize: 24,
     fontWeight: '700' as const,
@@ -91,6 +105,13 @@ export const Typography = {
   body: {
     fontSize: 16,
     fontWeight: '400' as const,
+  },
+  // Section headers (uppercase labels)
+  sectionHeader: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
   },
   strokeWidth: 2,
 };

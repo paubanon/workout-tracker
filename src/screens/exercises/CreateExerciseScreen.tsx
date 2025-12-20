@@ -73,11 +73,19 @@ export const CreateExerciseScreen = () => {
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
             <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
+                <TouchableOpacity
+                    onPress={() => navigation.goBack()}
+                    accessibilityRole="button"
+                    accessibilityLabel="Cancel"
+                >
                     <Text style={[styles.cancelText, { color: colors.danger }]}>Cancel</Text>
                 </TouchableOpacity>
                 <Text style={[{ fontSize: Theme.Typography.scale.lg, fontWeight: Theme.Typography.weight.bold }, { color: colors.text }]}>New Exercise</Text>
-                <TouchableOpacity onPress={handleSave}>
+                <TouchableOpacity
+                    onPress={handleSave}
+                    accessibilityRole="button"
+                    accessibilityLabel="Save exercise"
+                >
                     <Text style={[styles.saveText, { color: colors.primary }]}>Save</Text>
                 </TouchableOpacity>
             </View>

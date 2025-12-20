@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform, Keyboard, Animated, Modal, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform, Keyboard, Animated, Modal, Switch, ActivityIndicator } from 'react-native';
 import DraggableFlatList, { ScaleDecorator, RenderItemParams, ShadowDecorator } from 'react-native-draggable-flatlist';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -64,6 +64,9 @@ export const ActiveSessionScreen = () => {
 
     // Keyboard height for dynamic padding
     const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+    // Loading state for save button
+    const [isSaving, setIsSaving] = useState(false);
 
     const loadProfilePrefs = async () => {
         const profile = await supabaseService.getUserProfile();
@@ -325,7 +328,9 @@ export const ActiveSessionScreen = () => {
     };
 
     const handleFinish = async () => {
-        if (!session) return;
+        if (!session || isSaving) return;
+
+        setIsSaving(true);
 
         // Prepare session for saving: Add body weight to load if applicable
         const sessionToSave = {
@@ -375,6 +380,8 @@ export const ActiveSessionScreen = () => {
         // Save to Supabase
         await supabaseService.addWorkoutSession(sessionToSave);
 
+        setIsSaving(false);
+
         // Show Toast
         setShowToast(true);
     };
@@ -400,8 +407,18 @@ export const ActiveSessionScreen = () => {
                     <Text style={[styles.bodyText, textStyle]}>Log Workout</Text>
                     <Text style={[styles.captionText, { color: colors.primary }]}>{formatTime(duration)}</Text>
                 </View>
-                <TouchableOpacity style={[styles.finishButton, { backgroundColor: colors.primary }]} onPress={handleFinish}>
-                    <Text style={styles.finishButtonText}>Finish</Text>
+                <TouchableOpacity
+                    style={[styles.finishButton, { backgroundColor: colors.primary, opacity: isSaving ? 0.7 : 1 }]}
+                    onPress={handleFinish}
+                    disabled={isSaving}
+                    accessibilityRole="button"
+                    accessibilityLabel={isSaving ? 'Saving workout' : 'Finish workout'}
+                >
+                    {isSaving ? (
+                        <ActivityIndicator color="#FFF" size="small" />
+                    ) : (
+                        <Text style={styles.finishButtonText}>Finish</Text>
+                    )}
                 </TouchableOpacity>
             </View>
 
@@ -463,7 +480,11 @@ export const ActiveSessionScreen = () => {
                                                 <Text style={[styles.noteText, textMutedStyle]}>📝 {exerciseNotes[exercise.id]}</Text>
                                             ) : null}
                                         </View>
-                                        <TouchableOpacity onPress={() => handleExerciseAction(exercise.id)}>
+                                        <TouchableOpacity
+                                            onPress={() => handleExerciseAction(exercise.id)}
+                                            accessibilityRole="button"
+                                            accessibilityLabel={`Options for ${exercise.name}`}
+                                        >
                                             <Ionicons name="ellipsis-horizontal" size={24} color={colors.textMuted} />
                                         </TouchableOpacity>
                                     </View>
@@ -582,6 +603,9 @@ export const ActiveSessionScreen = () => {
                                             <TouchableOpacity
                                                 style={[styles.colCheck, styles.checkBox, set.completed && styles.checkBoxChecked, { borderColor: set.completed ? colors.success : colors.border, backgroundColor: set.completed ? colors.success : 'transparent' }]}
                                                 onPress={() => onToggleSetComplete(set.id, set.completed)}
+                                                accessibilityRole="checkbox"
+                                                accessibilityState={{ checked: set.completed }}
+                                                accessibilityLabel={`Set ${index + 1} ${set.completed ? 'completed' : 'incomplete'}`}
                                             >
                                                 {set.completed && <Text style={{ color: 'white' }}>✓</Text>}
                                             </TouchableOpacity>
@@ -590,11 +614,21 @@ export const ActiveSessionScreen = () => {
 
                                     <View style={styles.setButtonsRow}>
                                         {exerciseSets.length > 0 && (
-                                            <TouchableOpacity style={[styles.removeSetButton, { backgroundColor: colors.bgLight }]} onPress={() => handleRemoveSet(exercise.id)}>
+                                            <TouchableOpacity
+                                                style={[styles.removeSetButton, { backgroundColor: colors.bgLight }]}
+                                                onPress={() => handleRemoveSet(exercise.id)}
+                                                accessibilityRole="button"
+                                                accessibilityLabel={`Remove last set from ${exercise.name}`}
+                                            >
                                                 <Text style={[styles.removeSetText, { color: colors.danger }]}>− Remove Set</Text>
                                             </TouchableOpacity>
                                         )}
-                                        <TouchableOpacity style={[styles.addSetButton, { backgroundColor: colors.bgLight }]} onPress={() => handleAddSet(exercise.id)}>
+                                        <TouchableOpacity
+                                            style={[styles.addSetButton, { backgroundColor: colors.bgLight }]}
+                                            onPress={() => handleAddSet(exercise.id)}
+                                            accessibilityRole="button"
+                                            accessibilityLabel={`Add set to ${exercise.name}`}
+                                        >
                                             <Text style={[styles.addSetText, { color: colors.primary }]}>+ Add Set</Text>
                                         </TouchableOpacity>
                                     </View>
@@ -613,6 +647,8 @@ export const ActiveSessionScreen = () => {
                                     }
                                 }
                             } as any)}
+                            accessibilityRole="button"
+                            accessibilityLabel="Add exercise to workout"
                         >
                             <Text style={[styles.addExerciseText, { color: colors.primary }]}>+ Add Exercise</Text>
                         </TouchableOpacity>

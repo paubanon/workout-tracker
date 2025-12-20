@@ -234,7 +234,12 @@ export const AnalysisScreen = () => {
                 <Text style={[styles.headerTitle, textStyle]}>Analysis</Text>
 
                 {/* Exercise Selector */}
-                <TouchableOpacity style={[styles.exerciseSelector, { backgroundColor: colors.surface }, shadowStyle]} onPress={() => setPickerVisible(true)}>
+                <TouchableOpacity
+                    style={[styles.exerciseSelector, { backgroundColor: colors.surface }, shadowStyle]}
+                    onPress={() => setPickerVisible(true)}
+                    accessibilityRole="button"
+                    accessibilityLabel={selectedExercise ? `Current exercise: ${selectedExercise.name}. Tap to change.` : 'Select an exercise'}
+                >
                     <Text style={[styles.exerciseSelectorText, textStyle]}>
                         {selectedExercise ? selectedExercise.name : "Select Exercise"}
                     </Text>
@@ -485,7 +490,11 @@ export const AnalysisScreen = () => {
                 <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
                     <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
                         <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
-                            <TouchableOpacity onPress={() => setPickerVisible(false)}>
+                            <TouchableOpacity
+                                onPress={() => setPickerVisible(false)}
+                                accessibilityRole="button"
+                                accessibilityLabel="Close"
+                            >
                                 <Ionicons name="close" size={24} color={colors.text} />
                             </TouchableOpacity>
                             <Text style={[styles.modalTitle, textStyle]}>Select Exercise</Text>
@@ -496,15 +505,21 @@ export const AnalysisScreen = () => {
                             placeholderTextColor={colors.textMuted}
                             value={searchQuery}
                             onChangeText={setSearchQuery}
+                            accessibilityLabel="Search exercises"
                         />
                         <FlatList
                             data={filteredExercises}
                             keyExtractor={item => item.id}
                             renderItem={({ item }) => (
-                                <TouchableOpacity style={[styles.exerciseItem, { borderBottomColor: colors.border }]} onPress={() => {
-                                    setSelectedExercise(item);
-                                    setPickerVisible(false);
-                                }}>
+                                <TouchableOpacity
+                                    style={[styles.exerciseItem, { borderBottomColor: colors.border }]}
+                                    onPress={() => {
+                                        setSelectedExercise(item);
+                                        setPickerVisible(false);
+                                    }}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`Select ${item.name}`}
+                                >
                                     <Text style={[styles.exerciseName, textStyle]}>{item.name}</Text>
                                 </TouchableOpacity>
                             )}

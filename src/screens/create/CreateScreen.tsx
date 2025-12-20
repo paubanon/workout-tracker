@@ -39,6 +39,8 @@ export const CreateScreen = () => {
                     <TouchableOpacity
                         style={styles.cardContent}
                         onPress={() => navigation.navigate('CreateWorkout')}
+                        accessibilityRole="button"
+                        accessibilityLabel="Create new routine"
                     >
                         <View style={[styles.iconContainer, iconBgStyle, iconShadowStyle]}>
                             <Ionicons name="add-circle" size={32} color={colors.primary} />
@@ -55,6 +57,8 @@ export const CreateScreen = () => {
                     <TouchableOpacity
                         style={styles.cardContent}
                         onPress={() => navigation.navigate('CreateExercise')}
+                        accessibilityRole="button"
+                        accessibilityLabel="Create new exercise"
                     >
                         <View style={[styles.iconContainer, iconBgStyle, iconShadowStyle]}>
                             <Ionicons name="barbell" size={32} color={colors.primary} />
@@ -71,6 +75,8 @@ export const CreateScreen = () => {
                     <TouchableOpacity
                         style={styles.cardContent}
                         onPress={() => navigation.navigate('ExerciseList')}
+                        accessibilityRole="button"
+                        accessibilityLabel="View exercise library"
                     >
                         <View style={[styles.iconContainer, iconBgStyle, iconShadowStyle]}>
                             <Ionicons name="list" size={32} color={colors.primary} />

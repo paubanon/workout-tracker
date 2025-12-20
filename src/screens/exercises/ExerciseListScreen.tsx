@@ -41,11 +41,19 @@ export const ExerciseListScreen = ({ route }: any) => {
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
             <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
+                <TouchableOpacity
+                    onPress={() => navigation.goBack()}
+                    accessibilityRole="button"
+                    accessibilityLabel="Cancel"
+                >
                     <Text style={[styles.backText, { color: colors.primary }]}>Cancel</Text>
                 </TouchableOpacity>
                 <Text style={[Theme.Typography.subtitle, { color: colors.text }]}>Exercises</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('CreateExercise')}>
+                <TouchableOpacity
+                    onPress={() => navigation.navigate('CreateExercise')}
+                    accessibilityRole="button"
+                    accessibilityLabel="Create new exercise"
+                >
                     <Text style={[styles.actionText, { color: colors.primary }]}>+</Text>
                 </TouchableOpacity>
             </View>
