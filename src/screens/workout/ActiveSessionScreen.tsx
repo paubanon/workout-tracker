@@ -811,15 +811,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: Theme.Spacing.s,
     },
-    colSet: { width: 30, alignItems: 'center' },
-    colInput: { flex: 1, alignItems: 'center', paddingHorizontal: 2 },
-    colCheck: { width: 30, alignItems: 'flex-end' },
+    colSet: { width: 36, alignItems: 'center', flexShrink: 0 },
+    colInput: { flex: 1, alignItems: 'center', flexShrink: 1, marginHorizontal: 8 },
+    colCheck: { width: 32, alignItems: 'flex-end', flexShrink: 0 },
 
     headerText: {
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: '600',
         textAlign: 'center',
-        marginBottom: 4,
     },
     setBadge: {
         width: 24,
@@ -833,12 +832,13 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     input: {
-        width: '90%',
-        minWidth: 60,
-        height: 44,
-        borderRadius: 8,
+        flex: 1,
+        height: 36,
+        borderRadius: 6,
         textAlign: 'center',
-        fontSize: 18,
+        fontSize: 14,
+        minWidth: 40,
+        marginHorizontal: 4,
     },
     checkBox: {
         width: 24,
@@ -854,33 +854,36 @@ const styles = StyleSheet.create({
     setButtonsRow: {
         flexDirection: 'row',
         justifyContent: 'center',
-        marginTop: 8,
+        marginTop: 12,
         gap: 12,
     },
     removeSetButton: {
+        flex: 1,
         paddingVertical: 10,
-        paddingHorizontal: 16,
         borderRadius: 8,
+        alignItems: 'center',
     },
     removeSetText: {
         fontSize: 14,
         fontWeight: '600',
     },
     addSetButton: {
+        flex: 1,
         paddingVertical: 10,
-        paddingHorizontal: 16,
         borderRadius: 8,
+        alignItems: 'center',
     },
     addSetText: {
         fontSize: 14,
         fontWeight: '600',
     },
     addExerciseButton: {
-        marginTop: 16,
-        alignItems: 'center',
-        padding: 16,
+        width: '100%',
+        paddingVertical: 14,
         borderRadius: 12,
-        backgroundColor: 'rgba(0,0,0,0.02)', // Minimal
+        alignItems: 'center',
+        justifyContent: 'center',
+        // backgroundColor set inline dynamic
     },
     addExerciseText: {
         fontSize: 16,

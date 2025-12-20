@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, Switch, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TextInput, Switch, ScrollView, TouchableOpacity, Alert, useWindowDimensions } from 'react-native';
+import Animated, { FadeIn, FadeOut, Layout, useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
 import { supabaseService } from '../../services/SupabaseDataService';
@@ -9,7 +10,7 @@ import { useTheme } from '../../context/ThemeContext';
 
 export const CreateExerciseScreen = () => {
     const navigation = useNavigation();
-    const { colors } = useTheme();
+    const { colors, isDark } = useTheme();
     const [name, setName] = useState('');
 
     // Metrics State
@@ -23,6 +24,25 @@ export const CreateExerciseScreen = () => {
 
     const [repsType, setRepsType] = useState<RepsType>('standard');
     const [trackBodyWeight, setTrackBodyWeight] = useState(false);
+
+    // Sliding indicator for reps type
+    const SEGMENT_OPTIONS: RepsType[] = ['standard', 'tempo', 'isometric'];
+    const indicatorPosition = useSharedValue(0);
+    const [segmentContainerWidth, setSegmentContainerWidth] = useState(0);
+
+    useEffect(() => {
+        const index = SEGMENT_OPTIONS.indexOf(repsType);
+        indicatorPosition.value = withTiming(index, { duration: 250 });
+    }, [repsType]);
+
+    // Calculate indicator position based on measured container width
+    const segmentWidth = (segmentContainerWidth - 4) / 3; // Account for padding
+    const indicatorStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{ translateX: indicatorPosition.value * segmentWidth }],
+            width: segmentWidth,
+        };
+    });
 
     const toggleMetric = (m: MetricType) => {
         setMetrics(prev => ({ ...prev, [m]: !prev[m] }));
@@ -55,7 +75,7 @@ export const CreateExerciseScreen = () => {
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Text style={[styles.cancelText, { color: colors.danger }]}>Cancel</Text>
                 </TouchableOpacity>
-                <Text style={[Theme.Typography.subtitle, { color: colors.text }]}>New Exercise</Text>
+                <Text style={[{ fontSize: Theme.Typography.scale.lg, fontWeight: Theme.Typography.weight.bold }, { color: colors.text }]}>New Exercise</Text>
                 <TouchableOpacity onPress={handleSave}>
                     <Text style={[styles.saveText, { color: colors.primary }]}>Save</Text>
                 </TouchableOpacity>
@@ -78,27 +98,44 @@ export const CreateExerciseScreen = () => {
                     <Text style={[styles.hint, { color: colors.textMuted }]}>Select what you want to log for this exercise.</Text>
 
                     {['load', 'reps', 'time', 'distance', 'rom'].map((m) => (
-                        <View key={m}>
-                            <View style={[styles.row, { backgroundColor: colors.surface }]}>
+                        <Animated.View key={m} layout={Layout.duration(300)}>
+                            <Animated.View layout={Layout.duration(300)} style={[styles.row, { backgroundColor: colors.surface, zIndex: 1 }]}>
                                 <Text style={[styles.rowLabel, { color: colors.text }]}>
                                     {m === 'rom' ? 'Range of Motion (ROM)' : m.charAt(0).toUpperCase() + m.slice(1)}
                                 </Text>
                                 <Switch
                                     value={metrics[m as MetricType]}
                                     onValueChange={() => toggleMetric(m as MetricType)}
-                                    trackColor={{ true: colors.primary }}
+                                    trackColor={{ false: "#767577", true: colors.primary }}
+                                    thumbColor={"#f4f3f4"}
+                                    ios_backgroundColor="#3e3e3e"
                                 />
-                            </View>
+                            </Animated.View>
 
                             {/* "Unfolding" Repetition Type Section - directly under Reps toggle */}
                             {m === 'reps' && metrics.reps && (
-                                <View style={[styles.unfoldingSection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                                <Animated.View
+                                    entering={FadeIn.duration(300)}
+                                    exiting={FadeOut.duration(200)}
+                                    style={[styles.unfoldingSection, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                                >
                                     <Text style={[styles.subLabel, { color: colors.textMuted }]}>Repetition Type</Text>
-                                    <View style={[styles.segmentContainer, { backgroundColor: colors.background }]}>
-                                        {(['standard', 'tempo', 'isometric'] as RepsType[]).map((type) => (
+                                    <View
+                                        style={[styles.segmentContainer, { backgroundColor: colors.border }]}
+                                        onLayout={(e) => setSegmentContainerWidth(e.nativeEvent.layout.width)}
+                                    >
+                                        {/* Sliding indicator */}
+                                        <Animated.View
+                                            style={[
+                                                styles.segmentIndicator,
+                                                { backgroundColor: colors.surface },
+                                                indicatorStyle
+                                            ]}
+                                        />
+                                        {SEGMENT_OPTIONS.map((type) => (
                                             <TouchableOpacity
                                                 key={type}
-                                                style={[styles.segment, repsType === type && [styles.segmentActive, { backgroundColor: colors.surface }]]}
+                                                style={styles.segment}
                                                 onPress={() => setRepsType(type)}
                                             >
                                                 <Text style={[styles.segmentText, { color: colors.text }, repsType === type && styles.segmentTextActive]}>
@@ -107,26 +144,32 @@ export const CreateExerciseScreen = () => {
                                             </TouchableOpacity>
                                         ))}
                                     </View>
-                                </View>
+                                </Animated.View>
                             )}
 
                             {/* "Unfolding" Body Weight Toggle - directly under Load toggle */}
                             {m === 'load' && metrics.load && (
-                                <View style={[styles.unfoldingSection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                                <Animated.View
+                                    entering={FadeIn.duration(300)}
+                                    exiting={FadeOut.duration(200)}
+                                    style={[styles.unfoldingSection, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                                >
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <Text style={[styles.subLabel, { color: colors.textMuted }]}>Add Body Weight?</Text>
+                                        <Text style={[styles.subLabel, { color: colors.textMuted, marginBottom: 0 }]}>Add Body Weight?</Text>
                                         <Switch
                                             value={trackBodyWeight}
                                             onValueChange={setTrackBodyWeight}
-                                            trackColor={{ true: colors.primary }}
+                                            trackColor={{ false: "#767577", true: colors.primary }}
+                                            thumbColor={"#f4f3f4"}
+                                            ios_backgroundColor="#3e3e3e"
                                         />
                                     </View>
-                                    <Text style={{ fontSize: 12, color: colors.textMuted }}>
+                                    <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 8 }}>
                                         If checked, your body weight will be added to the logged load automatically.
                                     </Text>
-                                </View>
+                                </Animated.View>
                             )}
-                        </View>
+                        </Animated.View>
                     ))}
                 </View>
 
@@ -147,11 +190,12 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
     },
     cancelText: {
-        ...Theme.Typography.body,
+        fontSize: Theme.Typography.scale.md,
+        fontWeight: Theme.Typography.weight.regular,
     },
     saveText: {
-        ...Theme.Typography.body,
-        fontWeight: 'bold',
+        fontSize: Theme.Typography.scale.md,
+        fontWeight: Theme.Typography.weight.bold,
     },
     content: {
         padding: Theme.Spacing.m,
@@ -160,7 +204,8 @@ const styles = StyleSheet.create({
         marginBottom: Theme.Spacing.l,
     },
     label: {
-        ...Theme.Typography.caption,
+        fontSize: Theme.Typography.scale.sm,
+        fontWeight: Theme.Typography.weight.medium,
         marginBottom: Theme.Spacing.s,
     },
     input: {
@@ -169,12 +214,12 @@ const styles = StyleSheet.create({
         fontSize: 17,
     },
     sectionTitle: {
-        ...Theme.Typography.body,
-        fontWeight: '600',
+        fontSize: Theme.Typography.scale.md,
+        fontWeight: Theme.Typography.weight.semibold,
         marginBottom: Theme.Spacing.xs,
     },
     hint: {
-        ...Theme.Typography.caption,
+        fontSize: Theme.Typography.scale.sm,
         marginBottom: Theme.Spacing.m,
     },
     row: {
@@ -182,7 +227,8 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: Theme.Spacing.m,
-        marginBottom: 1,
+        marginBottom: 4,
+        borderRadius: 12,
     },
     rowLabel: {
         fontSize: 17,
@@ -191,6 +237,19 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         borderRadius: 8,
         padding: 2,
+        position: 'relative',
+    },
+    segmentIndicator: {
+        position: 'absolute',
+        top: 2,
+        bottom: 2,
+        left: 2,
+        borderRadius: 6,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.15,
+        shadowRadius: 2,
+        elevation: 2,
     },
     segment: {
         flex: 1,
@@ -213,12 +272,13 @@ const styles = StyleSheet.create({
     },
     unfoldingSection: {
         paddingHorizontal: Theme.Spacing.m,
-        paddingBottom: Theme.Spacing.m,
-        borderBottomWidth: 1,
+        paddingVertical: Theme.Spacing.s,
+        marginBottom: 4,
+        borderRadius: 12,
     },
     subLabel: {
         fontSize: 13,
         fontWeight: '600',
-        marginBottom: 8,
+        marginBottom: 4,
     },
 });

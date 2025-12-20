@@ -182,7 +182,7 @@ export const SettingsScreen = () => {
                             </Text>
                         </View>
                         <Switch
-                            trackColor={{ false: "#767577", true: colors.primary }}
+                            trackColor={{ false: "#767577", true: isDark ? colors.primary : colors.primary }}
                             thumbColor={"#f4f3f4"}
                             onValueChange={toggleTheme}
                             value={isDark}
@@ -209,7 +209,7 @@ export const SettingsScreen = () => {
                             <Text style={[styles.optionSubtitle, subtitleStyle]}>Rate Perceived Exertion (1-10) after each set</Text>
                         </View>
                         <Switch
-                            trackColor={{ false: "#767577", true: colors.primary }}
+                            trackColor={{ false: "#767577", true: isDark ? colors.primary : colors.primary }}
                             thumbColor={trackRpe ? "#f4f3f4" : "#f4f3f4"}
                             onValueChange={toggleRpe}
                             value={trackRpe}
