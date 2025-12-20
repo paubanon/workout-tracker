@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "workout-tracker",
-    "slug": "workout-tracker",
+    "name": "WorkoutLab",
+    "slug": "workout-lab",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -9,9 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pablobanon.workouttracker"
     },
     "android": {
+      "package": "com.pablobanon.workouttracker",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -43,6 +45,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "5fe5487b-96bd-4701-bca2-cf6c5b059aba"
+      }
     }
   }
 }
