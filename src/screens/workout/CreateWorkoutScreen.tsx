@@ -7,10 +7,12 @@ import { supabaseService } from '../../services/SupabaseDataService';
 import { Exercise, WorkoutTemplate, TemplateExercise, RepsType } from '../../models';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../context/ThemeContext';
 
 export const CreateWorkoutScreen = () => {
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
+    const { colors } = useTheme();
     const { templateToEdit } = route.params || {};
 
     const [name, setName] = useState(templateToEdit?.name || '');
@@ -181,29 +183,29 @@ export const CreateWorkoutScreen = () => {
                     disabled={isActive}
                     style={[
                         styles.itemContainer,
-                        { backgroundColor: isActive ? Theme.Colors.surface : Theme.Colors.surface }
+                        { backgroundColor: isActive ? colors.surface : colors.surface }
                     ]}
                 >
                     <View style={[styles.itemHeader, { justifyContent: 'space-between' }]}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                             <TouchableOpacity onPressIn={drag} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                                <Ionicons name="menu" size={24} color={Theme.Colors.textSecondary} style={{ marginRight: 10 }} />
+                                <Ionicons name="menu" size={24} color={colors.textMuted} style={{ marginRight: 10 }} />
                             </TouchableOpacity>
-                            <Text style={styles.itemTitle}>{item.name}</Text>
+                            <Text style={[styles.itemTitle, { color: colors.text }]}>{item.name}</Text>
                         </View>
                         <TouchableOpacity onPress={() => index !== undefined && removeExercise(index)}>
-                            <Ionicons name="trash-outline" size={20} color={Theme.Colors.danger} />
+                            <Ionicons name="trash-outline" size={20} color={colors.danger} />
                         </TouchableOpacity>
                     </View>
 
                     {/* Table Header */}
                     <View style={styles.setRow}>
-                        <Text style={[styles.colSet, styles.headerText]}>SET</Text>
-                        {metrics.includes('load') && <Text style={[styles.colInput, styles.headerText]}>KG</Text>}
-                        {metrics.includes('reps') && <Text style={[styles.colInput, styles.headerText]}>REPS</Text>}
-                        {showTempoCol && <Text style={[styles.colInput, styles.headerText]}>{tempoLabel}</Text>}
-                        {metrics.includes('time') && <Text style={[styles.colInput, styles.headerText]}>TIME</Text>}
-                        {metrics.includes('distance') && <Text style={[styles.colInput, styles.headerText]}>DIST</Text>}
+                        <Text style={[styles.colSet, styles.headerText, { color: colors.textMuted }]}>SET</Text>
+                        {metrics.includes('load') && <Text style={[styles.colInput, styles.headerText, { color: colors.textMuted }]}>KG</Text>}
+                        {metrics.includes('reps') && <Text style={[styles.colInput, styles.headerText, { color: colors.textMuted }]}>REPS</Text>}
+                        {showTempoCol && <Text style={[styles.colInput, styles.headerText, { color: colors.textMuted }]}>{tempoLabel}</Text>}
+                        {metrics.includes('time') && <Text style={[styles.colInput, styles.headerText, { color: colors.textMuted }]}>TIME</Text>}
+                        {metrics.includes('distance') && <Text style={[styles.colInput, styles.headerText, { color: colors.textMuted }]}>DIST</Text>}
                         <View style={{ width: 30 }} />
                     </View>
 
@@ -211,67 +213,67 @@ export const CreateWorkoutScreen = () => {
                     {item.sets.map((set: any, setIndex: number) => (
                         <View key={setIndex} style={styles.setRow}>
                             <View style={styles.colSet}>
-                                <View style={styles.setBadge}><Text style={styles.setText}>{setIndex + 1}</Text></View>
+                                <View style={[styles.setBadge, { backgroundColor: colors.background }]}><Text style={[styles.setText, { color: colors.text }]}>{setIndex + 1}</Text></View>
                             </View>
 
                             {metrics.includes('load') && (
                                 <TextInput
-                                    style={styles.input}
+                                    style={[styles.input, { backgroundColor: colors.background, color: colors.text }]}
                                     keyboardType="numeric"
                                     placeholder={set.targetLoad?.toString() || "-"}
-                                    placeholderTextColor={Theme.Colors.textSecondary}
+                                    placeholderTextColor={colors.textMuted}
                                     value={set.targetLoad?.toString()}
                                     onChangeText={v => index !== undefined && updateSet(index, setIndex, 'targetLoad', parseFloat(v))}
                                 />
                             )}
                             {metrics.includes('reps') && (
                                 <TextInput
-                                    style={styles.input}
+                                    style={[styles.input, { backgroundColor: colors.background, color: colors.text }]}
                                     keyboardType="numeric"
                                     placeholder={set.targetReps?.toString() || "-"}
-                                    placeholderTextColor={Theme.Colors.textSecondary}
+                                    placeholderTextColor={colors.textMuted}
                                     value={set.targetReps?.toString()}
                                     onChangeText={v => index !== undefined && updateSet(index, setIndex, 'targetReps', v)}
                                 />
                             )}
                             {showTempoCol && (
                                 <TextInput
-                                    style={styles.input}
+                                    style={[styles.input, { backgroundColor: colors.background, color: colors.text }]}
                                     placeholder={isIsometric ? (set.targetTime?.toString() || "-") : (set.targetTempo || "-")}
-                                    placeholderTextColor={Theme.Colors.textSecondary}
+                                    placeholderTextColor={colors.textMuted}
                                     value={isIsometric ? set.targetTime?.toString() : set.targetTempo}
                                     onChangeText={v => index !== undefined && updateSet(index, setIndex, isIsometric ? 'targetTime' : 'targetTempo', isIsometric ? parseFloat(v) : v)}
                                 />
                             )}
                             {metrics.includes('time') && (
                                 <TextInput
-                                    style={styles.input}
+                                    style={[styles.input, { backgroundColor: colors.background, color: colors.text }]}
                                     keyboardType="numeric"
                                     placeholder={set.targetTime?.toString() || "-"}
-                                    placeholderTextColor={Theme.Colors.textSecondary}
+                                    placeholderTextColor={colors.textMuted}
                                     value={set.targetTime?.toString()}
                                     onChangeText={v => index !== undefined && updateSet(index, setIndex, 'targetTime', parseFloat(v))}
                                 />
                             )}
                             {metrics.includes('distance') && (
                                 <TextInput
-                                    style={styles.input}
+                                    style={[styles.input, { backgroundColor: colors.background, color: colors.text }]}
                                     keyboardType="numeric"
                                     placeholder={set.targetDistance?.toString() || "-"}
-                                    placeholderTextColor={Theme.Colors.textSecondary}
+                                    placeholderTextColor={colors.textMuted}
                                     value={set.targetDistance?.toString()}
                                     onChangeText={v => index !== undefined && updateSet(index, setIndex, 'targetDistance', parseFloat(v))}
                                 />
                             )}
 
                             <TouchableOpacity onPress={() => index !== undefined && removeSet(index, setIndex)} style={{ width: 30, alignItems: 'center' }}>
-                                <Ionicons name="close-circle" size={20} color={Theme.Colors.textSecondary} />
+                                <Ionicons name="close-circle" size={20} color={colors.textMuted} />
                             </TouchableOpacity>
                         </View>
                     ))}
 
-                    <TouchableOpacity style={styles.addSetButton} onPress={() => index !== undefined && addSet(index)}>
-                        <Text style={styles.addSetText}>+ Add Set</Text>
+                    <TouchableOpacity style={[styles.addSetButton, { borderTopColor: colors.border }]} onPress={() => index !== undefined && addSet(index)}>
+                        <Text style={[styles.addSetText, { color: colors.primary }]}>+ Add Set</Text>
                     </TouchableOpacity>
                 </TouchableOpacity>
             </ScaleDecorator>
@@ -279,14 +281,14 @@ export const CreateWorkoutScreen = () => {
     };
 
     return (
-        <SafeAreaView style={styles.container} edges={['top']}>
-            <View style={styles.header}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+            <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Text style={styles.cancelText}>Cancel</Text>
+                    <Text style={[styles.cancelText, { color: colors.danger }]}>Cancel</Text>
                 </TouchableOpacity>
-                <Text style={Theme.Typography.subtitle}>{templateToEdit ? 'Edit Routine' : 'New Routine'}</Text>
+                <Text style={[Theme.Typography.subtitle, { color: colors.text }]}>{templateToEdit ? 'Edit Routine' : 'New Routine'}</Text>
                 <TouchableOpacity onPress={handleSave}>
-                    <Text style={styles.saveText}>Save</Text>
+                    <Text style={[styles.saveText, { color: colors.primary }]}>Save</Text>
                 </TouchableOpacity>
             </View>
 
@@ -297,13 +299,14 @@ export const CreateWorkoutScreen = () => {
             >
                 <View style={{ flex: 1 }}>
                     <TextInput
-                        style={styles.nameInput}
+                        style={[styles.nameInput, { backgroundColor: colors.surface, color: colors.text }]}
                         placeholder="Routine Name"
+                        placeholderTextColor={colors.textMuted}
                         value={name}
                         onChangeText={setName}
                     />
 
-                    <Text style={styles.sectionTitle}>Exercises</Text>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Exercises</Text>
 
                     <DraggableFlatList
                         data={selectedExercises}
@@ -315,9 +318,9 @@ export const CreateWorkoutScreen = () => {
                         containerStyle={{ flex: 1 }}
                         ListEmptyComponent={
                             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', opacity: 0.5, paddingTop: 100 }}>
-                                <Ionicons name="barbell-outline" size={48} color={Theme.Colors.textSecondary} />
-                                <Text style={{ marginTop: 16, color: Theme.Colors.textSecondary }}>No exercises added yet</Text>
-                                <Text style={{ marginTop: 4, color: Theme.Colors.textSecondary, fontSize: 12 }}>Tap + to add one</Text>
+                                <Ionicons name="barbell-outline" size={48} color={colors.textMuted} />
+                                <Text style={{ marginTop: 16, color: colors.textMuted }}>No exercises added yet</Text>
+                                <Text style={{ marginTop: 4, color: colors.textMuted, fontSize: 12 }}>Tap + to add one</Text>
                             </View>
                         }
                     />
@@ -325,7 +328,7 @@ export const CreateWorkoutScreen = () => {
             </KeyboardAvoidingView>
 
             <TouchableOpacity
-                style={[styles.fab, { bottom: Math.max(30, keyboardOffset + 20) }]}
+                style={[styles.fab, { bottom: Math.max(30, keyboardOffset + 20), backgroundColor: colors.primary }]}
                 onPress={handleAddExercise}
             >
                 <Ionicons name="add" size={30} color="white" />
@@ -343,23 +346,19 @@ export const CreateWorkoutScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Theme.Colors.background,
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: Theme.Spacing.m,
-        backgroundColor: Theme.Colors.surface,
         borderBottomWidth: 1,
-        borderBottomColor: Theme.Colors.border,
     },
     cancelText: {
-        color: Theme.Colors.textSecondary,
         fontSize: 17,
+        color: '#FF3B30'
     },
     saveText: {
-        color: Theme.Colors.primary,
         fontWeight: 'bold',
         fontSize: 17,
     },
@@ -367,7 +366,6 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     nameInput: {
-        backgroundColor: Theme.Colors.surface,
         padding: Theme.Spacing.m,
         borderRadius: 12,
         fontSize: 18,
@@ -381,7 +379,6 @@ const styles = StyleSheet.create({
         marginHorizontal: Theme.Spacing.m,
     },
     itemContainer: {
-        backgroundColor: Theme.Colors.surface,
         padding: Theme.Spacing.m,
         borderRadius: 12,
         marginBottom: Theme.Spacing.m,
@@ -405,18 +402,16 @@ const styles = StyleSheet.create({
     headerText: {
         fontSize: 10,
         fontWeight: '700',
-        color: Theme.Colors.textSecondary,
         textAlign: 'center',
     },
     colSet: { width: 40, alignItems: 'center' },
     colInput: { flex: 1, textAlign: 'center' },
     setBadge: {
-        width: 24, height: 24, borderRadius: 12, backgroundColor: '#F2F2F7', justifyContent: 'center', alignItems: 'center'
+        width: 24, height: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center'
     },
     setText: { fontSize: 12, fontWeight: 'bold' },
     input: {
         flex: 1,
-        backgroundColor: Theme.Colors.background,
         borderRadius: 8,
         height: 40,
         marginHorizontal: 4,
@@ -428,18 +423,15 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         alignItems: 'center',
         borderTopWidth: 1,
-        borderTopColor: '#F2F2F7',
         marginTop: 8
     },
     addSetText: {
-        color: Theme.Colors.primary,
         fontWeight: '600'
     },
     fab: {
         position: 'absolute',
         bottom: 30,
         right: 20,
-        backgroundColor: Theme.Colors.primary,
         width: 56,
         height: 56,
         borderRadius: 28,

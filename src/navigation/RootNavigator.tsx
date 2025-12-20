@@ -1,10 +1,14 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { View, ActivityIndicator } from 'react-native';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Theme } from '../theme';
-// Removed for clarity, logic moved to App.tsx or inside RootNavigator component if I combined them.
-// Actually I will keep specific RootNavigator component clean and wrap in App.tsx
+import { Ionicons } from '@expo/vector-icons';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { Theme } from '../theme'; // Keep for static values/types if needed
 
 import { WorkoutListScreen } from '../screens/workout/WorkoutListScreen';
 import { ActiveSessionScreen } from '../screens/workout/ActiveSessionScreen';
@@ -16,27 +20,25 @@ import { CreateWorkoutScreen } from '../screens/workout/CreateWorkoutScreen';
 import { HistoryScreen } from '../screens/history/HistoryScreen';
 import { WorkoutHistoryDetailScreen } from '../screens/history/WorkoutHistoryDetailScreen';
 import { EditWorkoutScreen } from '../screens/history/EditWorkoutScreen';
-
-import { Ionicons } from '@expo/vector-icons';
 import { CreateScreen } from '../screens/create/CreateScreen';
 import { AnalysisScreen } from '../screens/analysis/AnalysisScreen';
 import { AuthScreen } from '../screens/auth/AuthScreen';
-import { useAuth } from '../context/AuthContext';
-import { View, ActivityIndicator } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function TabNavigator() {
+    const { colors, isDark } = useTheme();
+
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({
                 headerShown: false,
-                tabBarActiveTintColor: Theme.Colors.primary,
-                tabBarInactiveTintColor: Theme.Colors.textSecondary,
+                tabBarActiveTintColor: colors.primary,
+                tabBarInactiveTintColor: colors.textMuted,
                 tabBarStyle: {
-                    borderTopColor: Theme.Colors.border,
-                    backgroundColor: Theme.Colors.surface,
+                    borderTopColor: colors.border,
+                    backgroundColor: colors.surface,
                 },
                 tabBarIcon: ({ focused, color, size }) => {
                     let iconName: any;
@@ -51,7 +53,7 @@ function TabNavigator() {
                         iconName = focused ? 'person' : 'person-outline';
                     }
 
-                    return <Ionicons name={iconName} size={size} color={color} />;
+                    return <Ionicons name={iconName} size={size} color={color} style={{ strokeWidth: 2 } as any} />;
                 },
             })}
         >
@@ -67,23 +69,43 @@ function TabNavigator() {
     );
 }
 
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-
 export const RootNavigator = () => {
     const { session, isLoading } = useAuth();
+    const { colors, isDark } = useTheme();
 
     if (isLoading) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color={Theme.Colors.primary} />
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+                <ActivityIndicator size="large" color={colors.primary} />
             </View>
         );
     }
 
+    const MyNavigationTheme = {
+        ...DefaultTheme,
+        colors: {
+            ...DefaultTheme.colors,
+            primary: colors.primary,
+            background: colors.background,
+            card: colors.surface,
+            text: colors.text,
+            border: colors.border,
+            notification: colors.danger,
+        },
+    };
+
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-            <NavigationContainer>
-                <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <NavigationContainer theme={MyNavigationTheme}>
+                <Stack.Navigator
+                    screenOptions={{
+                        headerShown: false,
+                        headerStyle: { backgroundColor: colors.surface },
+                        headerTintColor: colors.text,
+                        headerTitleStyle: { fontWeight: 'bold' },
+                        contentStyle: { backgroundColor: colors.background }
+                    }}
+                >
                     {!session ? (
                         <Stack.Screen name="Auth" component={AuthScreen} />
                     ) : (
@@ -112,12 +134,12 @@ export const RootNavigator = () => {
                             <Stack.Screen
                                 name="History"
                                 component={HistoryScreen}
-                                options={{ title: 'History' }}
+                                options={{ title: 'History', headerShown: false }}
                             />
                             <Stack.Screen
                                 name="Settings"
                                 component={SettingsScreen}
-                                options={{ title: 'Settings' }}
+                                options={{ title: 'Settings', headerShown: true }}
                             />
                             <Stack.Screen
                                 name="WorkoutHistoryDetail"

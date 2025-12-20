@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
 import { supabaseService } from '../../services/SupabaseDataService';
 import { WorkoutSession } from '../../models';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../context/ThemeContext';
 
 export const HistoryScreen = () => {
     const navigation = useNavigation<any>();
+    const { colors } = useTheme();
     const [sessions, setSessions] = useState<WorkoutSession[]>([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(0);
@@ -77,45 +79,45 @@ export const HistoryScreen = () => {
         return (
             <View style={styles.cardWrapper}>
                 <TouchableOpacity
-                    style={styles.card}
+                    style={[styles.card, { backgroundColor: colors.surface }]}
                     onPress={() => navigation.navigate('WorkoutHistoryDetail', { session: item })}
                 >
                     <View style={styles.cardContent}>
-                        <Text style={styles.cardTitle}>{item.name || 'Untitled Workout'}</Text>
+                        <Text style={[styles.cardTitle, { color: colors.text }]}>{item.name || 'Untitled Workout'}</Text>
                         <View style={styles.statsRow}>
                             <View style={styles.stat}>
-                                <Ionicons name="barbell-outline" size={16} color={Theme.Colors.textSecondary} />
-                                <Text style={styles.statText}>{totalVolume} kg</Text>
+                                <Ionicons name="barbell-outline" size={16} color={colors.textMuted} />
+                                <Text style={[styles.statText, { color: colors.textMuted }]}>{totalVolume} kg</Text>
                             </View>
                             <View style={styles.stat}>
-                                <Ionicons name="layers-outline" size={16} color={Theme.Colors.textSecondary} />
-                                <Text style={styles.statText}>{item.sets.length} Sets</Text>
+                                <Ionicons name="layers-outline" size={16} color={colors.textMuted} />
+                                <Text style={[styles.statText, { color: colors.textMuted }]}>{item.sets.length} Sets</Text>
                             </View>
                             {item.durationSeconds ? (
                                 <View style={styles.stat}>
-                                    <Ionicons name="time-outline" size={16} color={Theme.Colors.textSecondary} />
-                                    <Text style={styles.statText}>{Math.floor(item.durationSeconds / 60)}m</Text>
+                                    <Ionicons name="time-outline" size={16} color={colors.textMuted} />
+                                    <Text style={[styles.statText, { color: colors.textMuted }]}>{Math.floor(item.durationSeconds / 60)}m</Text>
                                 </View>
                             ) : null}
                         </View>
-                        <Text style={styles.cardDate}>{date}</Text>
+                        <Text style={[styles.cardDate, { color: colors.textMuted }]}>{date}</Text>
                     </View>
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.menuButton}
                     onPress={() => setMenuVisible(menuVisible === item.id ? null : item.id)}
                 >
-                    <Ionicons name="ellipsis-vertical" size={20} color={Theme.Colors.textSecondary} />
+                    <Ionicons name="ellipsis-vertical" size={20} color={colors.textMuted} />
                 </TouchableOpacity>
                 {menuVisible === item.id && (
-                    <View style={styles.menu}>
+                    <View style={[styles.menu, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                         <TouchableOpacity style={styles.menuItem} onPress={() => handleEdit(item)}>
-                            <Ionicons name="create-outline" size={18} color={Theme.Colors.text} />
-                            <Text style={styles.menuItemText}>Edit</Text>
+                            <Ionicons name="create-outline" size={18} color={colors.text} />
+                            <Text style={[styles.menuItemText, { color: colors.text }]}>Edit</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.menuItem} onPress={() => handleDelete(item)}>
-                            <Ionicons name="trash-outline" size={18} color="#FF3B30" />
-                            <Text style={[styles.menuItemText, { color: '#FF3B30' }]}>Delete</Text>
+                            <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                            <Text style={[styles.menuItemText, { color: colors.danger }]}>Delete</Text>
                         </TouchableOpacity>
                     </View>
                 )}
@@ -124,12 +126,12 @@ export const HistoryScreen = () => {
     };
 
     return (
-        <SafeAreaView style={styles.container} edges={['top']}>
-            <View style={styles.header}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+            <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Ionicons name="arrow-back" size={24} color={Theme.Colors.primary} />
+                    <Ionicons name="arrow-back" size={24} color={colors.primary} />
                 </TouchableOpacity>
-                <Text style={Theme.Typography.subtitle}>History</Text>
+                <Text style={[styles.headerTitle, { color: colors.text }]}>History</Text>
                 <View style={{ width: 24 }} />
             </View>
 
@@ -140,7 +142,7 @@ export const HistoryScreen = () => {
                 contentContainerStyle={styles.list}
                 onEndReached={handleLoadMore}
                 onEndReachedThreshold={0.5}
-                ListFooterComponent={loading ? <ActivityIndicator color={Theme.Colors.primary} /> : null}
+                ListFooterComponent={loading ? <ActivityIndicator color={colors.primary} /> : null}
             />
         </SafeAreaView>
     );
@@ -149,16 +151,17 @@ export const HistoryScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Theme.Colors.background,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: Theme.Spacing.m,
-        backgroundColor: Theme.Colors.surface,
         borderBottomWidth: 1,
-        borderBottomColor: Theme.Colors.border,
+    },
+    headerTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
     },
     list: {
         padding: Theme.Spacing.m,
@@ -168,7 +171,6 @@ const styles = StyleSheet.create({
         marginBottom: Theme.Spacing.m,
     },
     card: {
-        backgroundColor: Theme.Colors.surface,
         borderRadius: 12,
         padding: Theme.Spacing.m,
     },
@@ -183,10 +185,8 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 40,
         right: 8,
-        backgroundColor: Theme.Colors.surface,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: Theme.Colors.border,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
@@ -204,7 +204,6 @@ const styles = StyleSheet.create({
     },
     menuItemText: {
         fontSize: 15,
-        color: Theme.Colors.text,
     },
     cardContent: {
         flex: 1,
@@ -217,7 +216,6 @@ const styles = StyleSheet.create({
     },
     cardDate: {
         fontSize: 14,
-        color: Theme.Colors.textSecondary,
         alignSelf: 'flex-end',
         marginTop: 4,
     },
@@ -231,7 +229,6 @@ const styles = StyleSheet.create({
         gap: 4,
     },
     statText: {
-        color: Theme.Colors.textSecondary,
         fontSize: 14,
     }
 });

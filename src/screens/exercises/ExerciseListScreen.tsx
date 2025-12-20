@@ -5,9 +5,11 @@ import { Theme } from '../../theme';
 import { supabaseService } from '../../services/SupabaseDataService';
 import { Exercise } from '../../models';
 import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '../../context/ThemeContext';
 
 export const ExerciseListScreen = ({ route }: any) => {
     const navigation = useNavigation<any>();
+    const { colors } = useTheme();
     const onSelect = route.params?.onSelect;
 
     const [search, setSearch] = useState('');
@@ -36,21 +38,22 @@ export const ExerciseListScreen = ({ route }: any) => {
     };
 
     return (
-        <SafeAreaView style={styles.container} edges={['top']}>
-            <View style={styles.header}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+            <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Text style={styles.backText}>Cancel</Text>
+                    <Text style={[styles.backText, { color: colors.primary }]}>Cancel</Text>
                 </TouchableOpacity>
-                <Text style={Theme.Typography.subtitle}>Exercises</Text>
+                <Text style={[Theme.Typography.subtitle, { color: colors.text }]}>Exercises</Text>
                 <TouchableOpacity onPress={() => navigation.navigate('CreateExercise')}>
-                    <Text style={styles.actionText}>+</Text>
+                    <Text style={[styles.actionText, { color: colors.primary }]}>+</Text>
                 </TouchableOpacity>
             </View>
 
             <View style={styles.searchContainer}>
                 <TextInput
-                    style={styles.searchInput}
+                    style={[styles.searchInput, { backgroundColor: colors.surface, color: colors.text }]}
                     placeholder="Search exercises..."
+                    placeholderTextColor={colors.textMuted}
                     value={search}
                     onChangeText={setSearch}
                 />
@@ -60,9 +63,9 @@ export const ExerciseListScreen = ({ route }: any) => {
                 data={filtered}
                 keyExtractor={item => item.id}
                 renderItem={({ item }) => (
-                    <TouchableOpacity style={styles.item} onPress={() => handleSelect(item)}>
-                        <Text style={styles.itemTitle}>{item.name}</Text>
-                        <Text style={styles.itemSubtitle}>
+                    <TouchableOpacity style={[styles.item, { backgroundColor: colors.surface }]} onPress={() => handleSelect(item)}>
+                        <Text style={[styles.itemTitle, { color: colors.text }]}>{item.name}</Text>
+                        <Text style={[styles.itemSubtitle, { color: colors.textMuted }]}>
                             {(item.enabledMetrics || []).join(', ')}
                         </Text>
                     </TouchableOpacity>
@@ -76,30 +79,24 @@ export const ExerciseListScreen = ({ route }: any) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Theme.Colors.background,
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: Theme.Spacing.m,
-        backgroundColor: Theme.Colors.surface,
         borderBottomWidth: 1,
-        borderBottomColor: Theme.Colors.border,
     },
     backText: {
-        color: Theme.Colors.primary,
         fontSize: 17,
     },
     actionText: {
-        color: Theme.Colors.primary,
         fontSize: 24,
     },
     searchContainer: {
         padding: Theme.Spacing.m,
     },
     searchInput: {
-        backgroundColor: '#E5E5EA',
         padding: Theme.Spacing.s,
         borderRadius: 10,
         fontSize: 17,
@@ -108,7 +105,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: Theme.Spacing.m,
     },
     item: {
-        backgroundColor: Theme.Colors.surface,
         padding: Theme.Spacing.m,
         borderRadius: 12,
         marginBottom: Theme.Spacing.s,
@@ -118,7 +114,6 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     itemSubtitle: {
-        color: Theme.Colors.textSecondary,
         marginTop: 4,
     }
 });

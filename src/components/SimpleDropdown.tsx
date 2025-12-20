@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, Modal, StyleSheet, FlatList, ViewStyle, TextStyle, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, StyleSheet, FlatList, ViewStyle, TextStyle } from 'react-native';
 import { Theme } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 
 interface SimpleDropdownProps {
     value: string;
@@ -12,6 +13,8 @@ interface SimpleDropdownProps {
     style?: ViewStyle;
     textStyle?: TextStyle;
     label?: string;
+    dropdownStyle?: ViewStyle;
+    dropdownTextStyle?: TextStyle;
 }
 
 export const SimpleDropdown: React.FC<SimpleDropdownProps> = ({
@@ -22,8 +25,11 @@ export const SimpleDropdown: React.FC<SimpleDropdownProps> = ({
     disabled = false,
     style,
     textStyle,
-    label
+    label,
+    dropdownStyle,
+    dropdownTextStyle
 }) => {
+    const { colors } = useTheme();
     const [visible, setVisible] = useState(false);
     const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
     const buttonRef = useRef<React.ElementRef<typeof TouchableOpacity>>(null);
@@ -42,12 +48,19 @@ export const SimpleDropdown: React.FC<SimpleDropdownProps> = ({
         setVisible(false);
     };
 
+    // Dynamic Styles
+    const buttonStyle = { backgroundColor: colors.surface, borderColor: colors.border };
+    const dropdownBgStyle = { backgroundColor: colors.surface, borderColor: colors.border };
+    const itemTextStyle = { color: colors.text };
+    const selectedItemStyle = { backgroundColor: colors.background }; // Use background color for selection highlight
+
     return (
         <>
             <TouchableOpacity
                 ref={buttonRef}
                 style={[
                     styles.button,
+                    buttonStyle,
                     disabled && styles.disabledButton,
                     style
                 ]}
@@ -56,13 +69,14 @@ export const SimpleDropdown: React.FC<SimpleDropdownProps> = ({
             >
                 <Text style={[
                     styles.buttonText,
-                    disabled && styles.disabledText,
+                    { color: colors.text },
+                    disabled && { color: colors.textMuted },
                     textStyle
                 ]}>
                     {label ? `${label}: ` : ''}{value ? value.toUpperCase() : placeholder}
                 </Text>
                 {!disabled && (
-                    <Ionicons name="chevron-down" size={16} color={Theme.Colors.textSecondary} />
+                    <Ionicons name="chevron-down" size={16} color={colors.textMuted} />
                 )}
             </TouchableOpacity>
 
@@ -79,11 +93,13 @@ export const SimpleDropdown: React.FC<SimpleDropdownProps> = ({
                 >
                     <View style={[
                         styles.dropdownMenu,
+                        dropdownBgStyle,
                         {
                             top: position.top,
                             left: position.left,
                             width: position.width,
-                        }
+                        },
+                        dropdownStyle
                     ]}>
                         <FlatList
                             data={options}
@@ -92,18 +108,20 @@ export const SimpleDropdown: React.FC<SimpleDropdownProps> = ({
                                 <TouchableOpacity
                                     style={[
                                         styles.item,
-                                        item === value && styles.selectedItem
+                                        item === value && selectedItemStyle
                                     ]}
                                     onPress={() => handleSelect(item)}
                                 >
                                     <Text style={[
                                         styles.itemText,
-                                        item === value && styles.selectedItemText
+                                        itemTextStyle,
+                                        item === value && { color: colors.primary, fontWeight: '600' },
+                                        dropdownTextStyle
                                     ]}>
                                         {item.toUpperCase()}
                                     </Text>
                                     {item === value && (
-                                        <Ionicons name="checkmark" size={18} color={Theme.Colors.primary} />
+                                        <Ionicons name="checkmark" size={18} color={colors.primary} />
                                     )}
                                 </TouchableOpacity>
                             )}
@@ -122,42 +140,33 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 12,
         paddingVertical: 10,
-        backgroundColor: Theme.Colors.surface,
         borderRadius: 10,
         borderWidth: 1,
-        borderColor: Theme.Colors.border,
         minWidth: 100,
     },
     disabledButton: {
-        backgroundColor: Theme.Colors.background,
         opacity: 0.6,
         borderColor: 'transparent'
     },
     buttonText: {
         fontSize: 14,
         fontWeight: '600',
-        color: Theme.Colors.text,
         marginRight: 8,
-    },
-    disabledText: {
-        color: Theme.Colors.textSecondary,
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'transparent', // Make overlay transparent so it feels like a popup
+        backgroundColor: 'transparent',
     },
     dropdownMenu: {
         position: 'absolute',
-        backgroundColor: Theme.Colors.surface,
         borderRadius: 12,
         maxHeight: 200,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 }, // Drop down shadow
+        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.15,
         shadowRadius: 8,
         elevation: 5,
         borderWidth: 1,
-        borderColor: Theme.Colors.border, // Subtle border
         overflow: 'hidden',
     },
     item: {
@@ -166,18 +175,9 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingVertical: 12,
         paddingHorizontal: 14,
-        // No bottom border for cleaner look, or maybe subtle separator
-    },
-    selectedItem: {
-        backgroundColor: '#F2F2F7', // Light highlight
     },
     itemText: {
-        fontSize: 14, // Match button text
-        color: Theme.Colors.text,
+        fontSize: 14,
         fontWeight: '500',
     },
-    selectedItemText: {
-        color: Theme.Colors.primary,
-        fontWeight: '600',
-    }
 });

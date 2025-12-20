@@ -6,10 +6,12 @@ import { supabaseService } from '../../services/SupabaseDataService';
 import { WorkoutTemplate } from '../../models';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../context/ThemeContext';
 
 export const WorkoutListScreen = () => {
     const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
     const navigation = useNavigation<any>();
+    const { colors, isDark } = useTheme();
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('focus', () => {
@@ -47,40 +49,45 @@ export const WorkoutListScreen = () => {
         navigation.navigate('CreateWorkout', { templateToEdit: selectedTemplate });
     };
 
+    // Dynamic Styles
+    const containerStyle = { backgroundColor: colors.background };
+    const textStyle = { color: colors.text };
+    const subtitleStyle = { color: colors.textMuted };
+    const cardStyle = { backgroundColor: colors.surface };
+    const quickStartButtonStyle = { backgroundColor: colors.surface };
+
     const renderHeader = () => (
         <View style={styles.header}>
-            <Text style={styles.title}>Workout</Text>
+            <Text style={[styles.title, textStyle]}>Workout</Text>
 
             <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Quick Start</Text>
+                <Text style={[styles.sectionTitle, subtitleStyle]}>Quick Start</Text>
                 <TouchableOpacity
-                    style={styles.quickStartButton}
+                    style={[styles.quickStartButton, quickStartButtonStyle]}
                     onPress={() => navigation.navigate('ActiveSession', { templateId: null })}
                 >
-                    <Text style={styles.quickStartText}>+ Start Empty Workout</Text>
+                    <Text style={[styles.quickStartText, textStyle]}>+ Start Empty Workout</Text>
                 </TouchableOpacity>
             </View>
 
-
-
             <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Routines</Text>
+                <Text style={[styles.sectionTitle, subtitleStyle]}>Routines</Text>
             </View>
         </View>
     );
 
     const renderItem = ({ item }: { item: WorkoutTemplate }) => (
-        <View style={styles.card}>
+        <View style={[styles.card, cardStyle]}>
             <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>{item.name}</Text>
+                <Text style={[styles.cardTitle, textStyle]}>{item.name}</Text>
                 <TouchableOpacity onPress={() => handleAction(item)} style={{ padding: 4 }}>
-                    <Ionicons name="ellipsis-horizontal" size={20} color={Theme.Colors.textSecondary} />
+                    <Ionicons name="ellipsis-horizontal" size={20} color={colors.textMuted} />
                 </TouchableOpacity>
             </View>
-            <Text style={styles.cardSubtitle}>{item.exercises?.length || 0} Exercises</Text>
+            <Text style={[styles.cardSubtitle, subtitleStyle]}>{item.exercises?.length || 0} Exercises</Text>
 
             <TouchableOpacity
-                style={styles.startButton}
+                style={[styles.startButton, { backgroundColor: colors.primary }]}
                 onPress={() => navigation.navigate('ActiveSession', { templateId: item.id })}
             >
                 <Text style={styles.startButtonText}>Start Routine</Text>
@@ -89,7 +96,7 @@ export const WorkoutListScreen = () => {
     );
 
     return (
-        <SafeAreaView style={styles.container} edges={['top']}>
+        <SafeAreaView style={[styles.container, containerStyle]} edges={['top']}>
             <FlatList
                 data={templates}
                 keyExtractor={(item) => item.id}
@@ -111,21 +118,21 @@ export const WorkoutListScreen = () => {
                     activeOpacity={1}
                     onPress={() => setModalVisible(false)}
                 >
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Manage Routine</Text>
-                        <Text style={styles.modalSubtitle}>{selectedTemplate?.name}</Text>
+                    <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+                        <Text style={[styles.modalTitle, textStyle]}>Manage Routine</Text>
+                        <Text style={[styles.modalSubtitle, subtitleStyle]}>{selectedTemplate?.name}</Text>
 
                         <View style={styles.modalActions}>
                             <TouchableOpacity style={styles.modalButton} onPress={handleEdit}>
-                                <Text style={styles.modalButtonText}>Edit</Text>
+                                <Text style={[styles.modalButtonText, { color: colors.primary }]}>Edit</Text>
                             </TouchableOpacity>
-                            <View style={styles.divider} />
+                            <View style={[styles.divider, { backgroundColor: colors.border }]} />
                             <TouchableOpacity style={styles.modalButton} onPress={handleDelete}>
-                                <Text style={[styles.modalButtonText, { color: Theme.Colors.danger }]}>Delete</Text>
+                                <Text style={[styles.modalButtonText, { color: colors.danger }]}>Delete</Text>
                             </TouchableOpacity>
                         </View>
                         <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
-                            <Text style={styles.cancelButtonText}>Cancel</Text>
+                            <Text style={[styles.cancelButtonText, subtitleStyle]}>Cancel</Text>
                         </TouchableOpacity>
                     </View>
                 </TouchableOpacity>
@@ -137,7 +144,6 @@ export const WorkoutListScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Theme.Colors.background,
     },
     content: {
         padding: Theme.Spacing.m,
@@ -146,7 +152,8 @@ const styles = StyleSheet.create({
         marginBottom: Theme.Spacing.l,
     },
     title: {
-        ...Theme.Typography.title,
+        fontSize: Theme.Typography.scale.xl,
+        fontWeight: 'bold',
         marginBottom: Theme.Spacing.l,
     },
     section: {
@@ -159,22 +166,20 @@ const styles = StyleSheet.create({
         marginBottom: Theme.Spacing.s,
     },
     sectionTitle: {
-        ...Theme.Typography.subtitle,
+        fontSize: Theme.Typography.scale.lg,
+        fontWeight: '600',
         marginBottom: Theme.Spacing.s,
     },
     quickStartButton: {
-        backgroundColor: Theme.Colors.surface,
         padding: Theme.Spacing.m,
         borderRadius: 12,
         alignItems: 'center',
     },
     quickStartText: {
-        ...Theme.Typography.body,
+        fontSize: Theme.Typography.scale.md,
         fontWeight: '600',
-        color: Theme.Colors.text,
     },
     card: {
-        backgroundColor: Theme.Colors.surface,
         padding: Theme.Spacing.m,
         borderRadius: 12,
         marginBottom: Theme.Spacing.m,
@@ -190,30 +195,27 @@ const styles = StyleSheet.create({
         marginBottom: Theme.Spacing.s,
     },
     cardTitle: {
-        ...Theme.Typography.body,
+        fontSize: Theme.Typography.scale.md,
         fontWeight: '600',
     },
     cardSubtitle: {
-        ...Theme.Typography.caption,
+        fontSize: Theme.Typography.scale.sm,
         marginBottom: Theme.Spacing.m,
     },
     startButton: {
-        backgroundColor: Theme.Colors.primary,
         paddingVertical: Theme.Spacing.s,
         borderRadius: 8,
         alignItems: 'center',
     },
     startButtonText: {
-        ...Theme.Typography.body,
+        fontSize: Theme.Typography.scale.md,
         color: '#FFFFFF',
         fontWeight: '600',
     },
     iconButton: {
         fontSize: 24,
-        color: Theme.Colors.text,
     },
     libraryCard: {
-        backgroundColor: Theme.Colors.surface,
         padding: Theme.Spacing.m,
         borderRadius: 12,
         flexDirection: 'row',
@@ -229,12 +231,11 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 8,
-        backgroundColor: Theme.Colors.primary,
         justifyContent: 'center',
         alignItems: 'center',
     },
     cardSubtitleNoBottom: {
-        ...Theme.Typography.caption,
+        fontSize: Theme.Typography.scale.sm,
     },
     // Modal
     modalOverlay: {
@@ -245,7 +246,6 @@ const styles = StyleSheet.create({
         padding: Theme.Spacing.l,
     },
     modalContent: {
-        backgroundColor: Theme.Colors.surface,
         borderRadius: 20,
         width: '100%',
         maxWidth: 320,
@@ -265,7 +265,6 @@ const styles = StyleSheet.create({
     },
     modalSubtitle: {
         fontSize: 14,
-        color: Theme.Colors.textSecondary,
         marginBottom: 24,
         textAlign: 'center',
     },
@@ -280,11 +279,9 @@ const styles = StyleSheet.create({
     modalButtonText: {
         fontSize: 17,
         fontWeight: '600',
-        color: Theme.Colors.primary,
     },
     divider: {
         height: 1,
-        backgroundColor: Theme.Colors.border,
         marginVertical: 4,
     },
     cancelButton: {
@@ -293,6 +290,5 @@ const styles = StyleSheet.create({
     cancelButtonText: {
         fontSize: 17,
         fontWeight: '600',
-        color: Theme.Colors.textSecondary,
     }
 });

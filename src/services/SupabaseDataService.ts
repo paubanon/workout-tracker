@@ -123,7 +123,12 @@ class SupabaseDataService {
         if (updates.firstName !== undefined) dbUpdates.first_name = updates.firstName;
         if (updates.lastName !== undefined) dbUpdates.last_name = updates.lastName;
         if (updates.sex !== undefined) dbUpdates.sex = updates.sex;
-        if (updates.preferences !== undefined) dbUpdates.preferences = updates.preferences;
+        if (updates.preferences !== undefined) {
+            // Fetch current user settings to merge if strictly needed, but assuming caller handles merge for now.
+            // Actually, doing a shallow merge here is safer for partial updates.
+            // But 'updates' comes from the App state which should have current valid state.
+            dbUpdates.preferences = updates.preferences;
+        }
 
         const { error } = await supabase
             .from('profiles')

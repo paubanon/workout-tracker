@@ -8,8 +8,11 @@ import { supabaseService } from '../../services/SupabaseDataService';
 import { Exercise } from '../../models';
 import { LineChart } from "react-native-gifted-charts";
 import { SimpleDropdown } from '../../components/SimpleDropdown';
+import { useTheme } from '../../context/ThemeContext';
 
 export const AnalysisScreen = () => {
+    const { colors, isDark } = useTheme();
+
     // --- State ---
     const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
     const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -70,10 +73,6 @@ export const AnalysisScreen = () => {
 
 
     // Metrics & Regression
-    // Compute metrics using the selected aggregation method for the Trend calculation?
-    // User: "The user can select whether to plot... and that is what should be displayed"
-    // "I would like to show this [regression]... for the data points."
-    // So aggregation affects Trend.
     const metrics1 = useMemo(() => computeMetrics(var1, agg1), [var1, agg1, loading, timeFrame]);
     const metrics2 = useMemo(() => var2 === 'none' ? null : computeMetrics(var2, agg2), [var2, agg2, loading, timeFrame]);
 
@@ -148,7 +147,6 @@ export const AnalysisScreen = () => {
     const chartData1Final = chartData1.map(d => ({ ...d }));
 
     // For secondary data, we need to merge the actual data and regression data
-    // because data4 with isSecondary has library limitations
     const chartData2Final = chartData2.map((d, i) => ({
         ...d,
         isSecondary: true
@@ -166,75 +164,60 @@ export const AnalysisScreen = () => {
         value: (d.value - axis2.minValue) * scaleFactor + axis1.minValue,
     }));
 
-    // Create combined secondary data with regression
-    // We'll use different styling on the regression points
-    const combinedSecondaryData = var2 !== 'none' ? [
-        ...chartData2Final,
-        ...regression2.map(d => ({
-            value: d.value,
-            isSecondary: true,
-            hideDataPoint: true, // Hide the dots for regression
-            // strokeDashArray can't be set per point, so we'll need another approach
-        }))
-    ] : [];
-    // If var2 is none, max2 might be 0.
-
     // Layout
     const screenWidth = Dimensions.get('window').width;
-    // Reserve more space for right axis labels
-    const chartWidth = screenWidth - Theme.Spacing.m * 2 - 100; // Even more space for right axis labels to avoid clipping
-    // Fit all points:
+    const chartWidth = screenWidth - Theme.Spacing.m * 2 - 100;
     const dataCount = chartData1.length;
-    // Calculate spacing to fit width. Max 100? Min 10?
-    // If dataCount is small, use default spacing? 
-    // "all the plot to be compressed in the view of the user without the need to scroll"
     const fitSpacing = dataCount > 1 ? (chartWidth - 40) / (dataCount - 1) : 40;
-    // Cap spacing to reasonable limits if needed, but user wants to fit ALL.
-    // If too many points, spacing might be tiny.
 
     // Local constants
     const SECONDARY_COLOR = '#FF9500';
+
+    // Dynamic Styles for Components
+    const textStyle = { color: colors.text };
+    const textMutedStyle = { color: colors.textMuted };
+    const cardStyle = { backgroundColor: colors.surface };
 
     // --- Components ---
 
     const renderMetricCard = (title: string, data: any, color: string) => {
         if (!data) return null;
         return (
-            <View style={styles.metricCard}>
+            <View style={[styles.metricCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <Text style={[styles.metricTitle, { color }]}>{title} ({data.trend})</Text>
                 <View style={styles.metricRow}>
-                    <Text style={styles.metricLabel}>Max:</Text>
-                    <Text style={styles.metricValue}>{data.max.toFixed(1)}</Text>
+                    <Text style={[styles.metricLabel, textMutedStyle]}>Max:</Text>
+                    <Text style={[styles.metricValue, textStyle]}>{data.max.toFixed(1)}</Text>
                 </View>
                 <View style={styles.metricRow}>
-                    <Text style={styles.metricLabel}>Avg:</Text>
-                    <Text style={styles.metricValue}>{data.avg.toFixed(1)}</Text>
+                    <Text style={[styles.metricLabel, textMutedStyle]}>Avg:</Text>
+                    <Text style={[styles.metricValue, textStyle]}>{data.avg.toFixed(1)}</Text>
                 </View>
                 <View style={styles.metricRow}>
-                    <Text style={styles.metricLabel}>Min:</Text>
-                    <Text style={styles.metricValue}>{data.min.toFixed(1)}</Text>
+                    <Text style={[styles.metricLabel, textMutedStyle]}>Min:</Text>
+                    <Text style={[styles.metricValue, textStyle]}>{data.min.toFixed(1)}</Text>
                 </View>
-                {/* Estimated RMs - Only show if > 0 */}
+                {/* Estimated RMs */}
                 {data.est1RM ? (
-                    <View style={styles.rmContainer}>
+                    <View style={[styles.rmContainer, { borderTopColor: colors.border }]}>
                         <View style={styles.metricRow}>
-                            <Text style={styles.metricLabel}>Est 1RM:</Text>
-                            <Text style={styles.metricValue}>{data.est1RM.toFixed(1)}</Text>
+                            <Text style={[styles.metricLabel, textMutedStyle]}>Est 1RM:</Text>
+                            <Text style={[styles.metricValue, textStyle]}>{data.est1RM.toFixed(1)}</Text>
                         </View>
                         <View style={styles.metricRow}>
-                            <Text style={styles.metricLabel}>Est 3RM:</Text>
-                            <Text style={styles.metricValue}>{data.est3RM.toFixed(1)}</Text>
+                            <Text style={[styles.metricLabel, textMutedStyle]}>Est 3RM:</Text>
+                            <Text style={[styles.metricValue, textStyle]}>{data.est3RM.toFixed(1)}</Text>
                         </View>
                         <View style={styles.metricRow}>
-                            <Text style={styles.metricLabel}>Est 5RM:</Text>
-                            <Text style={styles.metricValue}>{data.est5RM.toFixed(1)}</Text>
+                            <Text style={[styles.metricLabel, textMutedStyle]}>Est 5RM:</Text>
+                            <Text style={[styles.metricValue, textStyle]}>{data.est5RM.toFixed(1)}</Text>
                         </View>
                     </View>
                 ) : null}
                 {title === 'VOLUME' ? (
                     <View style={styles.metricRow}>
-                        <Text style={styles.metricLabel}>Total Vol:</Text>
-                        <Text style={styles.metricValue}>{data.volume.toFixed(0)}</Text>
+                        <Text style={[styles.metricLabel, textMutedStyle]}>Total Vol:</Text>
+                        <Text style={[styles.metricValue, textStyle]}>{data.volume.toFixed(0)}</Text>
                     </View>
                 ) : null}
             </View>
@@ -242,16 +225,16 @@ export const AnalysisScreen = () => {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                <Text style={styles.headerTitle}>Analysis</Text>
+                <Text style={[styles.headerTitle, textStyle]}>Analysis</Text>
 
                 {/* Exercise Selector */}
-                <TouchableOpacity style={styles.exerciseSelector} onPress={() => setPickerVisible(true)}>
-                    <Text style={styles.exerciseSelectorText}>
+                <TouchableOpacity style={[styles.exerciseSelector, { backgroundColor: colors.surface }]} onPress={() => setPickerVisible(true)}>
+                    <Text style={[styles.exerciseSelectorText, textStyle]}>
                         {selectedExercise ? selectedExercise.name : "Select Exercise"}
                     </Text>
-                    <Ionicons name="chevron-down" size={18} color={Theme.Colors.text} />
+                    <Ionicons name="chevron-down" size={18} color={colors.text} />
                 </TouchableOpacity>
 
                 {/* Left Axis Controls */}
@@ -265,10 +248,10 @@ export const AnalysisScreen = () => {
                                 borderWidth: 0,
                                 borderRadius: 12,
                                 paddingVertical: 12, // Match bigger touch area
-                                backgroundColor: Theme.Colors.surface
+                                backgroundColor: colors.surface
                             }}
                             textStyle={{
-                                color: Theme.Colors.primary,
+                                color: colors.primary,
                                 fontWeight: '700',
                                 fontSize: 13,
                                 textTransform: 'uppercase'
@@ -285,14 +268,17 @@ export const AnalysisScreen = () => {
                                 borderWidth: 0,
                                 borderRadius: 12,
                                 paddingVertical: 12,
-                                backgroundColor: Theme.Colors.surface,
+                                backgroundColor: colors.surface,
                                 ...(var1 === 'volume' ? { opacity: 0.5 } : {})
                             }}
                             textStyle={{
                                 fontSize: 13,
                                 fontWeight: '600',
-                                textTransform: 'uppercase'
+                                textTransform: 'uppercase',
+                                color: colors.text // Ensure aggregated text is visible
                             }}
+                            dropdownTextStyle={{ color: colors.text }} // Ensure dropdown items are visible
+                            dropdownStyle={{ backgroundColor: colors.surface }}
                         />
                     </View>
 
@@ -302,14 +288,14 @@ export const AnalysisScreen = () => {
                             setHelpVisible(!isHelpVisible);
                         }}
                     >
-                        <Ionicons name="help-circle-outline" size={22} color={Theme.Colors.textSecondary} />
+                        <Ionicons name="help-circle-outline" size={22} color={colors.textMuted} />
                     </TouchableOpacity>
                 </View>
 
                 {/* Help Bubble */}
                 {isHelpVisible && (
-                    <View style={styles.helpBubble}>
-                        <Text style={styles.helpText}>
+                    <View style={[styles.helpBubble, { backgroundColor: colors.surface }]}>
+                        <Text style={[styles.helpText, { color: colors.textMuted }]}>
                             Select Max, Average, or Min to plot the corresponding value from each session's sets.
                             {"\n"}Volume is a total sum per session.
                         </Text>
@@ -328,7 +314,7 @@ export const AnalysisScreen = () => {
                                 borderWidth: 0,
                                 borderRadius: 12,
                                 paddingVertical: 12,
-                                backgroundColor: Theme.Colors.surface
+                                backgroundColor: colors.surface
                             }}
                             textStyle={{
                                 color: SECONDARY_COLOR,
@@ -348,40 +334,47 @@ export const AnalysisScreen = () => {
                                 borderWidth: 0,
                                 borderRadius: 12,
                                 paddingVertical: 12,
-                                backgroundColor: Theme.Colors.surface,
+                                backgroundColor: colors.surface,
                                 ...(var2 === 'none' || var2 === 'volume' ? { opacity: 0.5 } : {})
                             }}
                             textStyle={{
                                 fontSize: 13,
                                 fontWeight: '600',
-                                textTransform: 'uppercase'
+                                textTransform: 'uppercase',
+                                color: colors.text
                             }}
+                            dropdownTextStyle={{ color: colors.text }}
+                            dropdownStyle={{ backgroundColor: colors.surface }}
                         />
                     </View>
                 </View>
 
 
                 {/* Time Frame */}
-                <View style={styles.timeFrameContainer}>
+                <View style={[styles.timeFrameContainer, { backgroundColor: colors.surface }]}>
                     {(['1M', '3M', '6M', '1Y', 'ALL'] as TimeFrame[]).map((tf) => (
                         <TouchableOpacity
                             key={tf}
-                            style={[styles.pill, timeFrame === tf && styles.pillActive]}
+                            style={[styles.pill, timeFrame === tf && { backgroundColor: colors.primary }]}
                             onPress={() => setTimeFrame(tf)}
                         >
-                            <Text style={[styles.pillText, timeFrame === tf && styles.pillTextActive]}>{tf}</Text>
+                            <Text style={[
+                                styles.pillText,
+                                { color: colors.textMuted },
+                                timeFrame === tf && { color: '#FFF' }
+                            ]}>{tf}</Text>
                         </TouchableOpacity>
                     ))}
                 </View>
 
                 {/* AI Report Placeholder */}
-                <View style={styles.aiCard}>
-                    <Text style={styles.aiText}>✨ AI Report Upcoming...</Text>
+                <View style={[styles.aiCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                    <Text style={[styles.aiText, { color: colors.textMuted }]}>✨ AI Report Upcoming...</Text>
                 </View>
 
                 {/* Chart */}
                 {selectedExercise && chartData1.length > 0 ? (
-                    <View style={styles.chartContainer}>
+                    <View style={[styles.chartContainer, { backgroundColor: colors.surface }]}>
                         <LineChart
                             data={chartData1Final}
                             secondaryData={var2 !== 'none' ? chartData2Final : undefined}
@@ -391,9 +384,9 @@ export const AnalysisScreen = () => {
                             width={chartWidth}
                             spacing={fitSpacing}
                             initialSpacing={10}
-                            color1={Theme.Colors.primary}
+                            color1={colors.primary}
                             color2={SECONDARY_COLOR}
-                            color3={Theme.Colors.primary} // Regression 1 same color
+                            color3={colors.primary} // Regression 1 same color
                             color4={SECONDARY_COLOR} // Regression 2 orange
 
                             // Line Config
@@ -407,27 +400,27 @@ export const AnalysisScreen = () => {
                             hideDataPoints4
 
                             // Dots
-                            dataPointsColor1={Theme.Colors.primary}
+                            dataPointsColor1={colors.primary}
                             dataPointsColor2={SECONDARY_COLOR}
                             dataPointsColor4={SECONDARY_COLOR}
-                            textColor1={Theme.Colors.primary}
+                            textColor1={colors.primary}
                             textColor2={SECONDARY_COLOR}
                             textColor4={SECONDARY_COLOR}
 
                             // Axes
-                            yAxisColor={Theme.Colors.border}
-                            xAxisColor={Theme.Colors.border}
-                            yAxisTextStyle={{ color: Theme.Colors.textSecondary, fontSize: 10 }}
+                            yAxisColor={colors.border}
+                            xAxisColor={colors.border}
+                            yAxisTextStyle={{ color: colors.textMuted, fontSize: 10 }}
                             yAxisLabelWidth={40}
                             xAxisLabelTextStyle={{
-                                color: Theme.Colors.textSecondary,
+                                color: colors.textMuted,
                                 fontSize: 9,
                             }}
                             labelsExtraHeight={16} // Extra room for X-axis labels (avoids clipping)
                             rotateLabel // Rotate labels to -45 degrees automatically
 
                             // Grid
-                            rulesColor={'#E0E0E0'}
+                            rulesColor={isDark ? '#333' : '#E0E0E0'}
                             rulesType="solid"
 
                             curved
@@ -464,14 +457,14 @@ export const AnalysisScreen = () => {
                     </View>
                 ) : (
                     <View style={styles.emptyChart}>
-                        <Text style={styles.emptyText}>Select an exercise to analyze</Text>
+                        <Text style={[styles.emptyText, textMutedStyle]}>Select an exercise to analyze</Text>
                     </View>
                 )}
 
                 {/* Metrics List */}
                 {selectedExercise && (
                     <View style={styles.metricsContainer}>
-                        {renderMetricCard(var1.toUpperCase(), metrics1, Theme.Colors.primary)}
+                        {renderMetricCard(var1.toUpperCase(), metrics1, colors.primary)}
                         {renderMetricCard(var2.toUpperCase(), metrics2, SECONDARY_COLOR)}
                     </View>
                 )}
@@ -480,34 +473,36 @@ export const AnalysisScreen = () => {
             </ScrollView>
 
             {/* Exercise Picker Modal */}
-            <Modal visible={isPickerVisible} animationType="slide">
-                <SafeAreaView style={styles.modalContainer}>
-                    <View style={styles.modalHeader}>
-                        <TouchableOpacity onPress={() => setPickerVisible(false)}>
-                            <Ionicons name="close" size={24} color={Theme.Colors.text} />
-                        </TouchableOpacity>
-                        <Text style={styles.modalTitle}>Select Exercise</Text>
-                    </View>
-                    <TextInput
-                        style={styles.searchInput}
-                        placeholder="Search exercises..."
-                        placeholderTextColor={Theme.Colors.textSecondary}
-                        value={searchQuery}
-                        onChangeText={setSearchQuery}
-                    />
-                    <FlatList
-                        data={filteredExercises}
-                        keyExtractor={item => item.id}
-                        renderItem={({ item }) => (
-                            <TouchableOpacity style={styles.exerciseItem} onPress={() => {
-                                setSelectedExercise(item);
-                                setPickerVisible(false);
-                            }}>
-                                <Text style={styles.exerciseName}>{item.name}</Text>
+            <Modal visible={isPickerVisible} animationType="slide" transparent>
+                <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
+                    <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
+                        <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+                            <TouchableOpacity onPress={() => setPickerVisible(false)}>
+                                <Ionicons name="close" size={24} color={colors.text} />
                             </TouchableOpacity>
-                        )}
-                    />
-                </SafeAreaView>
+                            <Text style={[styles.modalTitle, textStyle]}>Select Exercise</Text>
+                        </View>
+                        <TextInput
+                            style={[styles.searchInput, { backgroundColor: colors.surface, color: colors.text }]}
+                            placeholder="Search exercises..."
+                            placeholderTextColor={colors.textMuted}
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                        />
+                        <FlatList
+                            data={filteredExercises}
+                            keyExtractor={item => item.id}
+                            renderItem={({ item }) => (
+                                <TouchableOpacity style={[styles.exerciseItem, { borderBottomColor: colors.border }]} onPress={() => {
+                                    setSelectedExercise(item);
+                                    setPickerVisible(false);
+                                }}>
+                                    <Text style={[styles.exerciseName, textStyle]}>{item.name}</Text>
+                                </TouchableOpacity>
+                            )}
+                        />
+                    </View>
+                </View>
             </Modal>
         </SafeAreaView>
     );
@@ -516,14 +511,14 @@ export const AnalysisScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Theme.Colors.background,
     },
     scrollContent: {
         padding: Theme.Spacing.m,
         paddingBottom: 50,
     },
     headerTitle: {
-        ...Theme.Typography.title,
+        fontSize: Theme.Typography.scale.xl,
+        fontWeight: 'bold',
         marginTop: Theme.Spacing.s,
         marginBottom: Theme.Spacing.l,
     },
@@ -533,14 +528,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         padding: 14,
-        backgroundColor: Theme.Colors.surface,
         borderRadius: 16,
         marginBottom: 20,
     },
     exerciseSelectorText: {
         fontSize: 16,
         fontWeight: '600',
-        color: Theme.Colors.text,
         marginRight: 8,
     },
     controlsRow: {
@@ -555,23 +548,19 @@ const styles = StyleSheet.create({
         marginLeft: 4,
     },
     helpBubble: {
-        backgroundColor: Theme.Colors.surface,
         padding: 12,
         borderRadius: 8,
         marginTop: 4,
         marginBottom: 8,
-        // Remove border to match new minimal style, maybe just use bg
     },
     helpText: {
         fontSize: 12,
-        color: Theme.Colors.textSecondary,
         lineHeight: 16,
     },
     timeFrameContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginVertical: Theme.Spacing.m,
-        backgroundColor: Theme.Colors.surface,
         borderRadius: 12,
         padding: 4,
     },
@@ -581,42 +570,26 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         marginHorizontal: 2,
         borderRadius: 10,
-        backgroundColor: 'transparent', // Transparent on container
-    },
-    pillActive: {
-        backgroundColor: Theme.Colors.primary,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 3.84,
-        elevation: 2,
+        backgroundColor: 'transparent',
     },
     pillText: {
         fontSize: 13,
         fontWeight: '600',
-        color: Theme.Colors.textSecondary,
-    },
-    pillTextActive: {
-        color: '#FFF',
     },
     aiCard: {
         height: 80,
-        backgroundColor: Theme.Colors.surface,
         borderRadius: 12,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: Theme.Spacing.l,
         borderWidth: 1,
-        borderColor: Theme.Colors.border,
         borderStyle: 'dashed',
     },
     aiText: {
-        ...Theme.Typography.body,
-        color: Theme.Colors.textSecondary,
+        fontSize: Theme.Typography.scale.md,
         fontStyle: 'italic',
     },
     chartContainer: {
-        backgroundColor: Theme.Colors.surface,
         padding: Theme.Spacing.s,
         paddingBottom: 8, // Extra room for rotated X-axis labels
         borderRadius: 12,
@@ -629,21 +602,20 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     emptyText: {
-        color: Theme.Colors.textSecondary,
+        // dynamic color
     },
     metricsContainer: {
         flexDirection: 'column',
     },
     metricCard: {
-        backgroundColor: Theme.Colors.surface,
         padding: Theme.Spacing.m,
         borderRadius: 12,
         marginBottom: Theme.Spacing.m,
         borderLeftWidth: 4,
-        borderColor: Theme.Colors.border,
     },
     metricTitle: {
-        ...Theme.Typography.subtitle,
+        fontSize: Theme.Typography.scale.lg,
+        fontWeight: '600',
         marginBottom: Theme.Spacing.s,
         textTransform: 'capitalize',
     },
@@ -653,48 +625,50 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     metricLabel: {
-        ...Theme.Typography.body,
-        color: Theme.Colors.textSecondary,
+        fontSize: Theme.Typography.scale.md,
     },
     metricValue: {
-        ...Theme.Typography.body,
+        fontSize: Theme.Typography.scale.md,
         fontWeight: '600',
     },
     rmContainer: {
         marginTop: 8,
         paddingTop: 8,
         borderTopWidth: 1,
-        borderTopColor: Theme.Colors.border,
     },
     // Modal
-    modalContainer: {
+    modalOverlay: {
         flex: 1,
-        backgroundColor: Theme.Colors.background,
+        justifyContent: 'flex-end', // Make it like a sheet or full screen
+    },
+    modalContent: {
+        flex: 1,
+        marginTop: 60, // Leave some space at top
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        overflow: 'hidden',
     },
     modalHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: Theme.Spacing.m,
         borderBottomWidth: 1,
-        borderBottomColor: Theme.Colors.border,
     },
     modalTitle: {
-        ...Theme.Typography.subtitle,
+        fontSize: Theme.Typography.scale.lg,
+        fontWeight: '600',
         marginLeft: Theme.Spacing.m,
     },
     searchInput: {
         margin: Theme.Spacing.m,
         padding: Theme.Spacing.m,
-        backgroundColor: Theme.Colors.surface,
         borderRadius: 8,
-        color: Theme.Colors.text,
     },
     exerciseItem: {
         padding: Theme.Spacing.m,
         borderBottomWidth: 1,
-        borderBottomColor: Theme.Colors.border,
     },
     exerciseName: {
-        ...Theme.Typography.body,
+        fontSize: Theme.Typography.scale.md,
     },
 });
