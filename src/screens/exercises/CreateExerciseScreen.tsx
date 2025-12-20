@@ -7,6 +7,7 @@ import { supabaseService } from '../../services/SupabaseDataService';
 import { useNavigation } from '@react-navigation/native';
 import { MetricType, RepsType } from '../../models';
 import { useTheme } from '../../context/ThemeContext';
+import { GlowCard } from '../../components/GlowCard';
 
 export const CreateExerciseScreen = () => {
     const navigation = useNavigation();
@@ -84,13 +85,15 @@ export const CreateExerciseScreen = () => {
             <ScrollView style={styles.content}>
                 <View style={styles.section}>
                     <Text style={[styles.label, { color: colors.textMuted }]}>Name</Text>
-                    <TextInput
-                        style={[styles.input, { backgroundColor: colors.surface, color: colors.text }]}
-                        placeholder="e.g. Back Squat"
-                        placeholderTextColor={colors.textMuted}
-                        value={name}
-                        onChangeText={setName}
-                    />
+                    <GlowCard style={styles.inputCard} level="m">
+                        <TextInput
+                            style={[styles.input, { color: colors.text }]}
+                            placeholder="e.g. Back Squat"
+                            placeholderTextColor={colors.textMuted}
+                            value={name}
+                            onChangeText={setName}
+                        />
+                    </GlowCard>
                 </View>
 
                 <View style={styles.section}>
@@ -208,9 +211,11 @@ const styles = StyleSheet.create({
         fontWeight: Theme.Typography.weight.medium,
         marginBottom: Theme.Spacing.s,
     },
+    inputCard: {
+        borderRadius: 12,
+    },
     input: {
         padding: Theme.Spacing.m,
-        borderRadius: 12,
         fontSize: 17,
     },
     sectionTitle: {

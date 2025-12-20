@@ -7,10 +7,11 @@ import { WorkoutSession } from '../../models';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
+import { GlowCard } from '../../components/GlowCard';
 
 export const HistoryScreen = () => {
     const navigation = useNavigation<any>();
-    const { colors } = useTheme();
+    const { colors, isDark } = useTheme();
     const [sessions, setSessions] = useState<WorkoutSession[]>([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(0);
@@ -78,31 +79,33 @@ export const HistoryScreen = () => {
 
         return (
             <View style={styles.cardWrapper}>
-                <TouchableOpacity
-                    style={[styles.card, { backgroundColor: colors.surface }]}
-                    onPress={() => navigation.navigate('WorkoutHistoryDetail', { session: item })}
-                >
-                    <View style={styles.cardContent}>
-                        <Text style={[styles.cardTitle, { color: colors.text }]}>{item.name || 'Untitled Workout'}</Text>
-                        <View style={styles.statsRow}>
-                            <View style={styles.stat}>
-                                <Ionicons name="barbell-outline" size={16} color={colors.textMuted} />
-                                <Text style={[styles.statText, { color: colors.textMuted }]}>{totalVolume} kg</Text>
-                            </View>
-                            <View style={styles.stat}>
-                                <Ionicons name="layers-outline" size={16} color={colors.textMuted} />
-                                <Text style={[styles.statText, { color: colors.textMuted }]}>{item.sets.length} Sets</Text>
-                            </View>
-                            {item.durationSeconds ? (
+                <GlowCard style={styles.card} level="m">
+                    <TouchableOpacity
+                        style={styles.cardContent}
+                        onPress={() => navigation.navigate('WorkoutHistoryDetail', { session: item })}
+                    >
+                        <View style={styles.cardContent}>
+                            <Text style={[styles.cardTitle, { color: colors.text }]}>{item.name || 'Untitled Workout'}</Text>
+                            <View style={styles.statsRow}>
                                 <View style={styles.stat}>
-                                    <Ionicons name="time-outline" size={16} color={colors.textMuted} />
-                                    <Text style={[styles.statText, { color: colors.textMuted }]}>{Math.floor(item.durationSeconds / 60)}m</Text>
+                                    <Ionicons name="barbell-outline" size={16} color={colors.textMuted} />
+                                    <Text style={[styles.statText, { color: colors.textMuted }]}>{totalVolume} kg</Text>
                                 </View>
-                            ) : null}
+                                <View style={styles.stat}>
+                                    <Ionicons name="layers-outline" size={16} color={colors.textMuted} />
+                                    <Text style={[styles.statText, { color: colors.textMuted }]}>{item.sets.length} Sets</Text>
+                                </View>
+                                {item.durationSeconds ? (
+                                    <View style={styles.stat}>
+                                        <Ionicons name="time-outline" size={16} color={colors.textMuted} />
+                                        <Text style={[styles.statText, { color: colors.textMuted }]}>{Math.floor(item.durationSeconds / 60)}m</Text>
+                                    </View>
+                                ) : null}
+                            </View>
+                            <Text style={[styles.cardDate, { color: colors.textMuted }]}>{date}</Text>
                         </View>
-                        <Text style={[styles.cardDate, { color: colors.textMuted }]}>{date}</Text>
-                    </View>
-                </TouchableOpacity>
+                    </TouchableOpacity>
+                </GlowCard>
                 <TouchableOpacity
                     style={styles.menuButton}
                     onPress={() => setMenuVisible(menuVisible === item.id ? null : item.id)}

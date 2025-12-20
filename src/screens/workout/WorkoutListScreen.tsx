@@ -7,6 +7,7 @@ import { WorkoutTemplate } from '../../models';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
+import { GlowCard } from '../../components/GlowCard';
 
 export const WorkoutListScreen = () => {
     const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
@@ -55,6 +56,7 @@ export const WorkoutListScreen = () => {
     const subtitleStyle = { color: colors.textMuted };
     const cardStyle = { backgroundColor: colors.surface };
     const quickStartButtonStyle = { backgroundColor: colors.surface };
+    const shadowStyle = isDark ? Theme.TopLight.m : Theme.Shadows.light.m;
 
     const renderHeader = () => (
         <View style={styles.header}>
@@ -62,12 +64,14 @@ export const WorkoutListScreen = () => {
 
             <View style={styles.section}>
                 <Text style={[styles.sectionTitle, subtitleStyle]}>Quick Start</Text>
-                <TouchableOpacity
-                    style={[styles.quickStartButton, quickStartButtonStyle]}
-                    onPress={() => navigation.navigate('ActiveSession', { templateId: null })}
-                >
-                    <Text style={[styles.quickStartText, textStyle]}>+ Start Empty Workout</Text>
-                </TouchableOpacity>
+                <GlowCard style={styles.quickStartButton} level="m">
+                    <TouchableOpacity
+                        style={{ padding: Theme.Spacing.m }}
+                        onPress={() => navigation.navigate('ActiveSession', { templateId: null })}
+                    >
+                        <Text style={[styles.quickStartText, textStyle]}>+ Start Empty Workout</Text>
+                    </TouchableOpacity>
+                </GlowCard>
             </View>
 
             <View style={styles.sectionHeader}>
@@ -77,7 +81,7 @@ export const WorkoutListScreen = () => {
     );
 
     const renderItem = ({ item }: { item: WorkoutTemplate }) => (
-        <View style={[styles.card, cardStyle]}>
+        <GlowCard style={styles.card} level="m">
             <View style={styles.cardHeader}>
                 <Text style={[styles.cardTitle, textStyle]}>{item.name}</Text>
                 <TouchableOpacity onPress={() => handleAction(item)} style={{ padding: 4 }}>
@@ -87,12 +91,12 @@ export const WorkoutListScreen = () => {
             <Text style={[styles.cardSubtitle, subtitleStyle]}>{item.exercises?.length || 0} Exercises</Text>
 
             <TouchableOpacity
-                style={[styles.startButton, { backgroundColor: colors.primary }]}
+                style={[styles.startButton, { backgroundColor: colors.primary }, shadowStyle]}
                 onPress={() => navigation.navigate('ActiveSession', { templateId: item.id })}
             >
                 <Text style={styles.startButtonText}>Start Routine</Text>
             </TouchableOpacity>
-        </View>
+        </GlowCard>
     );
 
     return (

@@ -11,6 +11,7 @@ import { Theme } from '../../theme';
 import { supabaseService } from '../../services/SupabaseDataService';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { GlowCard } from '../../components/GlowCard';
 
 export const SettingsScreen = () => {
     const [trackRpe, setTrackRpe] = useState(false);
@@ -168,73 +169,86 @@ export const SettingsScreen = () => {
     const subtitleStyle = { color: colors.textMuted };
     const titleStyle = { color: colors.textMuted }; // Section titles
     const iconColor = colors.textMuted;
+    const shadowStyle = isDark ? Theme.TopLight.m : Theme.Shadows.light.m;
 
     return (
-        <SafeAreaView style={[styles.container, containerStyle]}>
-            <ScrollView>
-                <View style={styles.section}>
+        <SafeAreaView style={[styles.container, containerStyle]} edges={['bottom']}>
+            <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+                <View style={[styles.section]}>
                     <Text style={[styles.sectionTitle, titleStyle]}>Appearance</Text>
-                    <View style={[styles.row, rowStyle]}>
-                        <View>
-                            <Text style={[styles.optionTitle, textStyle]}>Dark Mode</Text>
-                            <Text style={[styles.optionSubtitle, subtitleStyle]}>
-                                {isDark ? "On" : "Off"}
-                            </Text>
+                    <GlowCard style={styles.row} level="m">
+                        <View style={styles.rowContent}>
+                            <View>
+                                <Text style={[styles.optionTitle, textStyle]}>Dark Mode</Text>
+                                <Text style={[styles.optionSubtitle, subtitleStyle]}>
+                                    {isDark ? "On" : "Off"}
+                                </Text>
+                            </View>
+                            <Switch
+                                trackColor={{ false: "#767577", true: isDark ? colors.primary : colors.primary }}
+                                thumbColor={"#f4f3f4"}
+                                onValueChange={toggleTheme}
+                                value={isDark}
+                            />
                         </View>
-                        <Switch
-                            trackColor={{ false: "#767577", true: isDark ? colors.primary : colors.primary }}
-                            thumbColor={"#f4f3f4"}
-                            onValueChange={toggleTheme}
-                            value={isDark}
-                        />
-                    </View>
+                    </GlowCard>
                 </View>
 
                 <View style={[styles.section, { marginTop: 24 }]}>
                     <Text style={[styles.sectionTitle, titleStyle]}>Account</Text>
-                    <TouchableOpacity
-                        style={[styles.row, rowStyle]}
-                        onPress={() => setIsPasswordModalVisible(true)}
-                    >
-                        <Text style={[styles.optionTitle, textStyle]}>Change Password</Text>
-                        <Ionicons name="chevron-forward" size={20} color={iconColor} />
-                    </TouchableOpacity>
+                    <GlowCard style={styles.row} level="m">
+                        <TouchableOpacity
+                            style={styles.rowContent}
+                            onPress={() => setIsPasswordModalVisible(true)}
+                        >
+                            <Text style={[styles.optionTitle, textStyle]}>Change Password</Text>
+                            <Ionicons name="chevron-forward" size={20} color={iconColor} />
+                        </TouchableOpacity>
+                    </GlowCard>
                 </View>
 
                 <View style={[styles.section, { marginTop: 24 }]}>
                     <Text style={[styles.sectionTitle, titleStyle]}>Preferences</Text>
-                    <View style={[styles.row, rowStyle]}>
-                        <View>
-                            <Text style={[styles.optionTitle, textStyle]}>Track RPE</Text>
-                            <Text style={[styles.optionSubtitle, subtitleStyle]}>Rate Perceived Exertion (1-10) after each set</Text>
+                    <GlowCard style={styles.row} level="m">
+                        <View style={styles.rowContent}>
+                            <View>
+                                <Text style={[styles.optionTitle, textStyle]}>Track RPE</Text>
+                                <Text style={[styles.optionSubtitle, subtitleStyle]}>Rate Perceived Exertion (1-10) after each set</Text>
+                            </View>
+                            <Switch
+                                trackColor={{ false: "#767577", true: isDark ? colors.primary : colors.primary }}
+                                thumbColor={trackRpe ? "#f4f3f4" : "#f4f3f4"}
+                                onValueChange={toggleRpe}
+                                value={trackRpe}
+                                disabled={loading}
+                            />
                         </View>
-                        <Switch
-                            trackColor={{ false: "#767577", true: isDark ? colors.primary : colors.primary }}
-                            thumbColor={trackRpe ? "#f4f3f4" : "#f4f3f4"}
-                            onValueChange={toggleRpe}
-                            value={trackRpe}
-                            disabled={loading}
-                        />
-                    </View>
+                    </GlowCard>
                 </View>
 
                 <View style={[styles.section, { marginTop: 24 }]}>
                     <Text style={[styles.sectionTitle, titleStyle]}>Data Management</Text>
-                    <TouchableOpacity style={[styles.row, rowStyle, { marginBottom: 1 }]} onPress={handleExportData}>
-                        <Text style={[styles.optionTitle, textStyle]}>Export Data (Backup)</Text>
-                        <Ionicons name="download-outline" size={24} color={colors.primary} />
-                    </TouchableOpacity>
-                    <View style={[styles.separator, { backgroundColor: colors.background }]} />
-                    <TouchableOpacity style={[styles.row, rowStyle]} onPress={handleImportData}>
-                        <Text style={[styles.optionTitle, textStyle]}>Import Data</Text>
-                        <Ionicons name="cloud-upload-outline" size={24} color={colors.primary} />
-                    </TouchableOpacity>
+                    <GlowCard style={[styles.row, { marginBottom: Theme.Spacing.s }]} level="m">
+                        <TouchableOpacity style={styles.rowContent} onPress={handleExportData}>
+                            <Text style={[styles.optionTitle, textStyle]}>Export Data (Backup)</Text>
+                            <Ionicons name="download-outline" size={24} color={colors.primary} />
+                        </TouchableOpacity>
+                    </GlowCard>
+
+                    <GlowCard style={styles.row} level="m">
+                        <TouchableOpacity style={styles.rowContent} onPress={handleImportData}>
+                            <Text style={[styles.optionTitle, textStyle]}>Import Data</Text>
+                            <Ionicons name="cloud-upload-outline" size={24} color={colors.primary} />
+                        </TouchableOpacity>
+                    </GlowCard>
                 </View>
 
                 <View style={styles.section}>
-                    <TouchableOpacity style={[styles.logoutButton, rowStyle]} onPress={signOut}>
-                        <Text style={styles.logoutText}>Log Out</Text>
-                    </TouchableOpacity>
+                    <GlowCard style={styles.logoutButton} level="m">
+                        <TouchableOpacity style={styles.logoutContent} onPress={signOut}>
+                            <Text style={styles.logoutText}>Log Out</Text>
+                        </TouchableOpacity>
+                    </GlowCard>
 
                     <TouchableOpacity
                         style={[styles.logoutButton, { backgroundColor: 'transparent', marginTop: 12, borderColor: colors.danger, borderWidth: 1 }]}
@@ -401,11 +415,13 @@ const styles = StyleSheet.create({
         marginTop: Theme.Spacing.m,
     },
     row: {
+        borderRadius: 12,
+    },
+    rowContent: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: 16,
-        borderRadius: 12,
     },
     separator: {
         height: 1,
@@ -422,8 +438,10 @@ const styles = StyleSheet.create({
     },
     logoutButton: {
         marginTop: Theme.Spacing.xl,
-        padding: Theme.Spacing.m,
         borderRadius: 12,
+    },
+    logoutContent: {
+        padding: Theme.Spacing.m,
         alignItems: 'center',
     },
     logoutText: {

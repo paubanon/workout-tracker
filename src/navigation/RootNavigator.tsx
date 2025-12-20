@@ -39,6 +39,8 @@ function TabNavigator() {
                 tabBarStyle: {
                     borderTopColor: colors.border,
                     backgroundColor: colors.surface,
+                    ...(isDark ? Theme.TopLight.l : Theme.Shadows.light.l), // TopLight in dark, shadow in light
+                    borderTopWidth: isDark ? 0 : 0, // TopLight adds its own border
                 },
                 tabBarIcon: ({ focused, color, size }) => {
                     let iconName: any;

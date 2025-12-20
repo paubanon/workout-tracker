@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, Modal, StyleSheet, FlatList, ViewStyle, TextStyle } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, StyleSheet, FlatList, ViewStyle, TextStyle, StyleProp } from 'react-native';
 import { Theme } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
@@ -10,11 +10,11 @@ interface SimpleDropdownProps {
     onSelect: (value: string) => void;
     placeholder?: string;
     disabled?: boolean;
-    style?: ViewStyle;
-    textStyle?: TextStyle;
+    style?: StyleProp<ViewStyle>;
+    textStyle?: StyleProp<TextStyle>;
     label?: string;
-    dropdownStyle?: ViewStyle;
-    dropdownTextStyle?: TextStyle;
+    dropdownStyle?: StyleProp<ViewStyle>;
+    dropdownTextStyle?: StyleProp<TextStyle>;
 }
 
 export const SimpleDropdown: React.FC<SimpleDropdownProps> = ({

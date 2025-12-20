@@ -6,6 +6,7 @@ import { supabaseService } from '../../services/SupabaseDataService';
 import { Exercise } from '../../models';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../context/ThemeContext';
+import { GlowCard } from '../../components/GlowCard';
 
 export const ExerciseListScreen = ({ route }: any) => {
     const navigation = useNavigation<any>();
@@ -63,12 +64,14 @@ export const ExerciseListScreen = ({ route }: any) => {
                 data={filtered}
                 keyExtractor={item => item.id}
                 renderItem={({ item }) => (
-                    <TouchableOpacity style={[styles.item, { backgroundColor: colors.surface }]} onPress={() => handleSelect(item)}>
-                        <Text style={[styles.itemTitle, { color: colors.text }]}>{item.name}</Text>
-                        <Text style={[styles.itemSubtitle, { color: colors.textMuted }]}>
-                            {(item.enabledMetrics || []).join(', ')}
-                        </Text>
-                    </TouchableOpacity>
+                    <GlowCard style={styles.item} level="m">
+                        <TouchableOpacity style={styles.itemContent} onPress={() => handleSelect(item)}>
+                            <Text style={[styles.itemTitle, { color: colors.text }]}>{item.name}</Text>
+                            <Text style={[styles.itemSubtitle, { color: colors.textMuted }]}>
+                                {(item.enabledMetrics || []).join(', ')}
+                            </Text>
+                        </TouchableOpacity>
+                    </GlowCard>
                 )}
                 contentContainerStyle={styles.list}
             />
@@ -105,9 +108,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: Theme.Spacing.m,
     },
     item: {
-        padding: Theme.Spacing.m,
         borderRadius: 12,
         marginBottom: Theme.Spacing.s,
+    },
+    itemContent: {
+        padding: Theme.Spacing.m,
     },
     itemTitle: {
         fontSize: 17,

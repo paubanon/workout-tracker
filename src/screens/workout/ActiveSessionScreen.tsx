@@ -388,6 +388,7 @@ export const ActiveSessionScreen = () => {
     const textMutedStyle = { color: colors.textMuted };
     const buttonTextStyle = { color: colors.primary };
     const surfaceStyle = { backgroundColor: colors.surface };
+    const cardShadowStyle = isDark ? Theme.TopLight.m : Theme.Shadows.light.m;
 
     return (
         <SafeAreaView style={[styles.container, containerStyle]} edges={['top']}>
@@ -420,17 +421,17 @@ export const ActiveSessionScreen = () => {
                         <View style={styles.statsRow}>
                             <View>
                                 <Text style={[styles.captionText, textMutedStyle]}>Duration</Text>
-                                <Text style={styles.statValue}>{formatTime(duration)}</Text>
+                                <Text style={[styles.statValue, { color: colors.primary }]}>{formatTime(duration)}</Text>
                             </View>
                             <View>
                                 <Text style={[styles.captionText, textMutedStyle]}>Volume</Text>
-                                <Text style={styles.statValue}>
+                                <Text style={[styles.statValue, { color: colors.primary }]}>
                                     {session.sets.reduce((acc, s) => acc + (s.loadKg || 0) * (s.reps || 0), 0)} kg
                                 </Text>
                             </View>
                             <View>
                                 <Text style={[styles.captionText, textMutedStyle]}>Sets</Text>
-                                <Text style={styles.statValue}>{session.sets.length}</Text>
+                                <Text style={[styles.statValue, { color: colors.primary }]}>{session.sets.length}</Text>
                             </View>
                         </View>
                     }
@@ -447,7 +448,8 @@ export const ActiveSessionScreen = () => {
                                     style={[
                                         styles.exerciseCard,
                                         surfaceStyle,
-                                        { backgroundColor: isActive ? colors.bgLight : colors.surface }
+                                        { backgroundColor: isActive ? colors.bgLight : colors.surface },
+                                        cardShadowStyle
                                     ]}
                                     onLongPress={drag}
                                     delayLongPress={750}
@@ -506,7 +508,7 @@ export const ActiveSessionScreen = () => {
                                             {/* Load Input */}
                                             {(exercise.enabledMetrics || []).includes('load') && (
                                                 <TextInput
-                                                    style={[styles.input, textStyle, { backgroundColor: colors.bgLight }]}
+                                                    style={[styles.input, textStyle, { backgroundColor: isDark ? colors.bgLight : colors.background }]}
                                                     keyboardType="numeric"
                                                     placeholder={
                                                         exercise.trackBodyWeight
@@ -522,7 +524,7 @@ export const ActiveSessionScreen = () => {
                                             {/* Reps Input */}
                                             {(exercise.enabledMetrics || []).includes('reps') && (
                                                 <TextInput
-                                                    style={[styles.input, textStyle, { backgroundColor: colors.bgLight }]}
+                                                    style={[styles.input, textStyle, { backgroundColor: isDark ? colors.bgLight : colors.background }]}
                                                     keyboardType="numeric"
                                                     placeholder={set.targetReps || "-"}
                                                     placeholderTextColor={colors.textMuted}
@@ -534,7 +536,7 @@ export const ActiveSessionScreen = () => {
                                             {/* Tempo/Time Input (Associated with Reps usually) */}
                                             {(hasTempo || hasIsometric) && (exercise.enabledMetrics || []).includes('reps') && (
                                                 <TextInput
-                                                    style={[styles.input, textStyle, { backgroundColor: colors.bgLight }]}
+                                                    style={[styles.input, textStyle, { backgroundColor: isDark ? colors.bgLight : colors.background }]}
                                                     placeholder={set.targetTempo || (hasIsometric ? "0s" : "3010")}
                                                     placeholderTextColor={colors.textMuted}
                                                     value={set.tempo}
@@ -545,7 +547,7 @@ export const ActiveSessionScreen = () => {
                                             {/* Pure Time Input */}
                                             {(exercise.enabledMetrics || []).includes('time') && (
                                                 <TextInput
-                                                    style={[styles.input, textStyle, { backgroundColor: colors.bgLight }]}
+                                                    style={[styles.input, textStyle, { backgroundColor: isDark ? colors.bgLight : colors.background }]}
                                                     keyboardType="numeric"
                                                     placeholder={set.targetTime ? set.targetTime.toString() : "-"}
                                                     placeholderTextColor={colors.textMuted}
@@ -557,7 +559,7 @@ export const ActiveSessionScreen = () => {
                                             {/* Distance Input */}
                                             {(exercise.enabledMetrics || []).includes('distance') && (
                                                 <TextInput
-                                                    style={[styles.input, textStyle, { backgroundColor: colors.bgLight }]}
+                                                    style={[styles.input, textStyle, { backgroundColor: isDark ? colors.bgLight : colors.background }]}
                                                     keyboardType="numeric"
                                                     placeholder={set.targetDistance ? set.targetDistance.toString() : "-"}
                                                     placeholderTextColor={colors.textMuted}
@@ -569,7 +571,7 @@ export const ActiveSessionScreen = () => {
                                             {/* ROM Input */}
                                             {(exercise.enabledMetrics || []).includes('rom') && (
                                                 <TextInput
-                                                    style={[styles.input, textStyle, { backgroundColor: colors.bgLight }]}
+                                                    style={[styles.input, textStyle, { backgroundColor: isDark ? colors.bgLight : colors.background }]}
                                                     placeholder={set.targetRom || "-"}
                                                     placeholderTextColor={colors.textMuted}
                                                     value={set.romCm ? set.romCm.toString() : ''}

@@ -20,26 +20,26 @@ export interface ThemeColors {
 
 export const DarkColors: ThemeColors = {
   primary: '#65D984', // Vibrant Green
-  bgDark: '#161618',  // Base
-  bg: '#1C1C1E',      // Card
-  bgLight: '#2C2C2E', // Elevated/Input
+  bgDark: '#1C1C1E',  // Base - lightened for shadow visibility
+  bg: '#2C2C2E',      // Card - darker for contrast
+  bgLight: '#3A3A3C', // Elevated/Input - even darker
   text: '#F2F2F7',    // ~95% White
   textMuted: '#AEAEB2', // ~70% White
   border: 'rgba(255,255,255, 0.1)',
-  shadowS: '0px 1px 2px rgba(0,0,0,0.3)', // CSS-like string, mostly for web/reference. RN uses object styles.
+  shadowS: '0px 1px 2px rgba(0,0,0,0.3)',
   shadowM: '0px 4px 8px rgba(0,0,0,0.4)',
   shadowL: '0px 8px 16px rgba(0,0,0,0.5)',
-  
+
   // Aliases/Standard Palette
-  surface: '#1C1C1E',
-  background: '#161618',
+  surface: '#2C2C2E',
+  background: '#1C1C1E',
   danger: '#FF453A',
   success: '#32D74B',
   warning: '#FFD60A',
 };
 
 export const LightColors: ThemeColors = {
-  primary: '#00C853', // Strong Green
+  primary: '#007AFF', // System Blue
   bgDark: '#F2F2F7',  // iOS System Gray 6 - Page Base
   bg: '#FFFFFF',      // Card
   bgLight: '#FFFFFF', // Elevated - relies on shadow
@@ -49,7 +49,7 @@ export const LightColors: ThemeColors = {
   shadowS: '0px 1px 2px rgba(0,0,0,0.05)',
   shadowM: '0px 4px 6px rgba(0,0,0,0.08)',
   shadowL: '0px 10px 15px rgba(0,0,0,0.1)',
-  
+
   // Aliases/Standard Palette
   surface: '#FFFFFF',
   background: '#F2F2F7',
@@ -80,6 +80,18 @@ export const Typography = {
     semibold: '600' as '600',
     bold: '700' as '700',
   },
+  header: {
+    fontSize: 24,
+    fontWeight: '700' as const,
+  },
+  subtitle: {
+    fontSize: 18,
+    fontWeight: '600' as const,
+  },
+  body: {
+    fontSize: 16,
+    fontWeight: '400' as const,
+  },
   strokeWidth: 2,
 };
 
@@ -91,52 +103,94 @@ export const BorderRadius = {
 
 // React Native Shadow Styles
 export const Shadows = {
-    light: {
-        s: {
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.05,
-            shadowRadius: 2,
-            elevation: 2,
-        },
-        m: {
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.08,
-            shadowRadius: 6,
-            elevation: 4,
-        },
-        l: {
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 10 },
-            shadowOpacity: 0.1,
-            shadowRadius: 15,
-            elevation: 8,
-        }
+  light: {
+    s: {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 2,
     },
-    dark: {
-        s: {
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.3,
-            shadowRadius: 2,
-            elevation: 2,
-        },
-        m: {
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.4,
-            shadowRadius: 8,
-            elevation: 4,
-        },
-        l: {
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.5,
-            shadowRadius: 16,
-            elevation: 8,
-        }
+    m: {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 6,
+      elevation: 4,
+    },
+    l: {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.1,
+      shadowRadius: 15,
+      elevation: 8,
     }
+  },
+  dark: {
+    s: {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.3,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    m: {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.4,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    l: {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.5,
+      shadowRadius: 16,
+      elevation: 8,
+    }
+  }
+};
+
+// Dark theme depth - directional lighting simulation
+// Top: Brighter border to simulate light hitting from above
+// Bottom: Black shadow casting downward for depth (increased intensity)
+export const TopLight = {
+  s: {
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.20)',
+    borderLeftColor: 'rgba(255,255,255,0.08)',
+    borderRightColor: 'rgba(255,255,255,0.08)',
+    borderBottomColor: 'rgba(255,255,255,0.04)',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.7,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  m: {
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.30)',
+    borderLeftColor: 'rgba(255,255,255,0.12)',
+    borderRightColor: 'rgba(255,255,255,0.12)',
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.8,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  l: {
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.40)',
+    borderLeftColor: 'rgba(255,255,255,0.15)',
+    borderRightColor: 'rgba(255,255,255,0.15)',
+    borderBottomColor: 'rgba(255,255,255,0.06)',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.9,
+    shadowRadius: 24,
+    elevation: 14,
+  }
 };
 
 export const Theme = {
@@ -146,5 +200,6 @@ export const Theme = {
   Spacing,
   Typography,
   BorderRadius,
-  Shadows
+  Shadows,
+  TopLight
 };

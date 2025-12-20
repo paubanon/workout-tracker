@@ -8,11 +8,12 @@ import { UserProfile, WorkoutSession } from '../../models';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
+import { GlowCard } from '../../components/GlowCard';
 
 export const ProfileScreen = () => {
     const { signOut } = useAuth();
     const navigation = useNavigation<any>();
-    const { colors } = useTheme();
+    const { colors, isDark } = useTheme();
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [recentSessions, setRecentSessions] = useState<WorkoutSession[]>([]);
 
@@ -42,7 +43,7 @@ export const ProfileScreen = () => {
     };
 
     // Derived properties
-    const displayName = profile ? `${profile.firstName} ${profile.lastName}`.trim() || 'User' : 'User';
+    const displayName = profile ? `${profile.firstName} ${profile.lastName} `.trim() || 'User' : 'User';
     // weightHistory might be empty or undefined if profile logic changes, safe access
     const currentWeightKg = profile?.weightHistory?.[0]?.weightKg ?? null;
     const lastWeightDate = profile?.weightHistory?.[0]?.date
@@ -76,6 +77,7 @@ export const ProfileScreen = () => {
     const textStyle = { color: colors.text };
     const textMutedStyle = { color: colors.textMuted };
     const cardStyle = { backgroundColor: colors.surface };
+    const shadowStyle = isDark ? Theme.TopLight.m : Theme.Shadows.light.m;
 
     return (
         <SafeAreaView style={[styles.container, containerStyle]} edges={['top']}>
@@ -107,7 +109,7 @@ export const ProfileScreen = () => {
 
                 {/* Body Metrics */}
                 <Text style={[styles.sectionTitle, textMutedStyle]}>BODY METRICS</Text>
-                <View style={[styles.metricsCard, cardStyle]}>
+                <GlowCard style={styles.metricsCard} level="m">
                     <View style={styles.metricRow}>
                         <View>
                             <Text style={[styles.metricLabel, textMutedStyle]}>Current Weight</Text>
@@ -131,11 +133,11 @@ export const ProfileScreen = () => {
                             {currentWeightKg ? `${currentWeightKg} kg` : ''}
                         </Text>
                     </View>
-                </View>
+                </GlowCard>
 
                 {/* Recent Workouts */}
                 <Text style={[styles.sectionTitle, textMutedStyle]}>RECENT WORKOUTS</Text>
-                <View style={[styles.historyList, cardStyle]}>
+                <GlowCard style={styles.historyList} level="m">
                     {recentSessions.length === 0 ? (
                         <View style={{ padding: 16 }}>
                             <Text style={textMutedStyle}>No recent workouts</Text>
@@ -164,7 +166,7 @@ export const ProfileScreen = () => {
                             </View>
                         ))
                     )}
-                </View>
+                </GlowCard>
 
                 <TouchableOpacity
                     style={[styles.secondaryButton, { borderColor: colors.border }]}

@@ -9,6 +9,7 @@ import { Exercise } from '../../models';
 import { LineChart } from "react-native-gifted-charts";
 import { SimpleDropdown } from '../../components/SimpleDropdown';
 import { useTheme } from '../../context/ThemeContext';
+import { GlowCard } from '../../components/GlowCard';
 
 export const AnalysisScreen = () => {
     const { colors, isDark } = useTheme();
@@ -79,16 +80,17 @@ export const AnalysisScreen = () => {
     // Chart Data
     const rawChartData = useMemo(() => getChartData(var1, var2, agg1, agg2), [var1, var2, agg1, agg2, loading, timeFrame]);
 
-    // Dataset for Chart
+    // Dataset for Chart - add textShiftY to move labels above dots
     const chartData1 = rawChartData.map(d => ({
         value: d.value,
-        dataPointText: Math.round(d.value).toString()
+        dataPointText: Math.round(d.value).toString(),
+        textShiftY: -12, // Move text above the dot
     }));
 
     // Create selective X-axis labels for readability - use shorter format
     const xAxisLabelTexts = rawChartData.map((d, index) => {
-        // Show every 3rd label, or first and last
-        if (index === 0 || index === rawChartData.length - 1 || index % 3 === 0) {
+        // Show every 2nd label for more dates, or first and last
+        if (index === 0 || index === rawChartData.length - 1 || index % 2 === 0) {
             // Use short format: M/D (e.g., "12/15")
             const date = new Date(d.date);
             return `${date.getMonth() + 1}/${date.getDate()}`;
@@ -98,7 +100,8 @@ export const AnalysisScreen = () => {
 
     const chartData2 = rawChartData.map(d => ({
         value: d.secondaryValue,
-        dataPointText: var2 === 'none' ? '' : Math.round(d.secondaryValue).toString()
+        dataPointText: var2 === 'none' ? '' : Math.round(d.secondaryValue).toString(),
+        textShiftY: -12, // Move text above the dot
     }));
 
     const regression1 = (metrics1.regressionData || []).map(d => ({ value: d.value }));
@@ -177,13 +180,14 @@ export const AnalysisScreen = () => {
     const textStyle = { color: colors.text };
     const textMutedStyle = { color: colors.textMuted };
     const cardStyle = { backgroundColor: colors.surface };
+    const shadowStyle = isDark ? Theme.TopLight.m : Theme.Shadows.light.m;
 
     // --- Components ---
 
     const renderMetricCard = (title: string, data: any, color: string) => {
         if (!data) return null;
         return (
-            <View style={[styles.metricCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <GlowCard style={[styles.metricCard, { borderColor: colors.border }]} level="m">
                 <Text style={[styles.metricTitle, { color }]}>{title} ({data.trend})</Text>
                 <View style={styles.metricRow}>
                     <Text style={[styles.metricLabel, textMutedStyle]}>Max:</Text>
@@ -220,7 +224,7 @@ export const AnalysisScreen = () => {
                         <Text style={[styles.metricValue, textStyle]}>{data.volume.toFixed(0)}</Text>
                     </View>
                 ) : null}
-            </View>
+            </GlowCard>
         );
     };
 
@@ -230,7 +234,7 @@ export const AnalysisScreen = () => {
                 <Text style={[styles.headerTitle, textStyle]}>Analysis</Text>
 
                 {/* Exercise Selector */}
-                <TouchableOpacity style={[styles.exerciseSelector, { backgroundColor: colors.surface }]} onPress={() => setPickerVisible(true)}>
+                <TouchableOpacity style={[styles.exerciseSelector, { backgroundColor: colors.surface }, shadowStyle]} onPress={() => setPickerVisible(true)}>
                     <Text style={[styles.exerciseSelectorText, textStyle]}>
                         {selectedExercise ? selectedExercise.name : "Select Exercise"}
                     </Text>
@@ -248,7 +252,8 @@ export const AnalysisScreen = () => {
                                 borderWidth: 0,
                                 borderRadius: 12,
                                 paddingVertical: 12, // Match bigger touch area
-                                backgroundColor: colors.surface
+                                backgroundColor: colors.surface,
+                                ...(isDark ? Theme.TopLight.m : Theme.Shadows.light.m) // Inline spread for dropdown style prop
                             }}
                             textStyle={{
                                 color: colors.primary,
@@ -269,7 +274,8 @@ export const AnalysisScreen = () => {
                                 borderRadius: 12,
                                 paddingVertical: 12,
                                 backgroundColor: colors.surface,
-                                ...(var1 === 'volume' ? { opacity: 0.5 } : {})
+                                ...(var1 === 'volume' ? { opacity: 0.5 } : {}),
+                                ...(isDark ? Theme.TopLight.m : Theme.Shadows.light.m)
                             }}
                             textStyle={{
                                 fontSize: 13,
@@ -314,7 +320,8 @@ export const AnalysisScreen = () => {
                                 borderWidth: 0,
                                 borderRadius: 12,
                                 paddingVertical: 12,
-                                backgroundColor: colors.surface
+                                backgroundColor: colors.surface,
+                                ...(isDark ? Theme.TopLight.m : Theme.Shadows.light.m)
                             }}
                             textStyle={{
                                 color: SECONDARY_COLOR,
@@ -335,7 +342,8 @@ export const AnalysisScreen = () => {
                                 borderRadius: 12,
                                 paddingVertical: 12,
                                 backgroundColor: colors.surface,
-                                ...(var2 === 'none' || var2 === 'volume' ? { opacity: 0.5 } : {})
+                                ...(var2 === 'none' || var2 === 'volume' ? { opacity: 0.5 } : {}),
+                                ...(isDark ? Theme.TopLight.m : Theme.Shadows.light.m)
                             }}
                             textStyle={{
                                 fontSize: 13,
@@ -351,7 +359,7 @@ export const AnalysisScreen = () => {
 
 
                 {/* Time Frame */}
-                <View style={[styles.timeFrameContainer, { backgroundColor: colors.surface }]}>
+                <View style={[styles.timeFrameContainer, { backgroundColor: colors.surface }, shadowStyle]}>
                     {(['1M', '3M', '6M', '1Y', 'ALL'] as TimeFrame[]).map((tf) => (
                         <TouchableOpacity
                             key={tf}
@@ -368,13 +376,13 @@ export const AnalysisScreen = () => {
                 </View>
 
                 {/* AI Report Placeholder */}
-                <View style={[styles.aiCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <View style={[styles.aiCard, { backgroundColor: colors.surface, borderColor: colors.border }, shadowStyle]}>
                     <Text style={[styles.aiText, { color: colors.textMuted }]}>✨ AI Report Upcoming...</Text>
                 </View>
 
                 {/* Chart */}
                 {selectedExercise && chartData1.length > 0 ? (
-                    <View style={[styles.chartContainer, { backgroundColor: colors.surface }]}>
+                    <View style={[styles.chartContainer, { backgroundColor: colors.surface }, shadowStyle]}>
                         <LineChart
                             data={chartData1Final}
                             secondaryData={var2 !== 'none' ? chartData2Final : undefined}

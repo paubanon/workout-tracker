@@ -12,7 +12,7 @@ import { useTheme } from '../../context/ThemeContext';
 export const CreateWorkoutScreen = () => {
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
-    const { colors } = useTheme();
+    const { colors, isDark } = useTheme();
     const { templateToEdit } = route.params || {};
 
     const [name, setName] = useState(templateToEdit?.name || '');
@@ -183,7 +183,8 @@ export const CreateWorkoutScreen = () => {
                     disabled={isActive}
                     style={[
                         styles.itemContainer,
-                        { backgroundColor: isActive ? colors.surface : colors.surface }
+                        { backgroundColor: isActive ? colors.surface : colors.surface },
+                        isDark ? Theme.TopLight.m : Theme.Shadows.light.m
                     ]}
                 >
                     <View style={[styles.itemHeader, { justifyContent: 'space-between' }]}>
