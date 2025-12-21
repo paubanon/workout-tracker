@@ -379,6 +379,7 @@ const styles = StyleSheet.create({
         backgroundColor: Theme.Colors.surface,
         borderRadius: 12,
         padding: Theme.Spacing.m,
+        ...Theme.Shadows.card,
     },
     metricRow: {
         flexDirection: 'row',

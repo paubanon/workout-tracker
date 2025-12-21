@@ -71,6 +71,25 @@ export const EditWorkoutScreen = () => {
         ]);
     };
 
+    const addSet = (exerciseId: string) => {
+        // Find the last set for this exercise to use as template
+        const exerciseSets = sets.filter(s => s.exerciseId === exerciseId);
+        const lastSet = exerciseSets[exerciseSets.length - 1];
+
+        // Create new set with same exerciseId and incremented setNumber
+        const newSet: SetLog = {
+            id: `temp-${Date.now()}`, // Temporary ID
+            exerciseId: exerciseId,
+            setNumber: exerciseSets.length + 1,
+            loadKg: lastSet?.loadKg || 0,
+            reps: lastSet?.reps || 0,
+            rpe: lastSet?.rpe,
+            completed: false,
+        };
+
+        setSets([...sets, newSet]);
+    };
+
     // Group sets by exercise
     const groupedSets: { [key: string]: { sets: SetLog[], indices: number[] } } = {};
     sets.forEach((set, index) => {
@@ -182,6 +201,15 @@ export const EditWorkoutScreen = () => {
                                         </View>
                                     );
                                 })}
+
+                                {/* Add Set Button */}
+                                <TouchableOpacity
+                                    style={styles.addSetButton}
+                                    onPress={() => addSet(exerciseId)}
+                                >
+                                    <Ionicons name="add-circle-outline" size={20} color={Theme.Colors.primary} />
+                                    <Text style={styles.addSetText}>Add Set</Text>
+                                </TouchableOpacity>
                             </View>
                         );
                     })}
@@ -286,5 +314,20 @@ const styles = StyleSheet.create({
     },
     deleteButton: {
         padding: 8,
+    },
+    addSetButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        paddingVertical: 12,
+        borderTopWidth: 1,
+        borderTopColor: Theme.Colors.border,
+        marginTop: 8,
+    },
+    addSetText: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: Theme.Colors.primary,
     },
 });

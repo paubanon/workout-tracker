@@ -60,9 +60,28 @@ export const Typography = {
   },
 };
 
+// Shadow styles for cards and elevated elements
+export const Shadows = {
+  card: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardElevated: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+};
+
 export const Theme = {
   Colors,
   Spacing,
   Typography,
   Layout,
+  Shadows,
 };
