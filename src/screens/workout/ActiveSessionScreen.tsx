@@ -349,12 +349,6 @@ export const ActiveSessionScreen = () => {
                     loadKg: (set.loadKg || 0) + userWeight
                 };
             }
-            if (exercise?.trackBodyWeight && userWeight > 0) {
-                return {
-                    ...set,
-                    loadKg: (set.loadKg || 0) + userWeight
-                };
-            }
             return set;
         });
 
@@ -503,7 +497,7 @@ export const ActiveSessionScreen = () => {
                                                             ? `${set.targetLoad || 0} (+${userWeight})`
                                                             : (set.targetLoad ? set.targetLoad.toString() : "-")
                                                     }
-                                                    placeholderTextColor="#C7C7CC"
+                                                    placeholderTextColor={Theme.Colors.placeholderText}
                                                     value={set.loadKg === 0 ? '' : set.loadKg?.toString()}
                                                     onChangeText={(val) => handleUpdateSet(set.id, 'loadKg', parseFloat(val) || 0)}
                                                 />
@@ -515,7 +509,7 @@ export const ActiveSessionScreen = () => {
                                                     style={styles.input}
                                                     keyboardType="numeric"
                                                     placeholder={set.targetReps || "-"}
-                                                    placeholderTextColor="#C7C7CC"
+                                                    placeholderTextColor={Theme.Colors.placeholderText}
                                                     value={set.reps === 0 ? '' : set.reps?.toString()}
                                                     onChangeText={(val) => handleUpdateSet(set.id, 'reps', parseFloat(val) || 0)}
                                                 />
@@ -526,7 +520,7 @@ export const ActiveSessionScreen = () => {
                                                 <TextInput
                                                     style={styles.input}
                                                     placeholder={set.targetTempo || (hasIsometric ? "0s" : "3010")}
-                                                    placeholderTextColor="#C7C7CC"
+                                                    placeholderTextColor={Theme.Colors.placeholderText}
                                                     value={set.tempo}
                                                     onChangeText={(val) => handleUpdateSet(set.id, 'tempo', val)}
                                                 />
@@ -538,7 +532,7 @@ export const ActiveSessionScreen = () => {
                                                     style={styles.input}
                                                     keyboardType="numeric"
                                                     placeholder={set.targetTime ? set.targetTime.toString() : "-"}
-                                                    placeholderTextColor="#C7C7CC"
+                                                    placeholderTextColor={Theme.Colors.placeholderText}
                                                     value={set.timeSeconds === 0 ? '' : set.timeSeconds?.toString()}
                                                     onChangeText={(val) => handleUpdateSet(set.id, 'timeSeconds', parseFloat(val) || 0)}
                                                 />
@@ -550,7 +544,7 @@ export const ActiveSessionScreen = () => {
                                                     style={styles.input}
                                                     keyboardType="numeric"
                                                     placeholder={set.targetDistance ? set.targetDistance.toString() : "-"}
-                                                    placeholderTextColor="#C7C7CC"
+                                                    placeholderTextColor={Theme.Colors.placeholderText}
                                                     value={set.distanceMeters === 0 ? '' : set.distanceMeters?.toString()}
                                                     onChangeText={(val) => handleUpdateSet(set.id, 'distanceMeters', parseFloat(val) || 0)}
                                                 />
@@ -561,7 +555,7 @@ export const ActiveSessionScreen = () => {
                                                 <TextInput
                                                     style={styles.input}
                                                     placeholder={set.targetRom || "-"}
-                                                    placeholderTextColor="#C7C7CC"
+                                                    placeholderTextColor={Theme.Colors.placeholderText}
                                                     value={set.romCm ? set.romCm.toString() : ''}
                                                     onChangeText={(val) => handleUpdateSet(set.id, 'romCm', parseFloat(val) || 0)}
                                                 />
@@ -571,7 +565,7 @@ export const ActiveSessionScreen = () => {
                                                 style={[styles.colCheck, styles.checkBox, set.completed && styles.checkBoxChecked]}
                                                 onPress={() => onToggleSetComplete(set.id, set.completed)}
                                             >
-                                                {set.completed && <Text style={{ color: 'white' }}>✓</Text>}
+                                                {set.completed && <Text style={{ color: Theme.Colors.surface }}>✓</Text>}
                                             </TouchableOpacity>
                                         </View>
                                     ))}
@@ -759,7 +753,7 @@ const styles = StyleSheet.create({
         borderRadius: 16,
     },
     finishButtonText: {
-        color: '#FFF',
+        color: Theme.Colors.surface,
         fontWeight: '600',
     },
     content: {
@@ -797,7 +791,7 @@ const styles = StyleSheet.create({
         height: 40,
     },
     setCompleted: {
-        backgroundColor: '#E8FAE8',
+        backgroundColor: Theme.Colors.successBackground,
     },
     headerText: {
         ...Theme.Typography.caption,
@@ -835,7 +829,7 @@ const styles = StyleSheet.create({
         width: 32,
         height: 32,
         borderRadius: 8,
-        backgroundColor: '#E5E5E5',
+        backgroundColor: Theme.Colors.inputBackground,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -877,7 +871,7 @@ const styles = StyleSheet.create({
         marginBottom: Theme.Spacing.xl,
     },
     addExerciseText: {
-        color: '#FFF',
+        color: Theme.Colors.surface,
         fontWeight: 'bold',
     },
     // Toast

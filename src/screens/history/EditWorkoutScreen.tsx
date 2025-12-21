@@ -177,7 +177,7 @@ export const EditWorkoutScreen = () => {
                                                 style={styles.deleteButton}
                                                 onPress={() => deleteSet(globalIndex)}
                                             >
-                                                <Ionicons name="trash-outline" size={20} color="#FF3B30" />
+                                                <Ionicons name="trash-outline" size={20} color={Theme.Colors.danger} />
                                             </TouchableOpacity>
                                         </View>
                                     );

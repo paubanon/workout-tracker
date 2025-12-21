@@ -193,7 +193,7 @@ export const AnalysisScreen = () => {
     // If too many points, spacing might be tiny.
 
     // Local constants
-    const SECONDARY_COLOR = '#FF9500';
+    const SECONDARY_COLOR = Theme.Colors.secondary;
 
     // --- Components ---
 
@@ -427,7 +427,7 @@ export const AnalysisScreen = () => {
                             rotateLabel // Rotate labels to -45 degrees automatically
 
                             // Grid
-                            rulesColor={'#E0E0E0'}
+                            rulesColor={Theme.Colors.gridLine}
                             rulesType="solid"
 
                             curved

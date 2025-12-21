@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
         padding: Theme.Spacing.m,
     },
     searchInput: {
-        backgroundColor: '#E5E5EA',
+        backgroundColor: Theme.Colors.inputBackground,
         padding: Theme.Spacing.s,
         borderRadius: 10,
         fontSize: 17,

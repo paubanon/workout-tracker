@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     },
     startButtonText: {
         ...Theme.Typography.body,
-        color: '#FFFFFF',
+        color: Theme.Colors.surface,
         fontWeight: '600',
     },
     iconButton: {

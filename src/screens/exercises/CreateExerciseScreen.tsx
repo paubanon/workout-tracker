@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     },
     segmentContainer: {
         flexDirection: 'row',
-        backgroundColor: '#E5E5EA',
+        backgroundColor: Theme.Colors.inputBackground,
         borderRadius: 8,
         padding: 2,
     },
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: Theme.Spacing.m,
         paddingBottom: Theme.Spacing.m,
         borderBottomWidth: 1,
-        borderColor: '#F2F2F7', // subtle separator
+        borderColor: Theme.Colors.background, // subtle separator
     },
     subLabel: {
         fontSize: 13,

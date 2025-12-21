@@ -187,8 +187,8 @@ export const SettingsScreen = () => {
                             <Text style={styles.optionSubtitle}>Rate Perceived Exertion (1-10) after each set</Text>
                         </View>
                         <Switch
-                            trackColor={{ false: "#767577", true: Theme.Colors.primary }}
-                            thumbColor={trackRpe ? "#f4f3f4" : "#f4f3f4"}
+                            trackColor={{ false: Theme.Colors.switchTrackOff, true: Theme.Colors.primary }}
+                            thumbColor={Theme.Colors.switchThumb}
                             onValueChange={toggleRpe}
                             value={trackRpe}
                             disabled={loading}
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
     logoutText: {
         fontSize: 17,
         fontWeight: '600',
-        color: '#ff3b30',
+        color: Theme.Colors.danger,
     },
     modalContainer: {
         flex: 1,

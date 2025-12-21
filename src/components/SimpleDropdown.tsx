@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
         // No bottom border for cleaner look, or maybe subtle separator
     },
     selectedItem: {
-        backgroundColor: '#F2F2F7', // Light highlight
+        backgroundColor: Theme.Colors.background, // Light highlight
     },
     itemText: {
         fontSize: 14, // Match button text

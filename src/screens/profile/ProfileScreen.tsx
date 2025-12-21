@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
         width: 100,
         height: 100,
         borderRadius: 50,
-        backgroundColor: '#E1E1E1',
+        backgroundColor: Theme.Colors.inputBackground,
     },
     avatarPlaceholder: {
         justifyContent: 'center',
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
     },
     avatarInitial: {
         fontSize: 40,
-        color: '#8E8E93',
+        color: Theme.Colors.textSecondary,
         fontWeight: '600',
     },
     cameraIcon: {
@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
         color: Theme.Colors.text,
     },
     logButton: {
-        backgroundColor: '#F2F2F7',
+        backgroundColor: Theme.Colors.background,
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
         marginTop: Theme.Spacing.m,
         paddingTop: Theme.Spacing.m,
         borderTopWidth: 1,
-        borderTopColor: '#F2F2F7',
+        borderTopColor: Theme.Colors.background,
     },
     historyTitle: {
         fontSize: 13,
@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
     },
     divider: {
         height: 1,
-        backgroundColor: '#F2F2F7',
+        backgroundColor: Theme.Colors.background,
         marginVertical: 4,
     },
 
@@ -457,7 +457,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     modalContent: {
-        backgroundColor: 'white',
+        backgroundColor: Theme.Colors.surface,
         width: '80%',
         borderRadius: 16,
         padding: 24,
@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
         marginBottom: 24,
         width: 120,
         borderBottomWidth: 1,
-        borderBottomColor: '#CCC',
+        borderBottomColor: Theme.Colors.border,
         paddingBottom: 8,
     },
     modalButtons: {
@@ -524,8 +524,8 @@ const styles = StyleSheet.create({
         padding: Theme.Spacing.m,
         alignItems: 'center',
         borderTopWidth: 1,
-        borderTopColor: '#F2F2F7',
-        backgroundColor: '#FAFAFA'
+        borderTopColor: Theme.Colors.background,
+        backgroundColor: Theme.Colors.background
     },
     showMoreText: {
         color: Theme.Colors.primary,

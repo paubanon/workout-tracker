@@ -114,8 +114,8 @@ export const HistoryScreen = () => {
                             <Text style={styles.menuItemText}>Edit</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.menuItem} onPress={() => handleDelete(item)}>
-                            <Ionicons name="trash-outline" size={18} color="#FF3B30" />
-                            <Text style={[styles.menuItemText, { color: '#FF3B30' }]}>Delete</Text>
+                            <Ionicons name="trash-outline" size={18} color={Theme.Colors.danger} />
+                            <Text style={[styles.menuItemText, { color: Theme.Colors.danger }]}>Delete</Text>
                         </TouchableOpacity>
                     </View>
                 )}
