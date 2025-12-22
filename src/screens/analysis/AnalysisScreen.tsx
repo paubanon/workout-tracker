@@ -174,7 +174,7 @@ export const AnalysisScreen = () => {
     const fitSpacing = dataCount > 1 ? (chartWidth - 40) / (dataCount - 1) : 40;
 
     // Local constants
-    const SECONDARY_COLOR = '#FF9500';
+    const SECONDARY_COLOR = Theme.Colors.secondary;
 
     // Dynamic Styles for Components
     const textStyle = { color: colors.text };
@@ -433,7 +433,7 @@ export const AnalysisScreen = () => {
                             rotateLabel // Rotate labels to -45 degrees automatically
 
                             // Grid
-                            rulesColor={isDark ? '#333' : '#E0E0E0'}
+                            rulesColor={Theme.Colors.gridLine}
                             rulesType="solid"
 
                             curved

@@ -223,7 +223,14 @@ export const SettingsScreen = () => {
                                 disabled={loading}
                             />
                         </View>
-                    </GlowCard>
+                        <Switch
+                            trackColor={{ false: Theme.Colors.switchTrackOff, true: Theme.Colors.primary }}
+                            thumbColor={Theme.Colors.switchThumb}
+                            onValueChange={toggleRpe}
+                            value={trackRpe}
+                            disabled={loading}
+                        />
+                    </View>
                 </View>
 
                 <View style={[styles.section, { marginTop: 24 }]}>
@@ -507,6 +514,7 @@ const styles = StyleSheet.create({
     deleteText: {
         fontSize: Theme.Typography.scale.md,
         fontWeight: '600',
+        color: Theme.Colors.danger,
     },
     modalContainer: { // Renamed from modalOverlay in instruction to match existing
         flex: 1,

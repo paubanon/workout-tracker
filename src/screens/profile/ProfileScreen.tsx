@@ -237,10 +237,16 @@ const styles = StyleSheet.create({
         width: 100,
         height: 100,
         borderRadius: 50,
+        backgroundColor: Theme.Colors.inputBackground,
     },
-    avatarInitials: {
-        fontSize: 36,
-        fontWeight: 'bold',
+    avatarPlaceholder: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    avatarInitial: {
+        fontSize: 40,
+        color: Theme.Colors.textSecondary,
+        fontWeight: '600',
     },
     cameraButton: {
         position: 'absolute',
@@ -274,7 +280,7 @@ const styles = StyleSheet.create({
     metricsCard: {
         borderRadius: 12,
         padding: Theme.Spacing.m,
-        marginBottom: Theme.Spacing.l,
+        ...Theme.Shadows.card,
     },
     metricRow: {
         flexDirection: 'row',
@@ -298,6 +304,8 @@ const styles = StyleSheet.create({
         fontSize: Theme.Typography.scale.sm,
     },
     logButton: {
+        backgroundColor: Theme.Colors.background,
+        paddingHorizontal: 16,
         paddingVertical: 8,
         paddingHorizontal: 16,
         borderRadius: 20,
@@ -306,8 +314,81 @@ const styles = StyleSheet.create({
         fontSize: Theme.Typography.scale.sm,
         fontWeight: '600',
     },
+    historyContainer: {
+        marginTop: Theme.Spacing.m,
+        paddingTop: Theme.Spacing.m,
+        borderTopWidth: 1,
+        borderTopColor: Theme.Colors.background,
+    },
+    historyTitle: {
+        fontSize: 13,
+        fontWeight: '600',
+        marginBottom: Theme.Spacing.s,
+        color: Theme.Colors.textSecondary,
+    },
+    historyRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 8,
+    },
+    historyDate: {
+        fontSize: 15,
+        color: Theme.Colors.textSecondary,
+    },
+    historyValue: {
+        fontSize: 15,
+        fontWeight: '500',
+    },
+    infoRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingVertical: 8,
+    },
+    infoLabel: {
+        fontSize: 17,
+        color: Theme.Colors.text,
+    },
+    infoValue: {
+        fontSize: 17,
+        color: Theme.Colors.textSecondary,
+    },
     divider: {
         height: 1,
+        backgroundColor: Theme.Colors.background,
+        marginVertical: 4,
+    },
+
+    // Modal
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        backgroundColor: Theme.Colors.surface,
+        width: '80%',
+        borderRadius: 16,
+        padding: 24,
+        alignItems: 'center',
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: '600',
+        marginBottom: 16,
+    },
+    modalInput: {
+        fontSize: 32,
+        fontWeight: '700',
+        textAlign: 'center',
+        marginBottom: 24,
+        width: 120,
+        borderBottomWidth: 1,
+        borderBottomColor: Theme.Colors.border,
+        paddingBottom: 8,
+    },
+    modalButtons: {
+        flexDirection: 'row',
         width: '100%',
     },
     historyList: {
@@ -344,7 +425,9 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         borderWidth: 1,
         alignItems: 'center',
-        marginBottom: Theme.Spacing.l,
+        borderTopWidth: 1,
+        borderTopColor: Theme.Colors.background,
+        backgroundColor: Theme.Colors.background
     },
     secondaryButtonText: {
         fontSize: Theme.Typography.scale.md,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Animated, Keyboard, KeyboardAvoidingView, Platform, StyleSheet as RNStyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Animated, Keyboard, KeyboardAvoidingView, Platform } from 'react-native';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
     colSet: { width: 40, alignItems: 'center' },
     colInput: { flex: 1, textAlign: 'center' },
     setBadge: {
-        width: 24, height: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center'
+        width: 24, height: 24, borderRadius: 12, backgroundColor: Theme.Colors.background, justifyContent: 'center', alignItems: 'center'
     },
     setText: { fontSize: 12, fontWeight: 'bold' },
     input: {
@@ -441,6 +441,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         alignItems: 'center',
         borderTopWidth: 1,
+        borderTopColor: Theme.Colors.background,
         marginTop: 8
     },
     addSetText: {

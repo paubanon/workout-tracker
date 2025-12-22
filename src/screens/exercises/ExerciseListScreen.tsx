@@ -108,6 +108,7 @@ const styles = StyleSheet.create({
         padding: Theme.Spacing.m,
     },
     searchInput: {
+        backgroundColor: Theme.Colors.inputBackground,
         padding: Theme.Spacing.s,
         borderRadius: 10,
         fontSize: 17,

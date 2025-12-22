@@ -175,6 +175,10 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingVertical: 12,
         paddingHorizontal: 14,
+        // No bottom border for cleaner look, or maybe subtle separator
+    },
+    selectedItem: {
+        backgroundColor: Theme.Colors.background, // Light highlight
     },
     itemText: {
         fontSize: 14,

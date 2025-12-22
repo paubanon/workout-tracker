@@ -248,6 +248,7 @@ const styles = StyleSheet.create({
     },
     segmentContainer: {
         flexDirection: 'row',
+        backgroundColor: Theme.Colors.inputBackground,
         borderRadius: 8,
         padding: 2,
         position: 'relative',
@@ -285,9 +286,9 @@ const styles = StyleSheet.create({
     },
     unfoldingSection: {
         paddingHorizontal: Theme.Spacing.m,
-        paddingVertical: Theme.Spacing.s,
-        marginBottom: 4,
-        borderRadius: 12,
+        paddingBottom: Theme.Spacing.m,
+        borderBottomWidth: 1,
+        borderColor: Theme.Colors.background, // subtle separator
     },
     subLabel: {
         fontSize: 13,

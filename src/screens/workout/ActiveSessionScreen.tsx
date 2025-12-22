@@ -355,12 +355,6 @@ export const ActiveSessionScreen = () => {
                     loadKg: (set.loadKg || 0) + userWeight
                 };
             }
-            if (exercise?.trackBodyWeight && userWeight > 0) {
-                return {
-                    ...set,
-                    loadKg: (set.loadKg || 0) + userWeight
-                };
-            }
             return set;
         });
 
@@ -536,7 +530,7 @@ export const ActiveSessionScreen = () => {
                                                             ? `${set.targetLoad || 0} (+${userWeight})`
                                                             : (set.targetLoad ? set.targetLoad.toString() : "-")
                                                     }
-                                                    placeholderTextColor={colors.textMuted}
+                                                    placeholderTextColor={Theme.Colors.placeholderText}
                                                     value={set.loadKg === 0 ? '' : set.loadKg?.toString()}
                                                     onChangeText={(val) => handleUpdateSet(set.id, 'loadKg', parseFloat(val) || 0)}
                                                 />
@@ -548,7 +542,7 @@ export const ActiveSessionScreen = () => {
                                                     style={[styles.input, textStyle, { backgroundColor: isDark ? colors.bgLight : colors.background }]}
                                                     keyboardType="numeric"
                                                     placeholder={set.targetReps || "-"}
-                                                    placeholderTextColor={colors.textMuted}
+                                                    placeholderTextColor={Theme.Colors.placeholderText}
                                                     value={set.reps === 0 ? '' : set.reps?.toString()}
                                                     onChangeText={(val) => handleUpdateSet(set.id, 'reps', parseFloat(val) || 0)}
                                                 />
@@ -559,7 +553,7 @@ export const ActiveSessionScreen = () => {
                                                 <TextInput
                                                     style={[styles.input, textStyle, { backgroundColor: isDark ? colors.bgLight : colors.background }]}
                                                     placeholder={set.targetTempo || (hasIsometric ? "0s" : "3010")}
-                                                    placeholderTextColor={colors.textMuted}
+                                                    placeholderTextColor={Theme.Colors.placeholderText}
                                                     value={set.tempo}
                                                     onChangeText={(val) => handleUpdateSet(set.id, 'tempo', val)}
                                                 />
@@ -571,7 +565,7 @@ export const ActiveSessionScreen = () => {
                                                     style={[styles.input, textStyle, { backgroundColor: isDark ? colors.bgLight : colors.background }]}
                                                     keyboardType="numeric"
                                                     placeholder={set.targetTime ? set.targetTime.toString() : "-"}
-                                                    placeholderTextColor={colors.textMuted}
+                                                    placeholderTextColor={Theme.Colors.placeholderText}
                                                     value={set.timeSeconds === 0 ? '' : set.timeSeconds?.toString()}
                                                     onChangeText={(val) => handleUpdateSet(set.id, 'timeSeconds', parseFloat(val) || 0)}
                                                 />
@@ -583,7 +577,7 @@ export const ActiveSessionScreen = () => {
                                                     style={[styles.input, textStyle, { backgroundColor: isDark ? colors.bgLight : colors.background }]}
                                                     keyboardType="numeric"
                                                     placeholder={set.targetDistance ? set.targetDistance.toString() : "-"}
-                                                    placeholderTextColor={colors.textMuted}
+                                                    placeholderTextColor={Theme.Colors.placeholderText}
                                                     value={set.distanceMeters === 0 ? '' : set.distanceMeters?.toString()}
                                                     onChangeText={(val) => handleUpdateSet(set.id, 'distanceMeters', parseFloat(val) || 0)}
                                                 />
@@ -594,7 +588,7 @@ export const ActiveSessionScreen = () => {
                                                 <TextInput
                                                     style={[styles.input, textStyle, { backgroundColor: isDark ? colors.bgLight : colors.background }]}
                                                     placeholder={set.targetRom || "-"}
-                                                    placeholderTextColor={colors.textMuted}
+                                                    placeholderTextColor={Theme.Colors.placeholderText}
                                                     value={set.romCm ? set.romCm.toString() : ''}
                                                     onChangeText={(val) => handleUpdateSet(set.id, 'romCm', parseFloat(val) || 0)}
                                                 />
@@ -607,7 +601,7 @@ export const ActiveSessionScreen = () => {
                                                 accessibilityState={{ checked: set.completed }}
                                                 accessibilityLabel={`Set ${index + 1} ${set.completed ? 'completed' : 'incomplete'}`}
                                             >
-                                                {set.completed && <Text style={{ color: 'white' }}>✓</Text>}
+                                                {set.completed && <Text style={{ color: Theme.Colors.surface }}>✓</Text>}
                                             </TouchableOpacity>
                                         </View>
                                     ))}
@@ -804,7 +798,7 @@ const styles = StyleSheet.create({
         borderRadius: 16,
     },
     finishButtonText: {
-        color: '#FFF',
+        color: Theme.Colors.surface,
         fontWeight: '600',
     },
     content: {
@@ -848,6 +842,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: Theme.Spacing.s,
+        height: 40,
+    },
+    setCompleted: {
+        backgroundColor: Theme.Colors.successBackground,
     },
     colSet: { width: 36, alignItems: 'center', flexShrink: 0 },
     colInput: { flex: 1, alignItems: 'center', flexShrink: 1, marginHorizontal: 8 },
@@ -879,10 +877,10 @@ const styles = StyleSheet.create({
         marginHorizontal: 4,
     },
     checkBox: {
-        width: 24,
-        height: 24,
-        borderRadius: 6,
-        borderWidth: 2,
+        width: 32,
+        height: 32,
+        borderRadius: 8,
+        backgroundColor: Theme.Colors.inputBackground,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -924,8 +922,8 @@ const styles = StyleSheet.create({
         // backgroundColor set inline dynamic
     },
     addExerciseText: {
-        fontSize: 16,
-        fontWeight: '600',
+        color: Theme.Colors.surface,
+        fontWeight: 'bold',
     },
 
     // Toast

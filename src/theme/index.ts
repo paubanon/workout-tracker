@@ -56,6 +56,26 @@ export const LightColors: ThemeColors = {
   danger: '#FF3B30',
   success: '#34C759',
   warning: '#FFCC00',
+
+  // Extended colors (previously hardcoded)
+  secondary: '#FF9500', // Orange for charts/secondary data
+  placeholderText: '#C7C7CC', // Input placeholder text
+  successBackground: '#E8FAE8', // Completed item background
+  inputBackground: '#E5E5EA', // Input field backgrounds
+  gridLine: '#E0E0E0', // Chart grid lines
+  switchTrackOff: '#767577', // Switch track when off
+  switchThumb: '#f4f3f4', // Switch thumb color
+};
+
+// Layout constants (previously magic numbers)
+export const Layout = {
+  longPressDelay: 750,
+  keyboardPaddingOffset: 220,
+  keyboardExtraMargin: 100,
+  rpeButtonSize: 40,
+  paginationLimit: 20,
+  exportLimit: 1000,
+  batchSize: 50,
 };
 
 export const Spacing = {
@@ -212,6 +232,24 @@ export const TopLight = {
     shadowRadius: 24,
     elevation: 14,
   }
+};
+
+// Shadow styles for cards and elevated elements
+export const Shadows = {
+  card: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardElevated: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+  },
 };
 
 export const Theme = {

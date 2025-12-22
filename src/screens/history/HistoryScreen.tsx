@@ -15,7 +15,6 @@ export const HistoryScreen = () => {
     const [sessions, setSessions] = useState<WorkoutSession[]>([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(0);
-    const [menuVisible, setMenuVisible] = useState<string | null>(null);
     const [hasMore, setHasMore] = useState(true);
     const LIMIT = 20;
 
@@ -61,7 +60,6 @@ export const HistoryScreen = () => {
                     onPress: async () => {
                         await supabaseService.deleteWorkoutSession(session.id);
                         setSessions(prev => prev.filter(s => s.id !== session.id));
-                        setMenuVisible(null);
                     }
                 }
             ]
@@ -69,7 +67,6 @@ export const HistoryScreen = () => {
     };
 
     const handleEdit = (session: WorkoutSession) => {
-        setMenuVisible(null);
         navigation.navigate('EditWorkout', { session });
     };
 
@@ -78,65 +75,38 @@ export const HistoryScreen = () => {
         const totalVolume = item.sets.reduce((acc, s) => acc + (s.loadKg || 0) * (s.reps || 0), 0);
 
         return (
-            <View style={styles.cardWrapper}>
-                <GlowCard style={styles.card} level="m">
-                    <TouchableOpacity
-                        style={styles.cardContent}
-                        onPress={() => navigation.navigate('WorkoutHistoryDetail', { session: item })}
-                    >
-                        <View style={styles.cardContent}>
-                            <Text style={[styles.cardTitle, { color: colors.text }]}>{item.name || 'Untitled Workout'}</Text>
-                            <View style={styles.statsRow}>
-                                <View style={styles.stat}>
-                                    <Ionicons name="barbell-outline" size={16} color={colors.textMuted} />
-                                    <Text style={[styles.statText, { color: colors.textMuted }]}>{totalVolume} kg</Text>
-                                </View>
-                                <View style={styles.stat}>
-                                    <Ionicons name="layers-outline" size={16} color={colors.textMuted} />
-                                    <Text style={[styles.statText, { color: colors.textMuted }]}>{item.sets.length} Sets</Text>
-                                </View>
-                                {item.durationSeconds ? (
-                                    <View style={styles.stat}>
-                                        <Ionicons name="time-outline" size={16} color={colors.textMuted} />
-                                        <Text style={[styles.statText, { color: colors.textMuted }]}>{Math.floor(item.durationSeconds / 60)}m</Text>
-                                    </View>
-                                ) : null}
-                            </View>
-                            <Text style={[styles.cardDate, { color: colors.textMuted }]}>{date}</Text>
-                        </View>
-                    </TouchableOpacity>
-                </GlowCard>
-                <TouchableOpacity
-                    style={styles.menuButton}
-                    onPress={() => setMenuVisible(menuVisible === item.id ? null : item.id)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`More options for ${item.name || 'workout'}`}
-                >
-                    <Ionicons name="ellipsis-vertical" size={20} color={colors.textMuted} />
-                </TouchableOpacity>
-                {menuVisible === item.id && (
-                    <View style={[styles.menu, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                        <TouchableOpacity
-                            style={styles.menuItem}
-                            onPress={() => handleEdit(item)}
-                            accessibilityRole="button"
-                            accessibilityLabel="Edit workout"
-                        >
-                            <Ionicons name="create-outline" size={18} color={colors.text} />
-                            <Text style={[styles.menuItemText, { color: colors.text }]}>Edit</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.menuItem}
-                            onPress={() => handleDelete(item)}
-                            accessibilityRole="button"
-                            accessibilityLabel="Delete workout"
-                        >
-                            <Ionicons name="trash-outline" size={18} color={colors.danger} />
-                            <Text style={[styles.menuItemText, { color: colors.danger }]}>Delete</Text>
-                        </TouchableOpacity>
+            <TouchableOpacity
+                style={styles.card}
+                onPress={() => navigation.navigate('WorkoutHistoryDetail', { session: item })}
+            >
+                <View style={styles.cardContent}>
+                    {/* Title and Date Row */}
+                    <View style={styles.titleRow}>
+                        <Text style={styles.cardTitle} numberOfLines={1} ellipsizeMode="tail">
+                            {item.name || 'Untitled Workout'}
+                        </Text>
+                        <Text style={styles.cardDate}>{date}</Text>
                     </View>
-                )}
-            </View>
+
+                    {/* Stats Row */}
+                    <View style={styles.statsRow}>
+                        <View style={styles.stat}>
+                            <Ionicons name="barbell-outline" size={16} color={Theme.Colors.textSecondary} />
+                            <Text style={styles.statText}>{totalVolume} kg</Text>
+                        </View>
+                        <View style={styles.stat}>
+                            <Ionicons name="layers-outline" size={16} color={Theme.Colors.textSecondary} />
+                            <Text style={styles.statText}>{item.sets.length} Sets</Text>
+                        </View>
+                        {item.durationSeconds ? (
+                            <View style={styles.stat}>
+                                <Ionicons name="time-outline" size={16} color={Theme.Colors.textSecondary} />
+                                <Text style={styles.statText}>{Math.floor(item.durationSeconds / 60)}m</Text>
+                            </View>
+                        ) : null}
+                    </View>
+                </View>
+            </TouchableOpacity>
         );
     };
 
@@ -185,58 +155,31 @@ const styles = StyleSheet.create({
     list: {
         padding: Theme.Spacing.m,
     },
-    cardWrapper: {
-        position: 'relative',
-        marginBottom: Theme.Spacing.m,
-    },
     card: {
         borderRadius: 12,
         padding: Theme.Spacing.m,
-    },
-    menuButton: {
-        position: 'absolute',
-        top: 8,
-        right: 8,
-        padding: 8,
-        zIndex: 10,
-    },
-    menu: {
-        position: 'absolute',
-        top: 40,
-        right: 8,
-        borderRadius: 8,
-        borderWidth: 1,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-        zIndex: 20,
-    },
-    menuItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        gap: 12,
-        minWidth: 120,
-    },
-    menuItemText: {
-        fontSize: 15,
+        marginBottom: Theme.Spacing.s,
+        ...Theme.Shadows.card,
     },
     cardContent: {
         flex: 1,
     },
+    titleRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: Theme.Spacing.s,
+        gap: 12,
+    },
     cardTitle: {
         fontSize: 17,
         fontWeight: '600',
-        marginBottom: Theme.Spacing.s,
-        paddingRight: 32, // Space for menu button
+        flex: 1,
     },
     cardDate: {
         fontSize: 14,
-        alignSelf: 'flex-end',
-        marginTop: 4,
+        color: Theme.Colors.textSecondary,
+        flexShrink: 0,
     },
     statsRow: {
         flexDirection: 'row',

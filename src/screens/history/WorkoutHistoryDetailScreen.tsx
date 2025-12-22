@@ -1,17 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Theme } from '../../theme';
 import { WorkoutSession, SetLog, MetricType } from '../../models';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../context/ThemeContext';
+import { supabaseService } from '../../services/SupabaseDataService';
 
 export const WorkoutHistoryDetailScreen = () => {
     const route = useRoute<any>();
     const navigation = useNavigation();
     const { session } = route.params as { session: WorkoutSession };
-    const { colors, isDark } = useTheme();
+    const [menuVisible, setMenuVisible] = React.useState(false);
 
     if (!session) return null;
 
@@ -34,14 +34,39 @@ export const WorkoutHistoryDetailScreen = () => {
     const [exerciseNames, setExerciseNames] = React.useState<{ [key: string]: string }>({});
 
     React.useEffect(() => {
-        import('../../services/SupabaseDataService').then(mod => {
-            mod.supabaseService.getExercises().then(all => {
-                const map: any = {};
-                all.forEach(e => map[e.id] = e.name);
-                setExerciseNames(map);
-            });
+        // We'll trust that SupabaseDataService is available and we can just get all
+        // Or improvement: Get specific IDs.
+        // For now, lazy load all.
+        supabaseService.getExercises().then(all => {
+            const map: any = {};
+            all.forEach(e => map[e.id] = e.name);
+            setExerciseNames(map);
         });
     }, []);
+
+    const handleEdit = () => {
+        setMenuVisible(false);
+        (navigation as any).navigate('EditWorkout', { session });
+    };
+
+    const handleDelete = () => {
+        setMenuVisible(false);
+        Alert.alert(
+            "Delete Workout",
+            `Are you sure you want to delete "${session.name || 'Untitled Workout'}"?`,
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                        await supabaseService.deleteWorkoutSession(session.id);
+                        navigation.goBack();
+                    }
+                }
+            ]
+        );
+    };
 
     const renderSetGroup = (exerciseId: string, sets: SetLog[]) => {
         const name = exerciseNames[exerciseId] || 'Loading...';
@@ -77,17 +102,34 @@ export const WorkoutHistoryDetailScreen = () => {
     };
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-            <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-                <TouchableOpacity
-                    onPress={() => navigation.goBack()}
-                    accessibilityRole="button"
-                    accessibilityLabel="Go back"
-                >
-                    <Ionicons name="arrow-back" size={24} color={colors.primary} />
-                </TouchableOpacity>
-                <Text style={[Theme.Typography.subtitle, { color: colors.text }]}>Workout Details</Text>
-                <View style={{ width: 24 }} />
+        <SafeAreaView style={styles.container} edges={['top']}>
+            <View style={styles.headerWrapper}>
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => navigation.goBack()}>
+                        <Ionicons name="arrow-back" size={24} color={Theme.Colors.primary} />
+                    </TouchableOpacity>
+                    <Text style={Theme.Typography.subtitle}>Workout Details</Text>
+                    <TouchableOpacity
+                        onPress={() => setMenuVisible(!menuVisible)}
+                        style={styles.menuButton}
+                    >
+                        <Ionicons name="ellipsis-vertical" size={24} color={Theme.Colors.primary} />
+                    </TouchableOpacity>
+                </View>
+
+                {/* Positioned Menu */}
+                {menuVisible && (
+                    <View style={styles.menu}>
+                        <TouchableOpacity style={styles.menuItem} onPress={handleEdit}>
+                            <Ionicons name="create-outline" size={20} color={Theme.Colors.text} />
+                            <Text style={styles.menuItemText}>Edit Workout</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.menuItem} onPress={handleDelete}>
+                            <Ionicons name="trash-outline" size={20} color={Theme.Colors.danger} />
+                            <Text style={[styles.menuItemText, { color: Theme.Colors.danger }]}>Delete Workout</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
             </View>
 
             <ScrollView contentContainerStyle={styles.content}>
@@ -148,6 +190,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         flex: 1,
         alignItems: 'center',
+        ...Theme.Shadows.card,
     },
     statLabel: {
         fontSize: 12,
@@ -162,6 +205,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         padding: Theme.Spacing.m,
         marginBottom: Theme.Spacing.m,
+        ...Theme.Shadows.card,
     },
     exerciseTitle: {
         fontSize: 17,
@@ -190,6 +234,7 @@ const styles = StyleSheet.create({
         width: 24,
         height: 24,
         borderRadius: 12,
+        backgroundColor: Theme.Colors.background,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -202,6 +247,39 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         marginTop: -8,
         fontStyle: 'italic',
-    }
+    },
+    headerWrapper: {
+        position: 'relative',
+    },
+    menuButton: {
+        padding: 8,
+    },
+    menu: {
+        position: 'absolute',
+        top: 60,
+        right: 8,
+        backgroundColor: Theme.Colors.surface,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: Theme.Colors.border,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+        zIndex: 20,
+        minWidth: 180,
+    },
+    menuItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        gap: 12,
+    },
+    menuItemText: {
+        fontSize: 15,
+        color: Theme.Colors.text,
+    },
 });
 

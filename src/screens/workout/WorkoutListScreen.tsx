@@ -234,8 +234,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     startButtonText: {
-        fontSize: Theme.Typography.scale.md,
-        color: '#FFFFFF',
+        ...Theme.Typography.body,
+        color: Theme.Colors.surface,
         fontWeight: '600',
     },
     iconButton: {
