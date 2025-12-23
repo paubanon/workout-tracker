@@ -22,21 +22,24 @@ import { CreateScreen } from '../screens/create/CreateScreen';
 import { AnalysisScreen } from '../screens/analysis/AnalysisScreen';
 import { AuthScreen } from '../screens/auth/AuthScreen';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { View, ActivityIndicator } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function TabNavigator() {
+    const { colors } = useTheme();
+
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({
                 headerShown: false,
-                tabBarActiveTintColor: Theme.Colors.primary,
-                tabBarInactiveTintColor: Theme.Colors.textSecondary,
+                tabBarActiveTintColor: colors.primary,
+                tabBarInactiveTintColor: colors.textMuted,
                 tabBarStyle: {
-                    borderTopColor: Theme.Colors.border,
-                    backgroundColor: Theme.Colors.surface,
+                    borderTopColor: colors.border,
+                    backgroundColor: colors.surface,
                 },
                 tabBarIcon: ({ focused, color, size }) => {
                     let iconName: any;
@@ -71,11 +74,12 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export const RootNavigator = () => {
     const { session, isLoading } = useAuth();
+    const { colors } = useTheme();
 
     if (isLoading) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color={Theme.Colors.primary} />
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+                <ActivityIndicator size="large" color={colors.primary} />
             </View>
         );
     }

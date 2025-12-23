@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
 import { supabaseService } from '../../services/SupabaseDataService';
 import { WorkoutSession } from '../../models';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../context/ThemeContext';
+import { GlowCard } from '../../components/GlowCard';
 
 export const HistoryScreen = () => {
     const navigation = useNavigation<any>();
+    const { colors, isDark } = useTheme();
     const [sessions, setSessions] = useState<WorkoutSession[]>([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(0);
@@ -45,75 +48,54 @@ export const HistoryScreen = () => {
         loadHistory(nextPage * LIMIT);
     };
 
-    const handleDelete = (session: WorkoutSession) => {
-        Alert.alert(
-            "Delete Workout",
-            `Are you sure you want to delete "${session.name || 'Untitled Workout'}"?`,
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: async () => {
-                        await supabaseService.deleteWorkoutSession(session.id);
-                        setSessions(prev => prev.filter(s => s.id !== session.id));
-                    }
-                }
-            ]
-        );
-    };
-
-    const handleEdit = (session: WorkoutSession) => {
-        navigation.navigate('EditWorkout', { session });
-    };
-
     const renderItem = ({ item }: { item: WorkoutSession }) => {
         const date = new Date(item.date).toLocaleDateString();
         const totalVolume = item.sets.reduce((acc, s) => acc + (s.loadKg || 0) * (s.reps || 0), 0);
 
         return (
-            <TouchableOpacity
-                style={styles.card}
-                onPress={() => navigation.navigate('WorkoutHistoryDetail', { session: item })}
-            >
-                <View style={styles.cardContent}>
-                    {/* Title and Date Row */}
-                    <View style={styles.titleRow}>
-                        <Text style={styles.cardTitle} numberOfLines={1} ellipsizeMode="tail">
-                            {item.name || 'Untitled Workout'}
-                        </Text>
-                        <Text style={styles.cardDate}>{date}</Text>
-                    </View>
-
-                    {/* Stats Row */}
-                    <View style={styles.statsRow}>
-                        <View style={styles.stat}>
-                            <Ionicons name="barbell-outline" size={16} color={Theme.Colors.textSecondary} />
-                            <Text style={styles.statText}>{totalVolume} kg</Text>
+            <View style={styles.cardWrapper}>
+                <GlowCard style={styles.card} level="m">
+                    <TouchableOpacity
+                        style={styles.cardContent}
+                        onPress={() => navigation.navigate('WorkoutHistoryDetail', { session: item })}
+                    >
+                        <View style={styles.cardHeader}>
+                            <Text style={[styles.cardTitle, { color: colors.text }]}>{item.name || 'Untitled Workout'}</Text>
+                            <Text style={[styles.cardDate, { color: colors.textMuted }]}>{date}</Text>
                         </View>
-                        <View style={styles.stat}>
-                            <Ionicons name="layers-outline" size={16} color={Theme.Colors.textSecondary} />
-                            <Text style={styles.statText}>{item.sets.length} Sets</Text>
-                        </View>
-                        {item.durationSeconds ? (
+                        <View style={styles.statsRow}>
                             <View style={styles.stat}>
-                                <Ionicons name="time-outline" size={16} color={Theme.Colors.textSecondary} />
-                                <Text style={styles.statText}>{Math.floor(item.durationSeconds / 60)}m</Text>
+                                <Ionicons name="barbell-outline" size={16} color={colors.textMuted} />
+                                <Text style={[styles.statText, { color: colors.textMuted }]}>{totalVolume} kg</Text>
                             </View>
-                        ) : null}
-                    </View>
-                </View>
-            </TouchableOpacity>
+                            <View style={styles.stat}>
+                                <Ionicons name="layers-outline" size={16} color={colors.textMuted} />
+                                <Text style={[styles.statText, { color: colors.textMuted }]}>{item.sets.length} Sets</Text>
+                            </View>
+                            {item.durationSeconds ? (
+                                <View style={styles.stat}>
+                                    <Ionicons name="time-outline" size={16} color={colors.textMuted} />
+                                    <Text style={[styles.statText, { color: colors.textMuted }]}>{Math.floor(item.durationSeconds / 60)}m</Text>
+                                </View>
+                            ) : null}
+                        </View>
+                    </TouchableOpacity>
+                </GlowCard>
+            </View>
         );
     };
 
     return (
-        <SafeAreaView style={styles.container} edges={['top']}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Ionicons name="arrow-back" size={24} color={Theme.Colors.primary} />
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+            <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+                <TouchableOpacity
+                    onPress={() => navigation.goBack()}
+                    accessibilityRole="button"
+                    accessibilityLabel="Go back"
+                >
+                    <Ionicons name="arrow-back" size={24} color={colors.primary} />
                 </TouchableOpacity>
-                <Text style={Theme.Typography.subtitle}>History</Text>
+                <Text style={[styles.headerTitle, { color: colors.text }]}>History</Text>
                 <View style={{ width: 24 }} />
             </View>
 
@@ -124,7 +106,7 @@ export const HistoryScreen = () => {
                 contentContainerStyle={styles.list}
                 onEndReached={handleLoadMore}
                 onEndReachedThreshold={0.5}
-                ListFooterComponent={loading ? <ActivityIndicator color={Theme.Colors.primary} /> : null}
+                ListFooterComponent={loading ? <ActivityIndicator color={colors.primary} /> : null}
             />
         </SafeAreaView>
     );
@@ -133,36 +115,36 @@ export const HistoryScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Theme.Colors.background,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: Theme.Spacing.m,
-        backgroundColor: Theme.Colors.surface,
         borderBottomWidth: 1,
-        borderBottomColor: Theme.Colors.border,
+    },
+    headerTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
     },
     list: {
         padding: Theme.Spacing.m,
     },
+    cardWrapper: {
+        marginBottom: Theme.Spacing.m,
+    },
     card: {
-        backgroundColor: Theme.Colors.surface,
         borderRadius: 12,
         padding: Theme.Spacing.m,
-        marginBottom: Theme.Spacing.s,
-        ...Theme.Shadows.card,
     },
     cardContent: {
         flex: 1,
     },
-    titleRow: {
+    cardHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'flex-start',
+        alignItems: 'center',
         marginBottom: Theme.Spacing.s,
-        gap: 12,
     },
     cardTitle: {
         fontSize: 17,
@@ -171,8 +153,7 @@ const styles = StyleSheet.create({
     },
     cardDate: {
         fontSize: 14,
-        color: Theme.Colors.textSecondary,
-        flexShrink: 0,
+        marginLeft: Theme.Spacing.s,
     },
     statsRow: {
         flexDirection: 'row',
@@ -184,7 +165,6 @@ const styles = StyleSheet.create({
         gap: 4,
     },
     statText: {
-        color: Theme.Colors.textSecondary,
         fontSize: 14,
     }
 });

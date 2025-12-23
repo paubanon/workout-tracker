@@ -16,11 +16,13 @@ import { Theme } from '../../theme';
 import { WorkoutSession, SetLog } from '../../models';
 import { Ionicons } from '@expo/vector-icons';
 import { supabaseService } from '../../services/SupabaseDataService';
+import { useTheme } from '../../context/ThemeContext';
 
 export const EditWorkoutScreen = () => {
     const route = useRoute<any>();
-    const navigation = useNavigation();
+    const navigation = useNavigation<any>();
     const { session } = route.params as { session: WorkoutSession };
+    const { colors } = useTheme();
 
     const [workoutName, setWorkoutName] = useState(session.name || '');
     const [workoutDate, setWorkoutDate] = useState(new Date(session.date).toISOString().split('T')[0]);
@@ -72,22 +74,27 @@ export const EditWorkoutScreen = () => {
     };
 
     const addSet = (exerciseId: string) => {
-        // Find the last set for this exercise to use as template
-        const exerciseSets = sets.filter(s => s.exerciseId === exerciseId);
-        const lastSet = exerciseSets[exerciseSets.length - 1];
-
-        // Create new set with same exerciseId and incremented setNumber
         const newSet: SetLog = {
-            id: `temp-${Date.now()}`, // Temporary ID
-            exerciseId: exerciseId,
-            setNumber: exerciseSets.length + 1,
-            loadKg: lastSet?.loadKg || 0,
-            reps: lastSet?.reps || 0,
-            rpe: lastSet?.rpe,
+            id: `new_${Date.now()}`,
+            exerciseId,
+            setNumber: sets.filter(s => s.exerciseId === exerciseId).length + 1,
             completed: false,
         };
-
         setSets([...sets, newSet]);
+    };
+
+    const handleAddExercise = () => {
+        navigation.navigate('ExerciseList', {
+            onSelect: (exerciseId: string) => {
+                const newSet: SetLog = {
+                    id: `new_${Date.now()}`,
+                    exerciseId,
+                    setNumber: 1,
+                    completed: false,
+                };
+                setSets(prev => [...prev, newSet]);
+            }
+        });
     };
 
     // Group sets by exercise
@@ -101,18 +108,27 @@ export const EditWorkoutScreen = () => {
     });
 
     return (
-        <SafeAreaView style={styles.container} edges={['top']}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={{ flex: 1 }}
             >
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => navigation.goBack()}>
-                        <Ionicons name="close" size={24} color={Theme.Colors.primary} />
+                <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+                    <TouchableOpacity
+                        onPress={() => navigation.goBack()}
+                        accessibilityRole="button"
+                        accessibilityLabel="Close"
+                    >
+                        <Ionicons name="close" size={24} color={colors.primary} />
                     </TouchableOpacity>
-                    <Text style={Theme.Typography.subtitle}>Edit Workout</Text>
-                    <TouchableOpacity onPress={handleSave} disabled={saving}>
-                        <Text style={[styles.saveButton, saving && styles.saveButtonDisabled]}>
+                    <Text style={[Theme.Typography.subtitle, { color: colors.text }]}>Edit Workout</Text>
+                    <TouchableOpacity
+                        onPress={handleSave}
+                        disabled={saving}
+                        accessibilityRole="button"
+                        accessibilityLabel={saving ? 'Saving' : 'Save workout'}
+                    >
+                        <Text style={[styles.saveButton, { color: colors.primary }, saving && styles.saveButtonDisabled]}>
                             {saving ? 'Saving...' : 'Save'}
                         </Text>
                     </TouchableOpacity>
@@ -124,25 +140,25 @@ export const EditWorkoutScreen = () => {
                 >
                     {/* Workout Name */}
                     <View style={styles.field}>
-                        <Text style={styles.label}>Workout Name</Text>
+                        <Text style={[styles.label, { color: colors.text }]}>Workout Name</Text>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
                             value={workoutName}
                             onChangeText={setWorkoutName}
                             placeholder="Enter workout name"
-                            placeholderTextColor={Theme.Colors.textSecondary}
+                            placeholderTextColor={colors.textMuted}
                         />
                     </View>
 
                     {/* Date */}
                     <View style={styles.field}>
-                        <Text style={styles.label}>Date (YYYY-MM-DD)</Text>
+                        <Text style={[styles.label, { color: colors.text }]}>Date (YYYY-MM-DD)</Text>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
                             value={workoutDate}
                             onChangeText={setWorkoutDate}
                             placeholder="YYYY-MM-DD"
-                            placeholderTextColor={Theme.Colors.textSecondary}
+                            placeholderTextColor={colors.textMuted}
                         />
                     </View>
 
@@ -152,51 +168,53 @@ export const EditWorkoutScreen = () => {
                         const exerciseName = exerciseNames[exerciseId] || 'Loading...';
 
                         return (
-                            <View key={exerciseId} style={styles.exerciseCard}>
-                                <Text style={styles.exerciseTitle}>{exerciseName}</Text>
+                            <View key={exerciseId} style={[styles.exerciseCard, { backgroundColor: colors.surface }]}>
+                                <Text style={[styles.exerciseTitle, { color: colors.text }]}>{exerciseName}</Text>
 
                                 {exerciseSets.map((set, i) => {
                                     const globalIndex = indices[i];
                                     return (
                                         <View key={globalIndex} style={styles.setRow}>
-                                            <Text style={styles.setNumber}>{i + 1}</Text>
+                                            <Text style={[styles.setNumber, { color: colors.textMuted }]}>{i + 1}</Text>
                                             <View style={styles.setInputs}>
                                                 <View style={styles.inputGroup}>
-                                                    <Text style={styles.inputLabel}>KG</Text>
+                                                    <Text style={[styles.inputLabel, { color: colors.textMuted }]}>KG</Text>
                                                     <TextInput
-                                                        style={styles.setInput}
+                                                        style={[styles.setInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
                                                         value={set.loadKg?.toString() || ''}
                                                         onChangeText={(text) => updateSet(globalIndex, 'loadKg', parseFloat(text) || 0)}
                                                         keyboardType="numeric"
-                                                        placeholderTextColor={Theme.Colors.textSecondary}
+                                                        placeholderTextColor={colors.textMuted}
                                                     />
                                                 </View>
                                                 <View style={styles.inputGroup}>
-                                                    <Text style={styles.inputLabel}>Reps</Text>
+                                                    <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Reps</Text>
                                                     <TextInput
-                                                        style={styles.setInput}
+                                                        style={[styles.setInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
                                                         value={set.reps?.toString() || ''}
                                                         onChangeText={(text) => updateSet(globalIndex, 'reps', parseInt(text) || 0)}
                                                         keyboardType="numeric"
-                                                        placeholderTextColor={Theme.Colors.textSecondary}
+                                                        placeholderTextColor={colors.textMuted}
                                                     />
                                                 </View>
                                                 <View style={styles.inputGroup}>
-                                                    <Text style={styles.inputLabel}>RPE</Text>
+                                                    <Text style={[styles.inputLabel, { color: colors.textMuted }]}>RPE</Text>
                                                     <TextInput
-                                                        style={styles.setInput}
+                                                        style={[styles.setInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
                                                         value={set.rpe?.toString() || ''}
                                                         onChangeText={(text) => updateSet(globalIndex, 'rpe', parseFloat(text) || 0)}
                                                         keyboardType="numeric"
-                                                        placeholderTextColor={Theme.Colors.textSecondary}
+                                                        placeholderTextColor={colors.textMuted}
                                                     />
                                                 </View>
                                             </View>
                                             <TouchableOpacity
                                                 style={styles.deleteButton}
                                                 onPress={() => deleteSet(globalIndex)}
+                                                accessibilityRole="button"
+                                                accessibilityLabel={`Delete set ${i + 1}`}
                                             >
-                                                <Ionicons name="trash-outline" size={20} color={Theme.Colors.danger} />
+                                                <Ionicons name="trash-outline" size={20} color={colors.danger} />
                                             </TouchableOpacity>
                                         </View>
                                     );
@@ -204,15 +222,28 @@ export const EditWorkoutScreen = () => {
 
                                 {/* Add Set Button */}
                                 <TouchableOpacity
-                                    style={styles.addSetButton}
+                                    style={[styles.addSetButton, { borderColor: colors.primary }]}
                                     onPress={() => addSet(exerciseId)}
+                                    accessibilityRole="button"
+                                    accessibilityLabel="Add set"
                                 >
-                                    <Ionicons name="add-circle-outline" size={20} color={Theme.Colors.primary} />
-                                    <Text style={styles.addSetText}>Add Set</Text>
+                                    <Ionicons name="add" size={18} color={colors.primary} />
+                                    <Text style={[styles.addSetText, { color: colors.primary }]}>Add Set</Text>
                                 </TouchableOpacity>
                             </View>
                         );
                     })}
+
+                    {/* Add Exercise Button */}
+                    <TouchableOpacity
+                        style={[styles.addExerciseButton, { backgroundColor: colors.primary }]}
+                        onPress={handleAddExercise}
+                        accessibilityRole="button"
+                        accessibilityLabel="Add exercise"
+                    >
+                        <Ionicons name="add" size={20} color="#FFF" />
+                        <Text style={styles.addExerciseText}>Add Exercise</Text>
+                    </TouchableOpacity>
                 </ScrollView>
             </KeyboardAvoidingView>
         </SafeAreaView>
@@ -222,19 +253,15 @@ export const EditWorkoutScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Theme.Colors.background,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: Theme.Spacing.m,
-        backgroundColor: Theme.Colors.surface,
         borderBottomWidth: 1,
-        borderBottomColor: Theme.Colors.border,
     },
     saveButton: {
-        color: Theme.Colors.primary,
         fontSize: 16,
         fontWeight: '600',
     },
@@ -251,20 +278,15 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '600',
-        color: Theme.Colors.text,
         marginBottom: 6,
     },
     input: {
-        backgroundColor: Theme.Colors.surface,
         borderRadius: 8,
         padding: Theme.Spacing.m,
         fontSize: 16,
-        color: Theme.Colors.text,
         borderWidth: 1,
-        borderColor: Theme.Colors.border,
     },
     exerciseCard: {
-        backgroundColor: Theme.Colors.surface,
         borderRadius: 12,
         padding: Theme.Spacing.m,
         marginBottom: Theme.Spacing.m,
@@ -273,7 +295,6 @@ const styles = StyleSheet.create({
         fontSize: 17,
         fontWeight: '600',
         marginBottom: 12,
-        color: Theme.Colors.text,
     },
     setRow: {
         flexDirection: 'row',
@@ -284,7 +305,6 @@ const styles = StyleSheet.create({
     setNumber: {
         fontSize: 16,
         fontWeight: '600',
-        color: Theme.Colors.textSecondary,
         width: 30,
     },
     setInputs: {
@@ -298,18 +318,14 @@ const styles = StyleSheet.create({
     inputLabel: {
         fontSize: 11,
         fontWeight: '600',
-        color: Theme.Colors.textSecondary,
         marginBottom: 4,
         textTransform: 'uppercase',
     },
     setInput: {
-        backgroundColor: Theme.Colors.background,
         borderRadius: 6,
         padding: 8,
         fontSize: 14,
-        color: Theme.Colors.text,
         borderWidth: 1,
-        borderColor: Theme.Colors.border,
         textAlign: 'center',
     },
     deleteButton: {
@@ -319,15 +335,30 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 8,
-        paddingVertical: 12,
-        borderTopWidth: 1,
-        borderTopColor: Theme.Colors.border,
-        marginTop: 8,
+        paddingVertical: 8,
+        borderWidth: 1,
+        borderRadius: 8,
+        borderStyle: 'dashed',
+        marginTop: 4,
+        gap: 6,
     },
     addSetText: {
-        fontSize: 15,
+        fontSize: 14,
+        fontWeight: '500',
+    },
+    addExerciseButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: Theme.Spacing.m,
+        borderRadius: 12,
+        marginTop: Theme.Spacing.m,
+        gap: 8,
+    },
+    addExerciseText: {
+        fontSize: 16,
         fontWeight: '600',
-        color: Theme.Colors.primary,
+        color: '#FFF',
     },
 });
+

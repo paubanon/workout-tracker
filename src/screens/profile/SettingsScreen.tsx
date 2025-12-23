@@ -5,17 +5,18 @@ import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 // Using legacy API as per SDK 54 deprecation warning for writeAsStringAsync
 import * as FileSystem from 'expo-file-system/legacy';
-
-
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
 import { supabaseService } from '../../services/SupabaseDataService';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
+import { GlowCard } from '../../components/GlowCard';
 
 export const SettingsScreen = () => {
     const [trackRpe, setTrackRpe] = useState(false);
     const [loading, setLoading] = useState(true);
     const { signOut } = useAuth();
+    const { colors, isDark, toggleTheme } = useTheme();
 
     // Password Change State
     const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
@@ -160,66 +161,119 @@ export const SettingsScreen = () => {
         }
     };
 
+    // Dynamic Styles Helpers
+    const containerStyle = { backgroundColor: colors.background };
+    const rowStyle = { backgroundColor: colors.surface };
+    const textStyle = { color: colors.text };
+    const subtitleStyle = { color: colors.textMuted };
+    const titleStyle = { color: colors.textMuted }; // Section titles
+    const iconColor = colors.textMuted;
+    const shadowStyle = isDark ? Theme.TopLight.m : Theme.Shadows.light.m;
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Settings</Text>
-            </View>
-
-            <ScrollView>
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Account</Text>
-                    <TouchableOpacity
-                        style={styles.row}
-                        onPress={() => setIsPasswordModalVisible(true)}
-                    >
-                        <Text style={styles.optionTitle}>Change Password</Text>
-                        <Ionicons name="chevron-forward" size={20} color={Theme.Colors.textSecondary} />
-                    </TouchableOpacity>
-                </View>
-
-                <View style={[styles.section, { marginTop: 24 }]}>
-                    <Text style={styles.sectionTitle}>Preferences</Text>
-                    <View style={styles.row}>
-                        <View>
-                            <Text style={styles.optionTitle}>Track RPE</Text>
-                            <Text style={styles.optionSubtitle}>Rate Perceived Exertion (1-10) after each set</Text>
+        <SafeAreaView style={[styles.container, containerStyle]} edges={['top', 'bottom']}>
+            <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+                <View style={[styles.section, { marginTop: Theme.Spacing.l }]}>
+                    <Text style={[styles.sectionTitle, titleStyle]}>Appearance</Text>
+                    <GlowCard style={styles.row} level="m">
+                        <View style={styles.rowContent}>
+                            <View>
+                                <Text style={[styles.optionTitle, textStyle]}>Dark Mode</Text>
+                                <Text style={[styles.optionSubtitle, subtitleStyle]}>
+                                    {isDark ? "On" : "Off"}
+                                </Text>
+                            </View>
+                            <Switch
+                                trackColor={{ false: "#767577", true: isDark ? colors.primary : colors.primary }}
+                                thumbColor={"#f4f3f4"}
+                                onValueChange={toggleTheme}
+                                value={isDark}
+                            />
                         </View>
-                        <Switch
-                            trackColor={{ false: Theme.Colors.switchTrackOff, true: Theme.Colors.primary }}
-                            thumbColor={Theme.Colors.switchThumb}
-                            onValueChange={toggleRpe}
-                            value={trackRpe}
-                            disabled={loading}
-                        />
-                    </View>
+                    </GlowCard>
                 </View>
 
                 <View style={[styles.section, { marginTop: 24 }]}>
-                    <Text style={styles.sectionTitle}>Data Management</Text>
-                    <TouchableOpacity style={[styles.row, { marginBottom: 1 }]} onPress={handleExportData}>
-                        <Text style={styles.optionTitle}>Export Data (Backup)</Text>
-                        <Ionicons name="download-outline" size={24} color={Theme.Colors.primary} />
-                    </TouchableOpacity>
-                    <View style={styles.separator} />
-                    <TouchableOpacity style={styles.row} onPress={handleImportData}>
-                        <Text style={styles.optionTitle}>Import Data</Text>
-                        <Ionicons name="cloud-upload-outline" size={24} color={Theme.Colors.primary} />
-                    </TouchableOpacity>
+                    <Text style={[styles.sectionTitle, titleStyle]}>Account</Text>
+                    <GlowCard style={styles.row} level="m">
+                        <TouchableOpacity
+                            style={styles.rowContent}
+                            onPress={() => setIsPasswordModalVisible(true)}
+                        >
+                            <Text style={[styles.optionTitle, textStyle]}>Change Password</Text>
+                            <Ionicons name="chevron-forward" size={20} color={iconColor} />
+                        </TouchableOpacity>
+                    </GlowCard>
+                </View>
+
+                <View style={[styles.section, { marginTop: 24 }]}>
+                    <Text style={[styles.sectionTitle, titleStyle]}>Preferences</Text>
+                    <GlowCard style={styles.row} level="m">
+                        <View style={styles.rowContent}>
+                            <View>
+                                <Text style={[styles.optionTitle, textStyle]}>Track RPE</Text>
+                                <Text style={[styles.optionSubtitle, subtitleStyle]}>Rate Perceived Exertion (1-10) after each set</Text>
+                            </View>
+                            <Switch
+                                trackColor={{ false: "#767577", true: isDark ? colors.primary : colors.primary }}
+                                thumbColor={trackRpe ? "#f4f3f4" : "#f4f3f4"}
+                                onValueChange={toggleRpe}
+                                value={trackRpe}
+                                disabled={loading}
+                            />
+                        </View>
+                    </GlowCard>
+                </View>
+
+                <View style={[styles.section, { marginTop: 24 }]}>
+                    <Text style={[styles.sectionTitle, titleStyle]}>Data Management</Text>
+                    <GlowCard style={[styles.row, { marginBottom: Theme.Spacing.s }]} level="m">
+                        <TouchableOpacity
+                            style={styles.rowContent}
+                            onPress={handleExportData}
+                            accessibilityRole="button"
+                            accessibilityLabel="Export data backup"
+                        >
+                            <Text style={[styles.optionTitle, textStyle]}>Export Data (Backup)</Text>
+                            <Ionicons name="download-outline" size={24} color={colors.primary} />
+                        </TouchableOpacity>
+                    </GlowCard>
+
+                    <GlowCard style={styles.row} level="m">
+                        <TouchableOpacity
+                            style={styles.rowContent}
+                            onPress={handleImportData}
+                            accessibilityRole="button"
+                            accessibilityLabel="Import data"
+                        >
+                            <Text style={[styles.optionTitle, textStyle]}>Import Data</Text>
+                            <Ionicons name="cloud-upload-outline" size={24} color={colors.primary} />
+                        </TouchableOpacity>
+                    </GlowCard>
                 </View>
 
                 <View style={styles.section}>
-                    <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
-                        <Text style={styles.logoutText}>Log Out</Text>
-                    </TouchableOpacity>
+                    <GlowCard style={[styles.logoutButton, { borderWidth: 1, borderColor: colors.border }]} level="m">
+                        <TouchableOpacity
+                            style={styles.logoutContent}
+                            onPress={signOut}
+                            accessibilityRole="button"
+                            accessibilityLabel="Log out"
+                        >
+                            <Text style={[styles.logoutText, { color: colors.danger }]}>Log Out</Text>
+                        </TouchableOpacity>
+                    </GlowCard>
 
-                    <TouchableOpacity
-                        style={[styles.logoutButton, { backgroundColor: Theme.Colors.background, marginTop: 12 }]}
-                        onPress={() => setIsDeleteModalVisible(true)}
-                    >
-                        <Text style={[styles.logoutText, { color: Theme.Colors.danger, fontSize: 15 }]}>Delete Account</Text>
-                    </TouchableOpacity>
+                    <GlowCard style={[styles.logoutButton, { marginTop: Theme.Spacing.m, borderWidth: 1, borderColor: colors.danger }]} level="m">
+                        <TouchableOpacity
+                            style={styles.logoutContent}
+                            onPress={() => setIsDeleteModalVisible(true)}
+                            accessibilityRole="button"
+                            accessibilityLabel="Delete account"
+                        >
+                            <Text style={[styles.logoutText, { color: colors.danger }]}>Delete Account</Text>
+                        </TouchableOpacity>
+                    </GlowCard>
                 </View>
             </ScrollView>
 
@@ -231,26 +285,31 @@ export const SettingsScreen = () => {
                 onRequestClose={() => setIsPasswordModalVisible(false)}
             >
                 <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Change Password</Text>
+                    <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+                        <Text style={[styles.modalTitle, textStyle]}>Change Password</Text>
 
-                        <View style={styles.passwordContainer}>
+                        <View style={[styles.passwordContainer, { backgroundColor: colors.background }]}>
                             <TextInput
-                                style={styles.passwordInput}
+                                style={[styles.passwordInput, { color: colors.text }]}
                                 placeholder="New Password"
-                                placeholderTextColor={Theme.Colors.textSecondary}
+                                placeholderTextColor={colors.textMuted}
                                 secureTextEntry={!showNewPassword}
                                 value={newPassword}
                                 onChangeText={setNewPassword}
                             />
-                            <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)} style={styles.eyeButton}>
-                                <Ionicons name={showNewPassword ? "eye-outline" : "eye-off-outline"} size={20} color={Theme.Colors.textSecondary} />
+                            <TouchableOpacity
+                                onPress={() => setShowNewPassword(!showNewPassword)}
+                                style={styles.eyeButton}
+                                accessibilityRole="button"
+                                accessibilityLabel={showNewPassword ? 'Hide password' : 'Show password'}
+                            >
+                                <Ionicons name={showNewPassword ? "eye-outline" : "eye-off-outline"} size={20} color={colors.textMuted} />
                             </TouchableOpacity>
                         </View>
 
                         <View style={styles.requirementsContainer}>
                             {!isPasswordValid && forceValidation && (
-                                <Text style={styles.errorText}>
+                                <Text style={[styles.errorText, { color: colors.danger }]}>
                                     Please create a password that meets all requirements below
                                 </Text>
                             )}
@@ -259,12 +318,12 @@ export const SettingsScreen = () => {
                                     <Ionicons
                                         name={v.valid ? "checkmark-circle" : "close-circle"}
                                         size={18}
-                                        color={v.valid ? Theme.Colors.success : Theme.Colors.textSecondary}
+                                        color={v.valid ? colors.success : colors.textMuted}
                                         style={{ marginRight: 6 }}
                                     />
                                     <Text
                                         style={{
-                                            color: v.valid ? Theme.Colors.success : Theme.Colors.textSecondary,
+                                            color: v.valid ? colors.success : colors.textMuted,
                                             fontSize: 13,
                                             fontWeight: '500',
                                         }}
@@ -275,29 +334,34 @@ export const SettingsScreen = () => {
                             ))}
                         </View>
 
-                        <View style={styles.passwordContainer}>
+                        <View style={[styles.passwordContainer, { backgroundColor: colors.background }]}>
                             <TextInput
-                                style={styles.passwordInput}
+                                style={[styles.passwordInput, { color: colors.text }]}
                                 placeholder="Confirm Password"
-                                placeholderTextColor={Theme.Colors.textSecondary}
+                                placeholderTextColor={colors.textMuted}
                                 secureTextEntry={!showConfirmPassword}
                                 value={confirmPassword}
                                 onChangeText={setConfirmPassword}
                             />
-                            <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeButton}>
-                                <Ionicons name={showConfirmPassword ? "eye-outline" : "eye-off-outline"} size={20} color={Theme.Colors.textSecondary} />
+                            <TouchableOpacity
+                                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                                style={styles.eyeButton}
+                                accessibilityRole="button"
+                                accessibilityLabel={showConfirmPassword ? 'Hide password' : 'Show password'}
+                            >
+                                <Ionicons name={showConfirmPassword ? "eye-outline" : "eye-off-outline"} size={20} color={colors.textMuted} />
                             </TouchableOpacity>
                         </View>
 
                         <View style={styles.modalButtons}>
                             <TouchableOpacity
-                                style={[styles.modalButton, styles.cancelButton]}
+                                style={[styles.modalButton, { backgroundColor: colors.background }]}
                                 onPress={() => setIsPasswordModalVisible(false)}
                             >
-                                <Text style={styles.modalButtonText}>Cancel</Text>
+                                <Text style={[styles.modalButtonText, textStyle]}>Cancel</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={[styles.modalButton, styles.saveButton]}
+                                style={[styles.modalButton, { backgroundColor: colors.primary }]}
                                 onPress={handleChangePassword}
                                 disabled={passwordLoading}
                             >
@@ -318,37 +382,42 @@ export const SettingsScreen = () => {
                 onRequestClose={() => setIsDeleteModalVisible(false)}
             >
                 <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <Text style={[styles.modalTitle, { color: Theme.Colors.danger }]}>Delete Account</Text>
-                        <Text style={styles.modalSubtitle}>
+                    <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+                        <Text style={[styles.modalTitle, { color: colors.danger }]}>Delete Account</Text>
+                        <Text style={[styles.modalSubtitle, textStyle]}>
                             Are you sure you want to delete your account? This will permanently remove all your workouts, templates, and history.
                             {"\n\n"}
                             We strongly recommend backing up your data first.
                         </Text>
 
-                        <View style={styles.passwordContainer}>
+                        <View style={[styles.passwordContainer, { backgroundColor: colors.background }]}>
                             <TextInput
-                                style={styles.passwordInput}
+                                style={[styles.passwordInput, { color: colors.text }]}
                                 placeholder="Enter Password to Confirm"
-                                placeholderTextColor={Theme.Colors.textSecondary}
+                                placeholderTextColor={colors.textMuted}
                                 secureTextEntry={!showDeletePassword}
                                 value={deletePassword}
                                 onChangeText={setDeletePassword}
                             />
-                            <TouchableOpacity onPress={() => setShowDeletePassword(!showDeletePassword)} style={styles.eyeButton}>
-                                <Ionicons name={showDeletePassword ? "eye-outline" : "eye-off-outline"} size={20} color={Theme.Colors.textSecondary} />
+                            <TouchableOpacity
+                                onPress={() => setShowDeletePassword(!showDeletePassword)}
+                                style={styles.eyeButton}
+                                accessibilityRole="button"
+                                accessibilityLabel={showDeletePassword ? 'Hide password' : 'Show password'}
+                            >
+                                <Ionicons name={showDeletePassword ? "eye-outline" : "eye-off-outline"} size={20} color={colors.textMuted} />
                             </TouchableOpacity>
                         </View>
 
                         <View style={styles.modalButtons}>
                             <TouchableOpacity
-                                style={[styles.modalButton, styles.cancelButton]}
+                                style={[styles.modalButton, { backgroundColor: colors.background }]}
                                 onPress={() => setIsDeleteModalVisible(false)}
                             >
-                                <Text style={styles.modalButtonText}>Cancel</Text>
+                                <Text style={[styles.modalButtonText, textStyle]}>Cancel</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={[styles.modalButton, { backgroundColor: Theme.Colors.danger }]}
+                                style={[styles.modalButton, { backgroundColor: colors.danger }]}
                                 onPress={handleDeleteAccount}
                                 disabled={deleteLoading}
                             >
@@ -367,74 +436,91 @@ export const SettingsScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Theme.Colors.background,
     },
-    header: {
-        paddingHorizontal: Theme.Spacing.m,
-        paddingTop: Theme.Spacing.m,
-        marginBottom: Theme.Spacing.l,
-    },
-    headerTitle: {
-        ...Theme.Typography.title,
-    },
+    // Header style moved to inline or managed by navigation options, kept here if needed but mostly empty now in ScrollView
     section: {
         paddingHorizontal: Theme.Spacing.m,
     },
     sectionTitle: {
-        ...Theme.Typography.subtitle,
-        fontSize: 13,
-        textTransform: 'uppercase',
-        color: Theme.Colors.textSecondary,
-        marginBottom: Theme.Spacing.s,
+        fontSize: Theme.Typography.scale.lg,
+        fontWeight: '600',
+        marginBottom: Theme.Spacing.m,
+        marginTop: Theme.Spacing.m,
     },
     row: {
+        borderRadius: 12,
+    },
+    rowContent: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: Theme.Colors.surface,
         padding: 16,
-        borderRadius: 12,
     },
     separator: {
         height: 1,
-        backgroundColor: Theme.Colors.background,
         marginHorizontal: 16,
     },
     optionTitle: {
-        fontSize: 17,
+        fontSize: Theme.Typography.scale.md,
         fontWeight: '500',
-        color: Theme.Colors.text,
         marginBottom: 4,
     },
     optionSubtitle: {
-        fontSize: 13,
-        color: Theme.Colors.textSecondary,
+        fontSize: Theme.Typography.scale.sm,
         maxWidth: 240,
     },
     logoutButton: {
         marginTop: Theme.Spacing.xl,
-        backgroundColor: Theme.Colors.surface,
-        padding: 16,
         borderRadius: 12,
+    },
+    logoutContent: {
+        padding: Theme.Spacing.m,
         alignItems: 'center',
-        justifyContent: 'center',
     },
     logoutText: {
-        fontSize: 17,
+        fontSize: Theme.Typography.scale.md,
         fontWeight: '600',
-        color: Theme.Colors.danger,
     },
-    modalContainer: {
+    // New styles from instruction
+    item: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 12,
+        marginBottom: 8,
+    },
+    itemText: {
+        fontSize: Theme.Typography.scale.md,
+    },
+    versionText: {
+        fontSize: Theme.Typography.scale.sm,
+        marginTop: Theme.Spacing.xl,
+        textAlign: 'center',
+    },
+    deleteButton: {
+        marginTop: Theme.Spacing.l,
+        padding: Theme.Spacing.m,
+        borderRadius: 12,
+        alignItems: 'center',
+        borderWidth: 1,
+    },
+    deleteText: {
+        fontSize: Theme.Typography.scale.md,
+        fontWeight: '600',
+    },
+    modalContainer: { // Renamed from modalOverlay in instruction to match existing
         flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        padding: Theme.Spacing.l,
     },
     modalContent: {
-        backgroundColor: Theme.Colors.surface,
         borderRadius: 20,
+        width: '100%',
+        maxWidth: 320,
         padding: 24,
-        width: '90%',
+        alignItems: 'center',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
@@ -442,23 +528,50 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     modalTitle: {
-        fontSize: 20,
+        fontSize: Theme.Typography.scale.xl,
         fontWeight: 'bold',
         marginBottom: 16,
-        color: Theme.Colors.text,
         textAlign: 'center',
     },
-    modalSubtitle: {
-        fontSize: 14,
-        color: Theme.Colors.text,
-        marginBottom: 20,
+    modalSubtitle: { // Renamed from modalText in instruction to match existing
+        fontSize: Theme.Typography.scale.md,
+        marginBottom: 24,
         textAlign: 'center',
-        lineHeight: 20,
+        lineHeight: 20, // Keep original line height
     },
+    modalActions: { // New style from instruction
+        width: '100%',
+        marginBottom: 16,
+    },
+    modalButton: {
+        flex: 1, // Keep original flex property
+        padding: 14, // Keep original padding
+        borderRadius: 10, // Keep original border radius
+        alignItems: 'center',
+        marginHorizontal: 6, // Keep original margin
+    },
+    modalButtonText: {
+        fontWeight: '600', // Changed from 'bold' to '600'
+        fontSize: Theme.Typography.scale.md, // Changed from 16 to scale.md
+    },
+    saveButtonText: {
+        color: 'white',
+    },
+    divider: { // New style from instruction
+        height: 1,
+        marginVertical: 4,
+    },
+    cancelButton: { // New style from instruction
+        marginTop: 8,
+    },
+    cancelButtonText: { // New style from instruction
+        fontSize: Theme.Typography.scale.md,
+        fontWeight: '600',
+    },
+    // Remaining original styles
     passwordContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: Theme.Colors.background,
         borderRadius: 10,
         marginBottom: 16,
         paddingRight: 12,
@@ -466,7 +579,6 @@ const styles = StyleSheet.create({
     passwordInput: {
         flex: 1,
         padding: 12,
-        color: Theme.Colors.text,
         fontSize: 16,
     },
     eyeButton: {
@@ -483,7 +595,6 @@ const styles = StyleSheet.create({
         marginBottom: 6,
     },
     errorText: {
-        color: Theme.Colors.danger,
         fontSize: 12,
         marginBottom: 10,
         fontWeight: '500',
@@ -493,25 +604,5 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginTop: 8,
     },
-    modalButton: {
-        flex: 1,
-        padding: 14,
-        borderRadius: 10,
-        alignItems: 'center',
-        marginHorizontal: 6,
-    },
-    cancelButton: {
-        backgroundColor: Theme.Colors.background,
-    },
-    saveButton: {
-        backgroundColor: Theme.Colors.primary,
-    },
-    modalButtonText: {
-        fontWeight: 'bold',
-        color: Theme.Colors.text,
-        fontSize: 16,
-    },
-    saveButtonText: {
-        color: 'white',
-    },
 });
+

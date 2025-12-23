@@ -80,7 +80,8 @@ export interface UserProfile {
     sex: 'male' | 'female' | 'other';
     avatarUrl?: string; // Optional
     preferences?: {
-        trackRpe: boolean;
+        trackRpe?: boolean;
+        theme?: 'light' | 'dark';
     };
     weightHistory: WeightEntry[];
 }

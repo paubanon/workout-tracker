@@ -1,25 +1,89 @@
-export const Colors = {
-  primary: '#007AFF', // iOS Blue, widely accepted acting as accent
-  background: '#F2F2F7', // iOS System Gray 6 (Light)
-  surface: '#FFFFFF',
+export type ThemeMode = 'light' | 'dark';
+
+export interface ThemeColors {
+  primary: string;
+  bgDark: string;
+  bg: string;
+  bgLight: string;
+  text: string;
+  textMuted: string;
+  textSecondary: string; // Alias for textMuted
+  border: string;
+  shadowS: string;
+  shadowM: string;
+  shadowL: string;
+  surface: string; // Alias for bg
+  background: string; // Alias for bgDark
+  danger: string;
+  success: string;
+  warning: string;
+  // Extended colors
+  secondary?: string;
+  placeholderText?: string;
+  successBackground?: string;
+  inputBackground?: string;
+  gridLine?: string;
+  switchTrackOff?: string;
+  switchThumb?: string;
+}
+
+export const DarkColors: ThemeColors = {
+  primary: '#65D984', // Vibrant Green
+  bgDark: '#1C1C1E',  // Base - lightened for shadow visibility
+  bg: '#2C2C2E',      // Card - darker for contrast
+  bgLight: '#3A3A3C', // Elevated/Input - even darker
+  text: '#F2F2F7',    // ~95% White
+  textMuted: '#AEAEB2', // ~70% White
+  textSecondary: '#AEAEB2', // Alias
+  border: 'rgba(255,255,255, 0.1)',
+  shadowS: '0px 1px 2px rgba(0,0,0,0.3)',
+  shadowM: '0px 4px 8px rgba(0,0,0,0.4)',
+  shadowL: '0px 8px 16px rgba(0,0,0,0.5)',
+
+  // Aliases/Standard Palette
+  surface: '#2C2C2E',
+  background: '#1C1C1E',
+  danger: '#FF453A',
+  success: '#32D74B',
+  warning: '#FFD60A',
+
+  // Extended
+  secondary: '#FF9500',
+  switchTrackOff: '#767577',
+  switchThumb: '#f4f3f4',
+};
+
+export const LightColors: ThemeColors = {
+  primary: '#007AFF', // System Blue
+  bgDark: '#F2F2F7',  // iOS System Gray 6 - Page Base
+  bg: '#FFFFFF',      // Card
+  bgLight: '#FFFFFF', // Elevated - relies on shadow
   text: '#000000',
-  textSecondary: '#8E8E93',
-  border: '#C6C6C8',
+  textMuted: '#6C6C70',
+  textSecondary: '#6C6C70', // Alias
+  border: 'rgba(0,0,0, 0.1)',
+  shadowS: '0px 1px 2px rgba(0,0,0,0.05)',
+  shadowM: '0px 4px 6px rgba(0,0,0,0.08)',
+  shadowL: '0px 10px 15px rgba(0,0,0,0.1)',
+
+  // Aliases/Standard Palette
+  surface: '#FFFFFF',
+  background: '#F2F2F7',
   danger: '#FF3B30',
   success: '#34C759',
   warning: '#FFCC00',
 
-  // Extended colors (previously hardcoded)
-  secondary: '#FF9500', // Orange for charts/secondary data
-  placeholderText: '#C7C7CC', // Input placeholder text
-  successBackground: '#E8FAE8', // Completed item background
-  inputBackground: '#E5E5EA', // Input field backgrounds
-  gridLine: '#E0E0E0', // Chart grid lines
-  switchTrackOff: '#767577', // Switch track when off
-  switchThumb: '#f4f3f4', // Switch thumb color
+  // Extended
+  secondary: '#FF9500',
+  placeholderText: '#C7C7CC',
+  successBackground: '#E8FAE8',
+  inputBackground: '#E5E5EA',
+  gridLine: '#E0E0E0',
+  switchTrackOff: '#767577',
+  switchThumb: '#f4f3f4',
 };
 
-// Layout constants (previously magic numbers)
+// Layout constants
 export const Layout = {
   longPressDelay: 750,
   keyboardPaddingOffset: 220,
@@ -40,28 +104,63 @@ export const Spacing = {
 };
 
 export const Typography = {
-  title: {
+  scale: {
+    sm: 16,
+    md: 18,
+    lg: 20,
+    xl: 24,
+  },
+  weight: {
+    regular: '400' as '400',
+    medium: '500' as '500',
+    semibold: '600' as '600',
+    bold: '700' as '700',
+  },
+  // Heading hierarchy
+  h1: {
     fontSize: 28,
-    fontWeight: '700' as '700',
-    color: Colors.text,
+    fontWeight: '700' as const,
+  },
+  h2: {
+    fontSize: 24,
+    fontWeight: '700' as const,
+  },
+  h3: {
+    fontSize: 20,
+    fontWeight: '600' as const,
+  },
+  // Existing presets
+  header: {
+    fontSize: 24,
+    fontWeight: '700' as const,
   },
   subtitle: {
-    fontSize: 20,
-    fontWeight: '600' as '600',
-    color: Colors.text,
+    fontSize: 18,
+    fontWeight: '600' as const,
   },
   body: {
-    fontSize: 17, // Standard iOS body size
-    color: Colors.text,
+    fontSize: 16,
+    fontWeight: '400' as const,
   },
-  caption: {
+  // Section headers (uppercase labels)
+  sectionHeader: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    fontWeight: '600' as const,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
   },
+  strokeWidth: 2,
 };
 
-// Shadow styles for cards and elevated elements
+export const BorderRadius = {
+  sm: 8,
+  m: 12,
+  l: 20,
+};
+
+// React Native Shadow Styles
 export const Shadows = {
+  // Card shadow styles (cross-mode)
   card: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -76,12 +175,102 @@ export const Shadows = {
     shadowRadius: 8,
     elevation: 5,
   },
+  light: {
+    s: {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    m: {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 6,
+      elevation: 4,
+    },
+    l: {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.1,
+      shadowRadius: 15,
+      elevation: 8,
+    }
+  },
+  dark: {
+    s: {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.3,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    m: {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.4,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    l: {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.5,
+      shadowRadius: 16,
+      elevation: 8,
+    }
+  }
+};
+
+// Dark theme depth - directional lighting simulation
+export const TopLight = {
+  s: {
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.20)',
+    borderLeftColor: 'rgba(255,255,255,0.08)',
+    borderRightColor: 'rgba(255,255,255,0.08)',
+    borderBottomColor: 'rgba(255,255,255,0.04)',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.7,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  m: {
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.30)',
+    borderLeftColor: 'rgba(255,255,255,0.12)',
+    borderRightColor: 'rgba(255,255,255,0.12)',
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.8,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  l: {
+    borderWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.40)',
+    borderLeftColor: 'rgba(255,255,255,0.15)',
+    borderRightColor: 'rgba(255,255,255,0.15)',
+    borderBottomColor: 'rgba(255,255,255,0.06)',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.9,
+    shadowRadius: 24,
+    elevation: 14,
+  }
 };
 
 export const Theme = {
-  Colors,
+  Colors: DarkColors, // Default export for backwards compat
+  LightColors,
+  DarkColors,
   Spacing,
   Typography,
   Layout,
+  BorderRadius,
   Shadows,
+  TopLight,
 };

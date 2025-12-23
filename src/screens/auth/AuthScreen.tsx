@@ -4,8 +4,10 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { Theme } from '../../theme';
 import { supabase } from '../../services/supabase';
+import { useTheme } from '../../context/ThemeContext';
 
 export const AuthScreen = () => {
+    const { colors } = useTheme();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [firstName, setFirstName] = useState('');
@@ -85,23 +87,24 @@ export const AuthScreen = () => {
     }
 
     const renderForgotPassword = () => (
-        <View style={styles.form}>
-            <Text style={styles.title}>Reset Password</Text>
-            <Text style={styles.subtitle}>Enter your email to receive reset instructions</Text>
+        <View style={[styles.form, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.title, { color: colors.text }]}>Reset Password</Text>
+            <Text style={[styles.subtitle, { color: colors.textMuted }]}>Enter your email to receive reset instructions</Text>
 
             <View style={styles.inputContainer}>
                 <TextInput
-                    style={styles.input}
+                    style={[styles.input, { backgroundColor: colors.background, color: colors.text }]}
                     onChangeText={setEmail}
                     value={email}
                     placeholder="email@address.com"
+                    placeholderTextColor={colors.textMuted}
                     autoCapitalize="none"
                     keyboardType="email-address"
                 />
             </View>
 
             <TouchableOpacity
-                style={styles.button}
+                style={[styles.button, { backgroundColor: colors.primary }]}
                 onPress={resetPassword}
                 disabled={loading}
             >
@@ -111,32 +114,34 @@ export const AuthScreen = () => {
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => setIsForgotPassword(false)} style={styles.switchButton}>
-                <Text style={styles.switchText}>Back to Sign In</Text>
+                <Text style={[styles.switchText, { color: colors.primary }]}>Back to Sign In</Text>
             </TouchableOpacity>
         </View>
     );
 
     const renderAuth = () => (
-        <View style={styles.form}>
-            <Text style={styles.title}>{isLogin ? 'Welcome Back' : 'Create Account'}</Text>
-            <Text style={styles.subtitle}>{isLogin ? 'Sign in to access your workouts' : 'Start your training journey'}</Text>
+        <View style={[styles.form, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.title, { color: colors.text }]}>{isLogin ? 'Welcome Back' : 'Create Account'}</Text>
+            <Text style={[styles.subtitle, { color: colors.textMuted }]}>{isLogin ? 'Sign in to access your workouts' : 'Start your training journey'}</Text>
 
             {!isLogin && (
                 <>
                     <View style={styles.inputContainer}>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, { backgroundColor: colors.background, color: colors.text }]}
                             onChangeText={setFirstName}
                             value={firstName}
                             placeholder="First Name"
+                            placeholderTextColor={colors.textMuted}
                         />
                     </View>
                     <View style={styles.inputContainer}>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, { backgroundColor: colors.background, color: colors.text }]}
                             onChangeText={setLastName}
                             value={lastName}
                             placeholder="Last Name"
+                            placeholderTextColor={colors.textMuted}
                         />
                     </View>
                 </>
@@ -144,32 +149,34 @@ export const AuthScreen = () => {
 
             <View style={styles.inputContainer}>
                 <TextInput
-                    style={styles.input}
+                    style={[styles.input, { backgroundColor: colors.background, color: colors.text }]}
                     onChangeText={setEmail}
                     value={email}
                     placeholder="email@address.com"
+                    placeholderTextColor={colors.textMuted}
                     autoCapitalize="none"
                     keyboardType="email-address"
                 />
             </View>
-            <View style={[styles.inputContainer, styles.passwordContainer]}>
+            <View style={[styles.inputContainer, styles.passwordContainer, { backgroundColor: colors.background }]}>
                 <TextInput
-                    style={[styles.input, styles.passwordInput]}
+                    style={[styles.input, styles.passwordInput, { color: colors.text }]}
                     onChangeText={setPassword}
                     value={password}
                     secureTextEntry={!showPassword}
                     placeholder="Password"
+                    placeholderTextColor={colors.textMuted}
                     autoCapitalize="none"
                 />
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
-                    <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color={Theme.Colors.textSecondary} />
+                    <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color={colors.textMuted} />
                 </TouchableOpacity>
             </View>
 
             {!isLogin && (
                 <View style={styles.requirementsContainer}>
                     {!isPasswordValid && forceValidation && (
-                        <Text style={styles.errorText}>
+                        <Text style={[styles.errorText, { color: colors.danger }]}>
                             Please create a password that meets all requirements below
                         </Text>
                     )}
@@ -178,12 +185,12 @@ export const AuthScreen = () => {
                             <Ionicons
                                 name={v.valid ? "checkmark-circle" : "close-circle"}
                                 size={18}
-                                color={v.valid ? Theme.Colors.success : Theme.Colors.textSecondary}
+                                color={v.valid ? colors.success : colors.textMuted}
                                 style={{ marginRight: 6 }}
                             />
                             <Text
                                 style={{
-                                    color: v.valid ? Theme.Colors.success : Theme.Colors.textSecondary,
+                                    color: v.valid ? colors.success : colors.textMuted,
                                     fontSize: 13,
                                     fontWeight: '500',
                                 }}
@@ -196,7 +203,7 @@ export const AuthScreen = () => {
             )}
 
             <TouchableOpacity
-                style={styles.button}
+                style={[styles.button, { backgroundColor: colors.primary }]}
                 onPress={() => isLogin ? signInWithEmail() : signUpWithEmail()}
                 disabled={loading}
             >
@@ -207,12 +214,12 @@ export const AuthScreen = () => {
 
             {isLogin && (
                 <TouchableOpacity onPress={() => setIsForgotPassword(true)} style={styles.forgotButton}>
-                    <Text style={styles.forgotText}>Forgot Password?</Text>
+                    <Text style={[styles.forgotText, { color: colors.textMuted }]}>Forgot Password?</Text>
                 </TouchableOpacity>
             )}
 
             <TouchableOpacity onPress={() => setIsLogin(!isLogin)} style={styles.switchButton}>
-                <Text style={styles.switchText}>
+                <Text style={[styles.switchText, { color: colors.primary }]}>
                     {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
                 </Text>
             </TouchableOpacity>
@@ -222,7 +229,7 @@ export const AuthScreen = () => {
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.container}
+            style={[styles.container, { backgroundColor: colors.background }]}
         >
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 {isForgotPassword ? renderForgotPassword() : renderAuth()}
@@ -234,7 +241,6 @@ export const AuthScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Theme.Colors.background,
     },
     scrollContent: {
         flexGrow: 1,
@@ -242,7 +248,6 @@ const styles = StyleSheet.create({
         padding: Theme.Spacing.l,
     },
     form: {
-        backgroundColor: Theme.Colors.surface,
         padding: Theme.Spacing.xl,
         borderRadius: 20,
         shadowColor: '#000',
@@ -256,11 +261,9 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 8,
         textAlign: 'center',
-        color: Theme.Colors.text,
     },
     subtitle: {
         fontSize: 16,
-        color: Theme.Colors.textSecondary,
         marginBottom: 32,
         textAlign: 'center',
     },
@@ -268,13 +271,11 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     input: {
-        backgroundColor: Theme.Colors.background,
         padding: 16,
         borderRadius: 12,
         fontSize: 16,
     },
     button: {
-        backgroundColor: Theme.Colors.primary,
         padding: 16,
         borderRadius: 12,
         alignItems: 'center',
@@ -290,7 +291,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     switchText: {
-        color: Theme.Colors.primary,
         fontSize: 14,
     },
     forgotButton: {
@@ -298,13 +298,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     forgotText: {
-        color: Theme.Colors.textSecondary,
         fontSize: 14,
     },
     passwordContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: Theme.Colors.background,
         borderRadius: 12,
         paddingRight: 12,
     },
@@ -326,16 +324,15 @@ const styles = StyleSheet.create({
         marginBottom: 6,
     },
     errorText: {
-        color: Theme.Colors.danger,
         fontSize: 12,
         marginBottom: 10,
         fontWeight: '500',
     },
     passwordHint: {
         fontSize: 12,
-        color: Theme.Colors.textSecondary,
         marginBottom: 16,
         marginTop: -8,
         marginLeft: 4,
     }
 });
+
