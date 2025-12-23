@@ -252,6 +252,41 @@ export const SettingsScreen = () => {
                     </GlowCard>
                 </View>
 
+                <View style={[styles.section, { marginTop: 24 }]}>
+                    <Text style={[styles.sectionTitle, titleStyle]}>Contact or Report a Bug</Text>
+                    <GlowCard style={[styles.row, { marginBottom: Theme.Spacing.s }]} level="m">
+                        <TouchableOpacity
+                            style={styles.rowContent}
+                            onPress={() => {
+                                import('expo-linking').then(Linking => {
+                                    Linking.openURL('https://github.com/paubanon/workout-tracker/issues');
+                                });
+                            }}
+                            accessibilityRole="button"
+                            accessibilityLabel="Report a bug on GitHub"
+                        >
+                            <Text style={[styles.optionTitle, textStyle]}>Report a Bug (GitHub)</Text>
+                            <Ionicons name="logo-github" size={24} color={iconColor} />
+                        </TouchableOpacity>
+                    </GlowCard>
+
+                    <GlowCard style={styles.row} level="m">
+                        <TouchableOpacity
+                            style={styles.rowContent}
+                            onPress={() => {
+                                import('expo-linking').then(Linking => {
+                                    Linking.openURL('https://t.me/pablo_banon');
+                                });
+                            }}
+                            accessibilityRole="button"
+                            accessibilityLabel="Send a Telegram message"
+                        >
+                            <Text style={[styles.optionTitle, textStyle]}>Send a Message (Telegram)</Text>
+                            <Ionicons name="send" size={24} color={iconColor} />
+                        </TouchableOpacity>
+                    </GlowCard>
+                </View>
+
                 <View style={styles.section}>
                     <GlowCard style={[styles.logoutButton, { borderWidth: 1, borderColor: colors.border }]} level="m">
                         <TouchableOpacity
