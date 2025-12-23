@@ -45,3 +45,6 @@ app-example
 
 # code signing keys (NEVER COMMIT)
 /keys/
+
+# ai-notes
+/ai-notes
