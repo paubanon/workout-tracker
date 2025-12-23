@@ -18,15 +18,8 @@ export const CreateScreen = () => {
     const textStyle = { color: colors.text };
     const textMutedStyle = { color: colors.textMuted };
 
-    // Icon container - lighter bg with shadow for depth
+    // Icon container - lighter bg (no shadow to prevent octagon on press)
     const iconBgStyle = { backgroundColor: isDark ? colors.bgLight : colors.surface };
-    const iconShadowStyle = isDark ? {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.4,
-        shadowRadius: 4,
-        elevation: 4,
-    } : Theme.Shadows.light.s;
 
     return (
         <SafeAreaView style={[styles.container, containerStyle]} edges={['top']}>
@@ -42,7 +35,7 @@ export const CreateScreen = () => {
                         accessibilityRole="button"
                         accessibilityLabel="Create new routine"
                     >
-                        <View style={[styles.iconContainer, iconBgStyle, iconShadowStyle]}>
+                        <View style={[styles.iconContainer, iconBgStyle]}>
                             <Ionicons name="add-circle" size={32} color={colors.primary} />
                         </View>
                         <View style={styles.textContainer}>
@@ -60,7 +53,7 @@ export const CreateScreen = () => {
                         accessibilityRole="button"
                         accessibilityLabel="Create new exercise"
                     >
-                        <View style={[styles.iconContainer, iconBgStyle, iconShadowStyle]}>
+                        <View style={[styles.iconContainer, iconBgStyle]}>
                             <Ionicons name="barbell" size={32} color={colors.primary} />
                         </View>
                         <View style={styles.textContainer}>
@@ -78,7 +71,7 @@ export const CreateScreen = () => {
                         accessibilityRole="button"
                         accessibilityLabel="View exercise library"
                     >
-                        <View style={[styles.iconContainer, iconBgStyle, iconShadowStyle]}>
+                        <View style={[styles.iconContainer, iconBgStyle]}>
                             <Ionicons name="list" size={32} color={colors.primary} />
                         </View>
                         <View style={styles.textContainer}>

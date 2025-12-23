@@ -11,6 +11,7 @@ import { ActiveSessionScreen } from '../screens/workout/ActiveSessionScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { SettingsScreen } from '../screens/profile/SettingsScreen';
 import { CreateExerciseScreen } from '../screens/exercises/CreateExerciseScreen';
+import { EditExerciseScreen } from '../screens/exercises/EditExerciseScreen';
 import { ExerciseListScreen } from '../screens/exercises/ExerciseListScreen';
 import { CreateWorkoutScreen } from '../screens/workout/CreateWorkoutScreen';
 import { HistoryScreen } from '../screens/history/HistoryScreen';
@@ -106,6 +107,11 @@ export const RootNavigator = () => {
                             <Stack.Screen
                                 name="ExerciseList"
                                 component={ExerciseListScreen}
+                                options={{ presentation: 'modal' }}
+                            />
+                            <Stack.Screen
+                                name="EditExercise"
+                                component={EditExerciseScreen}
                                 options={{ presentation: 'modal' }}
                             />
                             <Stack.Screen

@@ -1,30 +1,42 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, Switch, ScrollView, TouchableOpacity, Alert, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Switch, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import Animated, { FadeIn, FadeOut, Layout, useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
 import { supabaseService } from '../../services/SupabaseDataService';
-import { useNavigation } from '@react-navigation/native';
-import { MetricType, RepsType } from '../../models';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { MetricType, RepsType, Exercise } from '../../models';
 import { useTheme } from '../../context/ThemeContext';
 import { GlowCard } from '../../components/GlowCard';
 
-export const CreateExerciseScreen = () => {
+export const EditExerciseScreen = () => {
     const navigation = useNavigation();
+    const route = useRoute<any>();
     const { colors, isDark } = useTheme();
-    const [name, setName] = useState('');
 
-    // Metrics State
-    const [metrics, setMetrics] = useState<Record<MetricType, boolean>>({
-        load: true,
-        reps: true,
-        time: false,
-        distance: false,
-        rom: false,
+    // Get exercise from route params
+    const exercise: Exercise = route.params?.exercise;
+
+    const [name, setName] = useState(exercise?.name || '');
+    const [saving, setSaving] = useState(false);
+
+    // Initialize metrics from exercise
+    const [metrics, setMetrics] = useState<Record<MetricType, boolean>>(() => {
+        const initial: Record<MetricType, boolean> = {
+            load: false,
+            reps: false,
+            time: false,
+            distance: false,
+            rom: false,
+        };
+        (exercise?.enabledMetrics || []).forEach(m => {
+            initial[m] = true;
+        });
+        return initial;
     });
 
-    const [repsType, setRepsType] = useState<RepsType>('standard');
-    const [trackBodyWeight, setTrackBodyWeight] = useState(false);
+    const [repsType, setRepsType] = useState<RepsType>(exercise?.repsType || 'standard');
+    const [trackBodyWeight, setTrackBodyWeight] = useState(exercise?.trackBodyWeight || false);
 
     // Sliding indicator for reps type
     const SEGMENT_OPTIONS: RepsType[] = ['standard', 'tempo', 'isometric'];
@@ -36,8 +48,7 @@ export const CreateExerciseScreen = () => {
         indicatorPosition.value = withTiming(index, { duration: 250 });
     }, [repsType]);
 
-    // Calculate indicator position based on measured container width
-    const segmentWidth = (segmentContainerWidth - 4) / 3; // Account for padding
+    const segmentWidth = (segmentContainerWidth - 4) / 3;
     const indicatorStyle = useAnimatedStyle(() => {
         return {
             transform: [{ translateX: indicatorPosition.value * segmentWidth }],
@@ -55,20 +66,48 @@ export const CreateExerciseScreen = () => {
             return;
         }
 
+        setSaving(true);
         const enabledMetrics = (Object.keys(metrics) as MetricType[]).filter(k => metrics[k]);
 
-        await supabaseService.addExercise({
-            id: '', // DB generates ID
+        await supabaseService.updateExercise({
+            id: exercise.id,
             name,
             enabledMetrics,
             repsType: metrics.reps ? repsType : undefined,
             trackBodyWeight: metrics.load ? trackBodyWeight : undefined,
         });
 
-        Alert.alert('Success', 'Exercise created!', [
+        setSaving(false);
+        Alert.alert('Success', 'Exercise updated!', [
             { text: 'OK', onPress: () => navigation.goBack() }
         ]);
     };
+
+    const handleDelete = () => {
+        Alert.alert(
+            'Delete Exercise',
+            `Are you sure you want to delete "${exercise.name}"?`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        await supabaseService.deleteExercise(exercise.id);
+                        navigation.goBack();
+                    }
+                }
+            ]
+        );
+    };
+
+    if (!exercise) {
+        return (
+            <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+                <Text style={{ color: colors.text, padding: 20 }}>No exercise data</Text>
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -80,13 +119,16 @@ export const CreateExerciseScreen = () => {
                 >
                     <Text style={[styles.cancelText, { color: colors.danger }]}>Cancel</Text>
                 </TouchableOpacity>
-                <Text style={[{ fontSize: Theme.Typography.scale.lg, fontWeight: Theme.Typography.weight.bold }, { color: colors.text }]}>New Exercise</Text>
+                <Text style={[{ fontSize: Theme.Typography.scale.lg, fontWeight: Theme.Typography.weight.bold }, { color: colors.text }]}>Edit Exercise</Text>
                 <TouchableOpacity
                     onPress={handleSave}
+                    disabled={saving}
                     accessibilityRole="button"
                     accessibilityLabel="Save exercise"
                 >
-                    <Text style={[styles.saveText, { color: colors.primary }]}>Save</Text>
+                    <Text style={[styles.saveText, { color: colors.primary }, saving && { opacity: 0.5 }]}>
+                        {saving ? 'Saving...' : 'Save'}
+                    </Text>
                 </TouchableOpacity>
             </View>
 
@@ -125,7 +167,7 @@ export const CreateExerciseScreen = () => {
                                 </Animated.View>
                             </GlowCard>
 
-                            {/* "Unfolding" Repetition Type Section - directly under Reps toggle */}
+                            {/* Repetition Type Section */}
                             {m === 'reps' && metrics.reps && (
                                 <Animated.View
                                     entering={FadeIn.duration(300)}
@@ -139,7 +181,6 @@ export const CreateExerciseScreen = () => {
                                                 style={[styles.segmentContainer, { backgroundColor: colors.border }]}
                                                 onLayout={(e) => setSegmentContainerWidth(e.nativeEvent.layout.width)}
                                             >
-                                                {/* Sliding indicator */}
                                                 <Animated.View
                                                     style={[
                                                         styles.segmentIndicator,
@@ -164,7 +205,7 @@ export const CreateExerciseScreen = () => {
                                 </Animated.View>
                             )}
 
-                            {/* "Unfolding" Body Weight Toggle - directly under Load toggle */}
+                            {/* Body Weight Section */}
                             {m === 'load' && metrics.load && (
                                 <Animated.View
                                     entering={FadeIn.duration(300)}
@@ -194,6 +235,18 @@ export const CreateExerciseScreen = () => {
                     ))}
                 </View>
 
+                {/* Delete Button */}
+                <View style={styles.section}>
+                    <TouchableOpacity
+                        style={[styles.deleteButton, { borderColor: colors.danger }]}
+                        onPress={handleDelete}
+                        accessibilityRole="button"
+                        accessibilityLabel="Delete exercise"
+                    >
+                        <Text style={[styles.deleteButtonText, { color: colors.danger }]}>Delete Exercise</Text>
+                    </TouchableOpacity>
+                </View>
+
             </ScrollView>
         </SafeAreaView>
     );
@@ -220,6 +273,7 @@ const styles = StyleSheet.create({
     },
     content: {
         padding: Theme.Spacing.m,
+        paddingBottom: 40,
     },
     section: {
         marginBottom: Theme.Spacing.l,
@@ -281,12 +335,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderRadius: 6,
     },
-    segmentActive: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 1,
-    },
     segmentText: {
         fontSize: 13,
         fontWeight: '500',
@@ -304,5 +352,16 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: '600',
         marginBottom: 8,
+    },
+    deleteButton: {
+        borderWidth: 1,
+        borderRadius: 12,
+        padding: Theme.Spacing.m,
+        alignItems: 'center',
+        marginTop: Theme.Spacing.l,
+    },
+    deleteButtonText: {
+        fontSize: 16,
+        fontWeight: '600',
     },
 });

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
 import { supabaseService } from '../../services/SupabaseDataService';
@@ -7,14 +7,23 @@ import { Exercise } from '../../models';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../context/ThemeContext';
 import { GlowCard } from '../../components/GlowCard';
+import { useAuth } from '../../context/AuthContext';
+import { Ionicons } from '@expo/vector-icons';
+
+// Admin user ID - only this user can edit exercises
+const ADMIN_USER_ID = '61ca1464-bb47-4c07-acad-8eebd1eb8c76';
 
 export const ExerciseListScreen = ({ route }: any) => {
     const navigation = useNavigation<any>();
     const { colors } = useTheme();
+    const { session } = useAuth();
     const onSelect = route.params?.onSelect;
 
     const [search, setSearch] = useState('');
     const [exercises, setExercises] = useState<Exercise[]>([]);
+
+    // Check if current user is admin
+    const isAdmin = session?.user?.id === ADMIN_USER_ID;
 
     useEffect(() => {
         loadExercises();
@@ -29,13 +38,33 @@ export const ExerciseListScreen = ({ route }: any) => {
 
     const filtered = exercises.filter(e => e.name.toLowerCase().includes(search.toLowerCase()));
 
+    const handleDelete = async (exercise: Exercise) => {
+        Alert.alert(
+            'Delete Exercise',
+            `Are you sure you want to delete "${exercise.name}"?`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        await supabaseService.deleteExercise(exercise.id);
+                        loadExercises();
+                    }
+                }
+            ]
+        );
+    };
+
     const handleSelect = (exercise: Exercise) => {
         if (onSelect) {
             onSelect(exercise);
             navigation.goBack();
-        } else {
-            // View details?
+        } else if (isAdmin) {
+            // Admin can edit - navigate to edit screen
+            navigation.navigate('EditExercise', { exercise });
         }
+        // Non-admins without onSelect: do nothing
     };
 
     return (
@@ -73,12 +102,21 @@ export const ExerciseListScreen = ({ route }: any) => {
                 keyExtractor={item => item.id}
                 renderItem={({ item }) => (
                     <GlowCard style={styles.item} level="m">
-                        <TouchableOpacity style={styles.itemContent} onPress={() => handleSelect(item)}>
-                            <Text style={[styles.itemTitle, { color: colors.text }]}>{item.name}</Text>
-                            <Text style={[styles.itemSubtitle, { color: colors.textMuted }]}>
-                                {(item.enabledMetrics || []).join(', ')}
-                            </Text>
-                        </TouchableOpacity>
+                        {(onSelect || isAdmin) ? (
+                            <TouchableOpacity style={styles.itemContent} onPress={() => handleSelect(item)}>
+                                <Text style={[styles.itemTitle, { color: colors.text }]}>{item.name}</Text>
+                                <Text style={[styles.itemSubtitle, { color: colors.textMuted }]}>
+                                    {(item.enabledMetrics || []).join(', ')}
+                                </Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <View style={styles.itemContent}>
+                                <Text style={[styles.itemTitle, { color: colors.text }]}>{item.name}</Text>
+                                <Text style={[styles.itemSubtitle, { color: colors.textMuted }]}>
+                                    {(item.enabledMetrics || []).join(', ')}
+                                </Text>
+                            </View>
+                        )}
                     </GlowCard>
                 )}
                 contentContainerStyle={styles.list}
@@ -114,6 +152,7 @@ const styles = StyleSheet.create({
     },
     list: {
         paddingHorizontal: Theme.Spacing.m,
+        paddingBottom: 40,
     },
     item: {
         borderRadius: 12,

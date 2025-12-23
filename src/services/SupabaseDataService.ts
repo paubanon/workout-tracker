@@ -35,6 +35,29 @@ class SupabaseDataService {
         if (error) console.error('Error adding exercise:', error);
     }
 
+    async deleteExercise(id: string): Promise<void> {
+        const { error } = await supabase
+            .from('exercises')
+            .delete()
+            .eq('id', id);
+
+        if (error) console.error('Error deleting exercise:', error);
+    }
+
+    async updateExercise(exercise: Exercise): Promise<void> {
+        const { error } = await supabase
+            .from('exercises')
+            .update({
+                name: exercise.name,
+                enabled_metrics: exercise.enabledMetrics,
+                reps_type: exercise.repsType,
+                track_body_weight: exercise.trackBodyWeight
+            })
+            .eq('id', exercise.id);
+
+        if (error) console.error('Error updating exercise:', error);
+    }
+
     // --- Templates ---
     async getTemplates(): Promise<WorkoutTemplate[]> {
         const { data: { user } } = await supabase.auth.getUser();
