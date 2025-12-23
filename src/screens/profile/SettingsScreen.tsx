@@ -5,12 +5,12 @@ import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 // Using legacy API as per SDK 54 deprecation warning for writeAsStringAsync
 import * as FileSystem from 'expo-file-system/legacy';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
 import { supabaseService } from '../../services/SupabaseDataService';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { GlowCard } from '../../components/GlowCard';
+import { ThemedSafeAreaView } from '../../components/ThemedSafeAreaView';
 
 export const SettingsScreen = () => {
     const [trackRpe, setTrackRpe] = useState(false);
@@ -171,7 +171,7 @@ export const SettingsScreen = () => {
     const shadowStyle = isDark ? Theme.TopLight.m : Theme.Shadows.light.m;
 
     return (
-        <SafeAreaView style={[styles.container, containerStyle]} edges={['top', 'bottom']}>
+        <ThemedSafeAreaView style={[styles.container, containerStyle]} edges={['top', 'bottom']}>
             <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
                 <View style={[styles.section, { marginTop: Theme.Spacing.l }]}>
                     <Text style={[styles.sectionTitle, titleStyle]}>Appearance</Text>
@@ -464,7 +464,7 @@ export const SettingsScreen = () => {
                     </View>
                 </View>
             </Modal>
-        </SafeAreaView>
+        </ThemedSafeAreaView>
     );
 };
 

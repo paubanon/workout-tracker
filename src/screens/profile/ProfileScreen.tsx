@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
 import { supabaseService } from '../../services/SupabaseDataService';
 import { useAuth } from '../../context/AuthContext';
@@ -9,6 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { GlowCard } from '../../components/GlowCard';
+import { ThemedSafeAreaView } from '../../components/ThemedSafeAreaView';
 
 export const ProfileScreen = () => {
     const { signOut } = useAuth();
@@ -80,7 +80,7 @@ export const ProfileScreen = () => {
     const shadowStyle = isDark ? Theme.TopLight.m : Theme.Shadows.light.m;
 
     return (
-        <SafeAreaView style={[styles.container, containerStyle]} edges={['top']}>
+        <ThemedSafeAreaView style={[styles.container, containerStyle]} edges={['top']}>
             <View style={styles.header}>
                 <Text style={[styles.headerTitle, textStyle]}>Profile</Text>
                 <TouchableOpacity
@@ -193,7 +193,7 @@ export const ProfileScreen = () => {
                     <Text style={[styles.secondaryButtonText, { color: colors.text }]}>See All History</Text>
                 </TouchableOpacity>
             </ScrollView>
-        </SafeAreaView>
+        </ThemedSafeAreaView>
     );
 };
 

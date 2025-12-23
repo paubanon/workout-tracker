@@ -21,7 +21,6 @@ const MOCK_DATA = [
 
 export const seedAnalysisData = async (): Promise<{ success: boolean; message: string }> => {
     try {
-        console.log("Starting seed process...");
 
         // 1. Find Exercise
         const exercises = await supabaseService.getExercises();
@@ -36,7 +35,6 @@ export const seedAnalysisData = async (): Promise<{ success: boolean; message: s
             return { success: false, message: `Exercise "${targetName}" not found. Please ensure it exists exactly.` };
         }
 
-        console.log(`Found exercise: ${exercise.name} (${exercise.id})`);
 
         // 2. Insert Sessions
         let count = 0;

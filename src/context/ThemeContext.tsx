@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabaseService } from '../services/SupabaseDataService';
 import { Theme, LightColors, DarkColors, ThemeMode, ThemeColors, Shadows } from '../theme';
@@ -46,14 +46,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const profile = await supabaseService.getUserProfile();
         if (profile?.preferences?.theme) {
             const remoteTheme = profile.preferences.theme as ThemeMode;
-            if (remoteTheme !== theme) {
-                setThemeState(remoteTheme);
-                await AsyncStorage.setItem('user_theme', remoteTheme);
-            }
+            setThemeState(currentTheme => {
+                if (remoteTheme !== currentTheme) {
+                    AsyncStorage.setItem('user_theme', remoteTheme);
+                    return remoteTheme;
+                }
+                return currentTheme;
+            });
         }
     };
 
-    const setTheme = async (mode: ThemeMode) => {
+    const setTheme = useCallback(async (mode: ThemeMode) => {
         setThemeState(mode);
         await AsyncStorage.setItem('user_theme', mode);
 
@@ -67,25 +70,44 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 }
             });
         }
-    };
+    }, [session]);
 
-    const toggleTheme = () => {
-        const newTheme = theme === 'light' ? 'dark' : 'light';
-        setTheme(newTheme);
-    };
+    const toggleTheme = useCallback(() => {
+        setThemeState(currentTheme => {
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            // Async operations in a separate effect or fire-and-forget
+            AsyncStorage.setItem('user_theme', newTheme);
+            if (session?.user) {
+                supabaseService.getUserProfile().then(profile => {
+                    supabaseService.updateUserProfile({
+                        preferences: {
+                            ...profile?.preferences,
+                            theme: newTheme
+                        }
+                    });
+                });
+            }
+            return newTheme;
+        });
+    }, [session]);
 
-    const colors = theme === 'light' ? LightColors : DarkColors;
-    const shadows = theme === 'light' ? Shadows.light : Shadows.dark;
+    // Memoize derived values to ensure stable references
+    const colors = useMemo(() => theme === 'light' ? LightColors : DarkColors, [theme]);
+    const shadows = useMemo(() => theme === 'light' ? Shadows.light : Shadows.dark, [theme]);
+    const isDark = theme === 'dark';
+
+    // Memoize context value to prevent unnecessary re-renders
+    const contextValue = useMemo(() => ({
+        theme,
+        toggleTheme,
+        setTheme,
+        colors,
+        shadows,
+        isDark
+    }), [theme, toggleTheme, setTheme, colors, shadows, isDark]);
 
     return (
-        <ThemeContext.Provider value={{
-            theme,
-            toggleTheme,
-            setTheme,
-            colors,
-            shadows,
-            isDark: theme === 'dark'
-        }}>
+        <ThemeContext.Provider value={contextValue}>
             {children}
         </ThemeContext.Provider>
     );

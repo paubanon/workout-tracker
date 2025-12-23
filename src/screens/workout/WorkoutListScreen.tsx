@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView, Alert, Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
 import { supabaseService } from '../../services/SupabaseDataService';
 import { WorkoutTemplate } from '../../models';
@@ -8,6 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { GlowCard } from '../../components/GlowCard';
+import { ThemedSafeAreaView } from '../../components/ThemedSafeAreaView';
 
 export const WorkoutListScreen = () => {
     const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
@@ -107,7 +107,7 @@ export const WorkoutListScreen = () => {
     );
 
     return (
-        <SafeAreaView style={[styles.container, containerStyle]} edges={['top']}>
+        <ThemedSafeAreaView style={[styles.container, containerStyle]} edges={['top']}>
             <FlatList
                 data={templates}
                 keyExtractor={(item) => item.id}
@@ -115,6 +115,7 @@ export const WorkoutListScreen = () => {
                 ListHeaderComponent={renderHeader}
                 contentContainerStyle={styles.content}
                 showsVerticalScrollIndicator={false}
+                extraData={colors}
             />
 
             {/* Custom Modal */}
@@ -163,7 +164,7 @@ export const WorkoutListScreen = () => {
                     </View>
                 </TouchableOpacity>
             </Modal>
-        </SafeAreaView>
+        </ThemedSafeAreaView>
     );
 };
 

@@ -85,9 +85,28 @@ export const RootNavigator = () => {
         );
     }
 
+    // Create navigation theme that reacts to context changes
+    const navigationTheme = {
+        dark: colors.background === '#121212', // Check if using dark colors
+        colors: {
+            primary: colors.primary,
+            background: colors.background,
+            card: colors.surface,
+            text: colors.text,
+            border: colors.border,
+            notification: colors.primary,
+        },
+        fonts: {
+            regular: { fontFamily: 'System', fontWeight: '400' as const },
+            medium: { fontFamily: 'System', fontWeight: '500' as const },
+            bold: { fontFamily: 'System', fontWeight: '700' as const },
+            heavy: { fontFamily: 'System', fontWeight: '900' as const },
+        },
+    };
+
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-            <NavigationContainer>
+            <NavigationContainer theme={navigationTheme}>
                 <Stack.Navigator screenOptions={{ headerShown: false }}>
                     {!session ? (
                         <Stack.Screen name="Auth" component={AuthScreen} />

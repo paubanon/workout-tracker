@@ -42,6 +42,14 @@
         }
       ]
     ],
+    "updates": {
+      "url": "https://u.expo.dev/5fe5487b-96bd-4701-bca2-cf6c5b059aba",
+      "codeSigningCertificate": "./keys/certificate.pem",
+      "codeSigningMetadata": {
+        "keyid": "main",
+        "alg": "rsa-v1_5-sha256"
+      }
+    },
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
