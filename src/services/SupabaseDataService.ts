@@ -488,10 +488,15 @@ class SupabaseDataService {
             }
         }
 
-        // 3. We cannot delete the Auth User from client side efficiently without admin key.
-        // Best practice is to sign them out.
+        // 3. Delete the user from auth.users using our database function
+        const { error: deleteAuthError } = await supabase.rpc('delete_user');
+        if (deleteAuthError) {
+            console.error('Error deleting auth user:', deleteAuthError);
+            // Still sign out even if auth deletion fails
+        }
+
         await supabase.auth.signOut();
-        return { error: null };
+        return { error: deleteAuthError };
     }
 }
 
