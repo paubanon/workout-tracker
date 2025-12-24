@@ -10,6 +10,7 @@ import { WorkoutListScreen } from '../screens/workout/WorkoutListScreen';
 import { ActiveSessionScreen } from '../screens/workout/ActiveSessionScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { SettingsScreen } from '../screens/profile/SettingsScreen';
+import { WeightHistoryScreen } from '../screens/profile/WeightHistoryScreen';
 import { CreateExerciseScreen } from '../screens/exercises/CreateExerciseScreen';
 import { EditExerciseScreen } from '../screens/exercises/EditExerciseScreen';
 import { ExerciseListScreen } from '../screens/exercises/ExerciseListScreen';
@@ -157,6 +158,11 @@ export const RootNavigator = () => {
                                 name="EditWorkout"
                                 component={EditWorkoutScreen}
                                 options={{ presentation: 'modal', title: 'Edit Workout' }}
+                            />
+                            <Stack.Screen
+                                name="WeightHistory"
+                                component={WeightHistoryScreen}
+                                options={{ title: 'Weight History' }}
                             />
                         </>
                     )}

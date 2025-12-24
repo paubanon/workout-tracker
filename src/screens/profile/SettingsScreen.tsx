@@ -5,18 +5,19 @@ import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 // Using legacy API as per SDK 54 deprecation warning for writeAsStringAsync
 import * as FileSystem from 'expo-file-system/legacy';
-import { Theme } from '../../theme';
+import { Theme, DATE_FORMAT_OPTIONS, DateFormat } from '../../theme';
 import { supabaseService } from '../../services/SupabaseDataService';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { GlowCard } from '../../components/GlowCard';
 import { ThemedSafeAreaView } from '../../components/ThemedSafeAreaView';
+import { SimpleDropdown } from '../../components/SimpleDropdown';
 
 export const SettingsScreen = () => {
     const [trackRpe, setTrackRpe] = useState(false);
     const [loading, setLoading] = useState(true);
     const { signOut } = useAuth();
-    const { colors, isDark, toggleTheme } = useTheme();
+    const { colors, isDark, toggleTheme, dateFormat, setDateFormat } = useTheme();
 
     // Password Change State
     const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
@@ -223,6 +224,23 @@ export const SettingsScreen = () => {
                             />
                         </View>
                     </GlowCard>
+
+                    <GlowCard style={[styles.row, { marginTop: Theme.Spacing.s }]} level="m">
+                        <View style={styles.rowContent}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={[styles.optionTitle, textStyle]}>Date Format</Text>
+                                <Text style={[styles.optionSubtitle, subtitleStyle]}>
+                                    Example: {DATE_FORMAT_OPTIONS.find(o => o.value === dateFormat)?.example}
+                                </Text>
+                            </View>
+                            <SimpleDropdown
+                                value={dateFormat}
+                                options={DATE_FORMAT_OPTIONS.map(o => o.value)}
+                                onSelect={(val) => setDateFormat(val as DateFormat)}
+                                style={{ minWidth: 130 }}
+                            />
+                        </View>
+                    </GlowCard>
                 </View>
 
                 <View style={[styles.section, { marginTop: 24 }]}>
@@ -265,7 +283,7 @@ export const SettingsScreen = () => {
                             accessibilityRole="button"
                             accessibilityLabel="Report a bug on GitHub"
                         >
-                            <Text style={[styles.optionTitle, textStyle]}>Report a Bug (GitHub)</Text>
+                            <Text style={[styles.optionTitle, textStyle]}>Report a Bug</Text>
                             <Ionicons name="logo-github" size={24} color={iconColor} />
                         </TouchableOpacity>
                     </GlowCard>
@@ -281,7 +299,7 @@ export const SettingsScreen = () => {
                             accessibilityRole="button"
                             accessibilityLabel="Send a Telegram message"
                         >
-                            <Text style={[styles.optionTitle, textStyle]}>Send a Message (Telegram)</Text>
+                            <Text style={[styles.optionTitle, textStyle]}>Send me a Message</Text>
                             <Ionicons name="send" size={24} color={iconColor} />
                         </TouchableOpacity>
                     </GlowCard>
@@ -444,22 +462,27 @@ export const SettingsScreen = () => {
                             </TouchableOpacity>
                         </View>
 
-                        <View style={styles.modalButtons}>
-                            <TouchableOpacity
-                                style={[styles.modalButton, { backgroundColor: colors.background }]}
-                                onPress={() => setIsDeleteModalVisible(false)}
-                            >
-                                <Text style={[styles.modalButtonText, textStyle]}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.modalButton, { backgroundColor: colors.danger }]}
-                                onPress={handleDeleteAccount}
-                                disabled={deleteLoading}
-                            >
-                                <Text style={[styles.modalButtonText, styles.saveButtonText]}>
-                                    {deleteLoading ? "Deleting..." : "Delete Permanently"}
-                                </Text>
-                            </TouchableOpacity>
+                        <View style={[styles.modalButtons, { flexDirection: 'column', marginTop: 24, width: '100%' }]}>
+                            <GlowCard style={[styles.logoutButton, { marginTop: 0, borderWidth: 1, borderColor: colors.danger }]} level="m">
+                                <TouchableOpacity
+                                    style={styles.logoutContent}
+                                    onPress={handleDeleteAccount}
+                                    disabled={deleteLoading}
+                                >
+                                    <Text style={[styles.logoutText, { color: colors.danger }]}>
+                                        {deleteLoading ? "Deleting..." : "Delete Permanently"}
+                                    </Text>
+                                </TouchableOpacity>
+                            </GlowCard>
+
+                            <GlowCard style={[styles.logoutButton, { marginTop: 12, borderWidth: 1, borderColor: colors.border }]} level="m">
+                                <TouchableOpacity
+                                    style={styles.logoutContent}
+                                    onPress={() => setIsDeleteModalVisible(false)}
+                                >
+                                    <Text style={[styles.logoutText, { color: colors.text }]}>Cancel</Text>
+                                </TouchableOpacity>
+                            </GlowCard>
                         </View>
                     </View>
                 </View>
@@ -584,6 +607,17 @@ const styles = StyleSheet.create({
         borderRadius: 10, // Keep original border radius
         alignItems: 'center',
         marginHorizontal: 6, // Keep original margin
+    },
+    stackedButton: {
+        width: '100%',
+        padding: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+        marginTop: 12,
+    },
+    stackedButtonText: {
+        fontSize: Theme.Typography.scale.md,
+        fontWeight: '600',
     },
     modalButtonText: {
         fontWeight: '600', // Changed from 'bold' to '600'

@@ -12,14 +12,12 @@ export const WorkoutHistoryDetailScreen = () => {
     const route = useRoute<any>();
     const navigation = useNavigation<any>();
     const { session } = route.params as { session: WorkoutSession };
-    const { colors, isDark } = useTheme();
+    const { colors, isDark, formatDate } = useTheme();
     const [menuVisible, setMenuVisible] = useState(false);
 
     if (!session) return null;
 
-    const date = new Date(session.date).toLocaleDateString(undefined, {
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-    });
+    const date = formatDate(session.date);
 
     // Group sets by exercise
     const groupedSets: { [key: string]: SetLog[] } = {};

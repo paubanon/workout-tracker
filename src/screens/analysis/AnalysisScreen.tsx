@@ -12,7 +12,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { GlowCard } from '../../components/GlowCard';
 
 export const AnalysisScreen = () => {
-    const { colors, isDark } = useTheme();
+    const { colors, isDark, formatDateShort } = useTheme();
 
     // --- State ---
     const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
@@ -39,7 +39,7 @@ export const AnalysisScreen = () => {
         setCustomDays,
         computeMetrics,
         getChartData
-    } = useExerciseAnalytics(selectedExercise?.id || null);
+    } = useExerciseAnalytics(selectedExercise?.id || null, formatDateShort);
 
     // Load available exercises once
     useEffect(() => {

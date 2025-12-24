@@ -161,19 +161,117 @@ class SupabaseDataService {
         return { error };
     }
 
-    async addWeightEntry(weight: number): Promise<void> {
+    async addWeightEntry(weight: number, date?: Date): Promise<void> {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
+        // Get current weight history from profile
+        const { data: profile, error: fetchError } = await supabase
+            .from('profiles')
+            .select('weight_history')
+            .eq('id', user.id)
+            .single();
+
+        if (fetchError) {
+            console.error('Error fetching profile for weight:', fetchError);
+            return;
+        }
+
+        const currentHistory: any[] = profile?.weight_history || [];
+        const newEntry = {
+            id: Math.random().toString(36).substring(2, 11),
+            date: (date || new Date()).toISOString(),
+            weightKg: weight
+        };
+
+        // Add new entry at the beginning (most recent first)
+        const updatedHistory = [newEntry, ...currentHistory];
+
         const { error } = await supabase
-            .from('weight_history')
-            .insert({
-                user_id: user.id,
-                weight_kg: weight,
-                date: new Date().toISOString()
-            });
+            .from('profiles')
+            .update({ weight_history: updatedHistory })
+            .eq('id', user.id);
 
         if (error) console.error('Error adding weight:', error);
+    }
+
+    async getWeightHistory(limit = 50, offset = 0): Promise<{ id: string; weightKg: number; date: string }[]> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return [];
+
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('weight_history')
+            .eq('id', user.id)
+            .single();
+
+        if (error) {
+            console.error('Error fetching weight history:', error);
+            return [];
+        }
+
+        const history: any[] = profile?.weight_history || [];
+        // Sort by date descending and apply pagination
+        const sorted = [...history].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        return sorted.slice(offset, offset + limit).map((w: any) => ({
+            id: w.id,
+            weightKg: w.weightKg,
+            date: w.date,
+        }));
+    }
+
+    async updateWeightEntry(id: string, weight: number, date: string): Promise<void> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: profile, error: fetchError } = await supabase
+            .from('profiles')
+            .select('weight_history')
+            .eq('id', user.id)
+            .single();
+
+        if (fetchError) {
+            console.error('Error fetching profile for weight update:', fetchError);
+            return;
+        }
+
+        const currentHistory: any[] = profile?.weight_history || [];
+        const updatedHistory = currentHistory.map((entry: any) =>
+            entry.id === id ? { ...entry, weightKg: weight, date } : entry
+        );
+
+        const { error } = await supabase
+            .from('profiles')
+            .update({ weight_history: updatedHistory })
+            .eq('id', user.id);
+
+        if (error) console.error('Error updating weight:', error);
+    }
+
+    async deleteWeightEntry(id: string): Promise<void> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: profile, error: fetchError } = await supabase
+            .from('profiles')
+            .select('weight_history')
+            .eq('id', user.id)
+            .single();
+
+        if (fetchError) {
+            console.error('Error fetching profile for weight delete:', fetchError);
+            return;
+        }
+
+        const currentHistory: any[] = profile?.weight_history || [];
+        const updatedHistory = currentHistory.filter((entry: any) => entry.id !== id);
+
+        const { error } = await supabase
+            .from('profiles')
+            .update({ weight_history: updatedHistory })
+            .eq('id', user.id);
+
+        if (error) console.error('Error deleting weight:', error);
     }
 
     // --- History ---
@@ -371,15 +469,20 @@ class SupabaseDataService {
         }
 
         // 2. Delete all data associated with user_id
-        const tables = ['workout_sessions', 'workout_templates', 'weight_history', 'profiles'];
+        const tables = ['workout_sessions', 'workout_templates', 'profiles'];
 
         for (const table of tables) {
             const { error } = await supabase
                 .from(table)
                 .delete()
-                .eq(table === 'profiles' ? 'id' : 'user_id', user.id); // profiles uses 'id', others 'user_id'
+                .eq(table === 'profiles' ? 'id' : 'user_id', user.id);
 
             if (error) {
+                // Ignore "table not found" errors (Postgres: 42P01, PostgREST: PGRST205)
+                if (error.code === '42P01' || error.code === 'PGRST205' || error.message?.includes('does not exist') || error.message?.includes('Could not find the table')) {
+                    console.warn(`Table ${table} not found, skipping delete.`);
+                    continue;
+                }
                 console.error(`Error deleting from ${table}`, error);
                 return { error };
             }

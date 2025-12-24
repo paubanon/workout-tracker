@@ -11,7 +11,7 @@ import { GlowCard } from '../../components/GlowCard';
 
 export const HistoryScreen = () => {
     const navigation = useNavigation<any>();
-    const { colors, isDark } = useTheme();
+    const { colors, isDark, formatDate } = useTheme();
     const [sessions, setSessions] = useState<WorkoutSession[]>([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(0);
@@ -49,7 +49,7 @@ export const HistoryScreen = () => {
     };
 
     const renderItem = ({ item }: { item: WorkoutSession }) => {
-        const date = new Date(item.date).toLocaleDateString();
+        const date = formatDate(item.date);
         const totalVolume = item.sets.reduce((acc, s) => acc + (s.loadKg || 0) * (s.reps || 0), 0);
 
         return (

@@ -27,7 +27,7 @@ export interface VariableMetrics {
     [variable: string]: AnalyticsMetrics;
 }
 
-export const useExerciseAnalytics = (exerciseId: string | null) => {
+export const useExerciseAnalytics = (exerciseId: string | null, formatDateShortFn?: (date: string | Date) => string) => {
     const [sessions, setSessions] = useState<WorkoutSession[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -236,7 +236,7 @@ export const useExerciseAnalytics = (exerciseId: string | null) => {
 
             return {
                 date: new Date(d.date),
-                label: new Date(d.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+                label: formatDateShortFn ? formatDateShortFn(d.date) : new Date(d.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
                 value: val1,
                 dataPointText: val1.toString(),
                 secondaryValue: val2

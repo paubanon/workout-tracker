@@ -82,6 +82,7 @@ export interface UserProfile {
     preferences?: {
         trackRpe?: boolean;
         theme?: 'light' | 'dark';
+        dateFormat?: 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD';
     };
     weightHistory: WeightEntry[];
 }

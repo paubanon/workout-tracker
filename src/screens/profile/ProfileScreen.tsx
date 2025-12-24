@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, Modal, TextInput } from 'react-native';
 import { Theme } from '../../theme';
 import { supabaseService } from '../../services/SupabaseDataService';
 import { useAuth } from '../../context/AuthContext';
@@ -9,13 +9,27 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { GlowCard } from '../../components/GlowCard';
 import { ThemedSafeAreaView } from '../../components/ThemedSafeAreaView';
+import { SimpleDropdown } from '../../components/SimpleDropdown';
 
 export const ProfileScreen = () => {
     const { signOut } = useAuth();
     const navigation = useNavigation<any>();
-    const { colors, isDark } = useTheme();
+    const { colors, isDark, formatDate } = useTheme();
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [recentSessions, setRecentSessions] = useState<WorkoutSession[]>([]);
+
+    // Edit Profile Modal State
+    const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+    const [editFirstName, setEditFirstName] = useState('');
+    const [editLastName, setEditLastName] = useState('');
+    const [editSex, setEditSex] = useState<string>('male');
+    const [isSaving, setIsSaving] = useState(false);
+
+    // Log Weight Modal State
+    const [isWeightModalVisible, setIsWeightModalVisible] = useState(false);
+    const [inputWeight, setInputWeight] = useState('');
+
+    const SEX_OPTIONS = ['Male', 'Female', 'Other'];
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('focus', () => {
@@ -38,6 +52,26 @@ export const ProfileScreen = () => {
         navigation.navigate('Settings');
     };
 
+    const handleOpenEditModal = () => {
+        // Populate modal with current values
+        setEditFirstName(profile?.firstName || '');
+        setEditLastName(profile?.lastName || '');
+        setEditSex(profile?.sex || 'male');
+        setIsEditModalVisible(true);
+    };
+
+    const handleSaveProfile = async () => {
+        setIsSaving(true);
+        await supabaseService.updateUserProfile({
+            firstName: editFirstName.trim(),
+            lastName: editLastName.trim(),
+            sex: editSex.toLowerCase() as 'male' | 'female' | 'other',
+        });
+        await loadData();
+        setIsSaving(false);
+        setIsEditModalVisible(false);
+    };
+
     const handleSeeAllHistory = () => {
         navigation.navigate('History');
     };
@@ -47,29 +81,25 @@ export const ProfileScreen = () => {
     // weightHistory might be empty or undefined if profile logic changes, safe access
     const currentWeightKg = profile?.weightHistory?.[0]?.weightKg ?? null;
     const lastWeightDate = profile?.weightHistory?.[0]?.date
-        ? new Date(profile.weightHistory[0].date).toLocaleDateString()
+        ? formatDate(profile.weightHistory[0].date)
         : 'No data';
 
     const handleLogWeight = () => {
-        Alert.prompt(
-            "Log Weight",
-            "Enter your current weight in kg:",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Save",
-                    onPress: async (weight?: string) => {
-                        const w = parseFloat(weight || '');
-                        if (w && !isNaN(w)) {
-                            await supabaseService.addWeightEntry(w);
-                            loadData();
-                        }
-                    }
-                }
-            ],
-            "plain-text",
-            currentWeightKg?.toString()
-        );
+        setInputWeight(currentWeightKg?.toString() || '');
+        setIsWeightModalVisible(true);
+    };
+
+    const handleSaveWeight = async () => {
+        const w = parseFloat(inputWeight);
+        if (w && !isNaN(w) && w > 0) {
+            await supabaseService.addWeightEntry(w);
+            await loadData();
+            setIsWeightModalVisible(false);
+        }
+    };
+
+    const handleSeeWeightHistory = () => {
+        navigation.navigate('WeightHistory');
     };
 
     // Dynamic Styles
@@ -112,7 +142,17 @@ export const ProfileScreen = () => {
                             <Ionicons name="camera" size={16} color={colors.primary} />
                         </TouchableOpacity>
                     </View>
-                    <Text style={[styles.userName, textStyle]}>{displayName}</Text>
+                    <View style={styles.nameRow}>
+                        <Text style={[styles.userName, textStyle]}>{displayName}</Text>
+                        <TouchableOpacity
+                            onPress={handleOpenEditModal}
+                            style={styles.editPencilButton}
+                            accessibilityRole="button"
+                            accessibilityLabel="Edit profile information"
+                        >
+                            <Ionicons name="pencil" size={18} color={colors.primary} />
+                        </TouchableOpacity>
+                    </View>
                     <Text style={[styles.userEmail, textMutedStyle]}>{profile?.email}</Text>
                 </View>
 
@@ -136,17 +176,25 @@ export const ProfileScreen = () => {
                         </TouchableOpacity>
                     </View>
                     <View style={[styles.divider, { backgroundColor: colors.border }]} />
-                    <View style={styles.metricRow}>
+                    <TouchableOpacity
+                        style={styles.metricRow}
+                        onPress={handleSeeWeightHistory}
+                        accessibilityRole="button"
+                        accessibilityLabel="See weight history"
+                    >
                         <View>
-                            <Text style={[styles.metricLabel, textMutedStyle]}>Recent History</Text>
+                            <Text style={[styles.metricLabel, textMutedStyle]}>Weight History</Text>
                             <Text style={[styles.metricSubValue, textMutedStyle]}>
                                 {lastWeightDate}
                             </Text>
                         </View>
-                        <Text style={[styles.metricValueSmall, textStyle]}>
-                            {currentWeightKg ? `${currentWeightKg} kg` : ''}
-                        </Text>
-                    </View>
+                        <View style={styles.linkRow}>
+                            <Text style={[styles.metricValueSmall, textStyle]}>
+                                {currentWeightKg ? `${currentWeightKg} kg` : ''}
+                            </Text>
+                            <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+                        </View>
+                    </TouchableOpacity>
                 </GlowCard>
 
                 {/* Recent Workouts */}
@@ -168,7 +216,7 @@ export const ProfileScreen = () => {
                                     <View>
                                         <Text style={[styles.historyName, textStyle]}>{session.name}</Text>
                                         <Text style={[styles.historyDate, textMutedStyle]}>
-                                            {new Date(session.date).toLocaleDateString()}
+                                            {formatDate(session.date)}
                                         </Text>
                                     </View>
                                     <View>
@@ -193,6 +241,112 @@ export const ProfileScreen = () => {
                     <Text style={[styles.secondaryButtonText, { color: colors.text }]}>See All History</Text>
                 </TouchableOpacity>
             </ScrollView>
+
+            {/* Edit Profile Modal */}
+            <Modal
+                visible={isEditModalVisible}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setIsEditModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+                        <Text style={[styles.modalTitle, textStyle]}>Edit Profile</Text>
+
+                        <View style={styles.inputGroup}>
+                            <Text style={[styles.inputLabel, textMutedStyle]}>First Name</Text>
+                            <TextInput
+                                style={[styles.textInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
+                                value={editFirstName}
+                                onChangeText={setEditFirstName}
+                                placeholder="First Name"
+                                placeholderTextColor={colors.textMuted}
+                            />
+                        </View>
+
+                        <View style={styles.inputGroup}>
+                            <Text style={[styles.inputLabel, textMutedStyle]}>Last Name</Text>
+                            <TextInput
+                                style={[styles.textInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
+                                value={editLastName}
+                                onChangeText={setEditLastName}
+                                placeholder="Last Name"
+                                placeholderTextColor={colors.textMuted}
+                            />
+                        </View>
+
+                        <View style={styles.inputGroup}>
+                            <Text style={[styles.inputLabel, textMutedStyle]}>Sex</Text>
+                            <SimpleDropdown
+                                value={editSex.charAt(0).toUpperCase() + editSex.slice(1)}
+                                options={SEX_OPTIONS}
+                                onSelect={(val) => setEditSex(val.toLowerCase())}
+                                style={{ width: '100%' }}
+                            />
+                        </View>
+
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity
+                                style={[styles.modalButton, { backgroundColor: colors.background, borderColor: colors.border, borderWidth: 1 }]}
+                                onPress={() => setIsEditModalVisible(false)}
+                            >
+                                <Text style={[styles.modalButtonText, textStyle]}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.modalButton, { backgroundColor: colors.primary }]}
+                                onPress={handleSaveProfile}
+                                disabled={isSaving}
+                            >
+                                <Text style={[styles.modalButtonText, { color: '#fff' }]}>
+                                    {isSaving ? 'Saving...' : 'Save'}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Log Weight Modal */}
+            <Modal
+                visible={isWeightModalVisible}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setIsWeightModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+                        <Text style={[styles.modalTitle, textStyle]}>Log Weight</Text>
+
+                        <View style={styles.inputGroup}>
+                            <Text style={[styles.inputLabel, textMutedStyle]}>Weight (kg)</Text>
+                            <TextInput
+                                style={[styles.textInput, styles.weightInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
+                                value={inputWeight}
+                                onChangeText={setInputWeight}
+                                placeholder="e.g. 75.5"
+                                placeholderTextColor={colors.textMuted}
+                                keyboardType="decimal-pad"
+                                autoFocus
+                            />
+                        </View>
+
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity
+                                style={[styles.modalButton, { backgroundColor: colors.background, borderColor: colors.border, borderWidth: 1 }]}
+                                onPress={() => setIsWeightModalVisible(false)}
+                            >
+                                <Text style={[styles.modalButtonText, textStyle]}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.modalButton, { backgroundColor: colors.primary }]}
+                                onPress={handleSaveWeight}
+                            >
+                                <Text style={[styles.modalButtonText, { color: '#fff' }]}>Save</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </ThemedSafeAreaView>
     );
 };
@@ -368,5 +522,70 @@ const styles = StyleSheet.create({
     },
     settingsButton: {
         padding: 4,
-    }
+    },
+    nameRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: Theme.Spacing.xs,
+    },
+    editPencilButton: {
+        marginLeft: Theme.Spacing.s,
+        padding: Theme.Spacing.xs,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        padding: Theme.Spacing.l,
+    },
+    modalContent: {
+        borderRadius: Theme.BorderRadius.l,
+        padding: Theme.Spacing.l,
+    },
+    modalTitle: {
+        fontSize: Theme.Typography.h2.fontSize,
+        fontWeight: Theme.Typography.h2.fontWeight,
+        marginBottom: Theme.Spacing.l,
+        textAlign: 'center',
+    },
+    inputGroup: {
+        marginBottom: Theme.Spacing.m,
+    },
+    inputLabel: {
+        fontSize: Theme.Typography.body.fontSize,
+        fontWeight: Theme.Typography.weight.medium,
+        marginBottom: Theme.Spacing.xs,
+    },
+    textInput: {
+        fontSize: Theme.Typography.body.fontSize,
+        paddingVertical: Theme.Spacing.s,
+        paddingHorizontal: Theme.Spacing.m,
+        borderRadius: Theme.BorderRadius.m,
+        borderWidth: 1,
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: Theme.Spacing.l,
+        gap: Theme.Spacing.m,
+    },
+    modalButton: {
+        flex: 1,
+        paddingVertical: Theme.Spacing.m,
+        borderRadius: Theme.BorderRadius.m,
+        alignItems: 'center',
+    },
+    modalButtonText: {
+        fontSize: Theme.Typography.body.fontSize,
+        fontWeight: Theme.Typography.weight.semibold,
+    },
+    linkRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: Theme.Spacing.xs,
+    },
+    weightInput: {
+        fontSize: Theme.Typography.h2.fontSize,
+        textAlign: 'center',
+    },
 });

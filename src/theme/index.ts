@@ -103,6 +103,48 @@ export const Spacing = {
   xxl: 48,
 };
 
+// Date Format Types
+export type DateFormat = 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD';
+
+export const DATE_FORMAT_OPTIONS: { value: DateFormat; label: string; example: string }[] = [
+  { value: 'DD/MM/YYYY', label: 'DD/MM/YYYY', example: '24/12/2025' },
+  { value: 'MM/DD/YYYY', label: 'MM/DD/YYYY', example: '12/24/2025' },
+  { value: 'YYYY-MM-DD', label: 'YYYY-MM-DD', example: '2025-12-24' },
+];
+
+// Date formatting utility (takes format as parameter)
+export const formatDateWithFormat = (dateInput: string | Date, format: DateFormat): string => {
+  const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+
+  switch (format) {
+    case 'DD/MM/YYYY': return `${day}/${month}/${year}`;
+    case 'MM/DD/YYYY': return `${month}/${day}/${year}`;
+    case 'YYYY-MM-DD': return `${year}-${month}-${day}`;
+    default: return `${day}/${month}/${year}`;
+  }
+};
+
+// Short date for charts (dd/mm or mm/dd based on format)
+export const formatDateShortWithFormat = (dateInput: string | Date, format: DateFormat): string => {
+  const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+
+  switch (format) {
+    case 'DD/MM/YYYY': return `${day}/${month}`;
+    case 'MM/DD/YYYY': return `${month}/${day}`;
+    case 'YYYY-MM-DD': return `${month}-${day}`;
+    default: return `${day}/${month}`;
+  }
+};
+
+// Legacy exports for backward compatibility (default to DD/MM/YYYY)
+export const formatDate = (dateInput: string | Date): string => formatDateWithFormat(dateInput, 'DD/MM/YYYY');
+export const formatDateShort = (dateInput: string | Date): string => formatDateShortWithFormat(dateInput, 'DD/MM/YYYY');
+
 export const Typography = {
   scale: {
     sm: 16,
