@@ -64,14 +64,14 @@ export const WorkoutListScreen = () => {
 
             <View style={styles.section}>
                 <Text style={[styles.sectionTitle, subtitleStyle]}>Quick Start</Text>
-                <GlowCard style={styles.quickStartButton} level="m">
-                    <TouchableOpacity
-                        style={{ padding: Theme.Spacing.m }}
-                        onPress={() => navigation.navigate('ActiveSession', { templateId: null })}
-                    >
-                        <Text style={[styles.quickStartText, textStyle]}>+ Start Empty Workout</Text>
-                    </TouchableOpacity>
-                </GlowCard>
+                <TouchableOpacity
+                    style={[styles.startButton, { backgroundColor: colors.primary }, shadowStyle]}
+                    onPress={() => navigation.navigate('ActiveSession', { templateId: null })}
+                    accessibilityRole="button"
+                    accessibilityLabel="Start empty workout"
+                >
+                    <Text style={styles.startButtonText}>+ Start Empty Workout</Text>
+                </TouchableOpacity>
             </View>
 
             <View style={styles.sectionHeader}>
