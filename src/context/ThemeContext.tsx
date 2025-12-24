@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useColorScheme } from 'react-native';
 import { supabaseService } from '../services/SupabaseDataService';
 import { Theme, LightColors, DarkColors, ThemeMode, ThemeColors, Shadows, DateFormat, formatDateWithFormat, formatDateShortWithFormat } from '../theme';
 import { useAuth } from './AuthContext';
@@ -21,8 +22,11 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [theme, setThemeState] = useState<ThemeMode>('dark');
+    // Use system color scheme as the initial default
+    const systemColorScheme = useColorScheme();
+    const [theme, setThemeState] = useState<ThemeMode | null>(null); // null = not yet determined
     const [dateFormat, setDateFormatState] = useState<DateFormat>('DD/MM/YYYY');
+    const [isThemeLoaded, setIsThemeLoaded] = useState(false);
     const { session } = useAuth();
 
     // 1. Load from local storage on mount
@@ -30,7 +34,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         loadPreferences();
     }, []);
 
-    // 2. Sync with Supabase on login
+    // 2. Set initial theme based on system preference if no saved preference
+    useEffect(() => {
+        if (theme === null && systemColorScheme) {
+            // Only set from system if we haven't loaded a preference yet
+            setThemeState(systemColorScheme === 'light' ? 'light' : 'dark');
+        }
+    }, [systemColorScheme, theme]);
+
+    // 3. Sync with Supabase on login
     useEffect(() => {
         if (session?.user) {
             syncPreferencesWithProfile();
@@ -43,12 +55,21 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             const savedDateFormat = await AsyncStorage.getItem('user_date_format');
             if (savedTheme === 'light' || savedTheme === 'dark') {
                 setThemeState(savedTheme);
+                setIsThemeLoaded(true); // User has a preference, don't follow system
+            } else if (theme === null) {
+                // No saved preference, use system or default to dark
+                const systemDefault = systemColorScheme === 'light' ? 'light' : 'dark';
+                setThemeState(systemDefault);
             }
             if (savedDateFormat === 'DD/MM/YYYY' || savedDateFormat === 'MM/DD/YYYY' || savedDateFormat === 'YYYY-MM-DD') {
                 setDateFormatState(savedDateFormat);
             }
         } catch (e) {
             console.error('Failed to load preferences from storage', e);
+            // On error, still set a default theme
+            if (theme === null) {
+                setThemeState(systemColorScheme === 'light' ? 'light' : 'dark');
+            }
         }
     };
 
@@ -59,6 +80,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             setThemeState(currentTheme => {
                 if (remoteTheme !== currentTheme) {
                     AsyncStorage.setItem('user_theme', remoteTheme);
+                    setIsThemeLoaded(true); // User has a cloud preference
                     return remoteTheme;
                 }
                 return currentTheme;
@@ -128,9 +150,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, [session]);
 
     // Memoize derived values to ensure stable references
-    const colors = useMemo(() => theme === 'light' ? LightColors : DarkColors, [theme]);
-    const shadows = useMemo(() => theme === 'light' ? Shadows.light : Shadows.dark, [theme]);
-    const isDark = theme === 'dark';
+    // Use a safe default while theme is null (during initial load)
+    const resolvedTheme: ThemeMode = theme ?? 'dark';
+    const colors = useMemo(() => resolvedTheme === 'light' ? LightColors : DarkColors, [resolvedTheme]);
+    const shadows = useMemo(() => resolvedTheme === 'light' ? Shadows.light : Shadows.dark, [resolvedTheme]);
+    const isDark = resolvedTheme === 'dark';
 
     // Date formatting functions that use user's preference
     const formatDate = useCallback((date: string | Date) => formatDateWithFormat(date, dateFormat), [dateFormat]);
@@ -138,7 +162,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // Memoize context value to prevent unnecessary re-renders
     const contextValue = useMemo(() => ({
-        theme,
+        theme: resolvedTheme,
         toggleTheme,
         setTheme,
         colors,
@@ -148,7 +172,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setDateFormat,
         formatDate,
         formatDateShort: formatDateShortFn
-    }), [theme, toggleTheme, setTheme, colors, shadows, isDark, dateFormat, setDateFormat, formatDate, formatDateShortFn]);
+    }), [resolvedTheme, toggleTheme, setTheme, colors, shadows, isDark, dateFormat, setDateFormat, formatDate, formatDateShortFn]);
+
+    // Don't render until we've determined the theme
+    if (theme === null) {
+        return null; // Or a loading spinner if preferred
+    }
 
     return (
         <ThemeContext.Provider value={contextValue}>
