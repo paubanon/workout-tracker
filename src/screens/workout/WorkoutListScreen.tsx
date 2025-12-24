@@ -65,7 +65,7 @@ export const WorkoutListScreen = () => {
             <View style={styles.section}>
                 <Text style={[styles.sectionTitle, subtitleStyle]}>Quick Start</Text>
                 <TouchableOpacity
-                    style={[styles.startButton, { backgroundColor: colors.primary }, shadowStyle]}
+                    style={[styles.startButton, { backgroundColor: colors.primary, paddingVertical: Theme.Spacing.m }, shadowStyle]}
                     onPress={() => navigation.navigate('ActiveSession', { templateId: null })}
                     accessibilityRole="button"
                     accessibilityLabel="Start empty workout"
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
         marginBottom: Theme.Spacing.m,
     },
     startButton: {
-        paddingVertical: Theme.Spacing.m,
+        paddingVertical: Theme.Spacing.s,
         borderRadius: 8,
         alignItems: 'center',
     },
