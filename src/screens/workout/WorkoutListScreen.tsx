@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
         marginBottom: Theme.Spacing.m,
     },
     startButton: {
-        paddingVertical: Theme.Spacing.s,
+        paddingVertical: Theme.Spacing.m,
         borderRadius: 8,
         alignItems: 'center',
     },

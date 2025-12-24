@@ -9,6 +9,7 @@ import { Exercise, SetLog, WorkoutSession } from '../../models';
 import { supabaseService } from '../../services/SupabaseDataService';
 import { performSetUpdate, toggleSetComplete, handleSaveRpe } from '../../utils/setLogicHelper';
 import { useTheme } from '../../context/ThemeContext';
+import { sanitizeDecimal, parseDecimal, sanitizeInteger, parseInteger, sanitizeSignedDecimal, parseSignedDecimal } from '../../utils/inputValidation';
 
 // Helper to generate a new set
 const createSet = (exerciseId: string, setNumber: number, defaults?: {
@@ -530,7 +531,7 @@ export const ActiveSessionScreen = () => {
                                             {(exercise.enabledMetrics || []).includes('load') && (
                                                 <TextInput
                                                     style={[styles.input, textStyle, { backgroundColor: isDark ? colors.bgLight : colors.background }]}
-                                                    keyboardType="numeric"
+                                                    keyboardType="decimal-pad"
                                                     placeholder={
                                                         exercise.trackBodyWeight
                                                             ? `${set.targetLoad || 0} (+${userWeight})`
@@ -538,7 +539,10 @@ export const ActiveSessionScreen = () => {
                                                     }
                                                     placeholderTextColor={colors.textMuted}
                                                     value={set.loadKg === 0 ? '' : set.loadKg?.toString()}
-                                                    onChangeText={(val) => handleUpdateSet(set.id, 'loadKg', parseFloat(val) || 0)}
+                                                    onChangeText={(val) => {
+                                                        const sanitized = sanitizeDecimal(val);
+                                                        handleUpdateSet(set.id, 'loadKg', parseDecimal(sanitized));
+                                                    }}
                                                 />
                                             )}
 
@@ -546,11 +550,14 @@ export const ActiveSessionScreen = () => {
                                             {(exercise.enabledMetrics || []).includes('reps') && (
                                                 <TextInput
                                                     style={[styles.input, textStyle, { backgroundColor: isDark ? colors.bgLight : colors.background }]}
-                                                    keyboardType="numeric"
+                                                    keyboardType="number-pad"
                                                     placeholder={set.targetReps || "-"}
                                                     placeholderTextColor={colors.textMuted}
                                                     value={set.reps === 0 ? '' : set.reps?.toString()}
-                                                    onChangeText={(val) => handleUpdateSet(set.id, 'reps', parseFloat(val) || 0)}
+                                                    onChangeText={(val) => {
+                                                        const sanitized = sanitizeInteger(val);
+                                                        handleUpdateSet(set.id, 'reps', parseInteger(sanitized));
+                                                    }}
                                                 />
                                             )}
 
@@ -569,11 +576,14 @@ export const ActiveSessionScreen = () => {
                                             {(exercise.enabledMetrics || []).includes('time') && (
                                                 <TextInput
                                                     style={[styles.input, textStyle, { backgroundColor: isDark ? colors.bgLight : colors.background }]}
-                                                    keyboardType="numeric"
+                                                    keyboardType="number-pad"
                                                     placeholder={set.targetTime ? set.targetTime.toString() : "-"}
                                                     placeholderTextColor={colors.textMuted}
                                                     value={set.timeSeconds === 0 ? '' : set.timeSeconds?.toString()}
-                                                    onChangeText={(val) => handleUpdateSet(set.id, 'timeSeconds', parseFloat(val) || 0)}
+                                                    onChangeText={(val) => {
+                                                        const sanitized = sanitizeInteger(val);
+                                                        handleUpdateSet(set.id, 'timeSeconds', parseInteger(sanitized));
+                                                    }}
                                                 />
                                             )}
 
@@ -581,11 +591,14 @@ export const ActiveSessionScreen = () => {
                                             {(exercise.enabledMetrics || []).includes('distance') && (
                                                 <TextInput
                                                     style={[styles.input, textStyle, { backgroundColor: isDark ? colors.bgLight : colors.background }]}
-                                                    keyboardType="numeric"
+                                                    keyboardType="number-pad"
                                                     placeholder={set.targetDistance ? set.targetDistance.toString() : "-"}
                                                     placeholderTextColor={colors.textMuted}
                                                     value={set.distanceMeters === 0 ? '' : set.distanceMeters?.toString()}
-                                                    onChangeText={(val) => handleUpdateSet(set.id, 'distanceMeters', parseFloat(val) || 0)}
+                                                    onChangeText={(val) => {
+                                                        const sanitized = sanitizeInteger(val);
+                                                        handleUpdateSet(set.id, 'distanceMeters', parseInteger(sanitized));
+                                                    }}
                                                 />
                                             )}
 
@@ -593,10 +606,14 @@ export const ActiveSessionScreen = () => {
                                             {(exercise.enabledMetrics || []).includes('rom') && (
                                                 <TextInput
                                                     style={[styles.input, textStyle, { backgroundColor: isDark ? colors.bgLight : colors.background }]}
+                                                    keyboardType="numbers-and-punctuation"
                                                     placeholder={set.targetRom || "-"}
                                                     placeholderTextColor={colors.textMuted}
                                                     value={set.romCm ? set.romCm.toString() : ''}
-                                                    onChangeText={(val) => handleUpdateSet(set.id, 'romCm', parseFloat(val) || 0)}
+                                                    onChangeText={(val) => {
+                                                        const sanitized = sanitizeSignedDecimal(val);
+                                                        handleUpdateSet(set.id, 'romCm', parseSignedDecimal(sanitized));
+                                                    }}
                                                 />
                                             )}
 

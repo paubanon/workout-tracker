@@ -10,6 +10,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { GlowCard } from '../../components/GlowCard';
 import { ThemedSafeAreaView } from '../../components/ThemedSafeAreaView';
 import { SimpleDropdown } from '../../components/SimpleDropdown';
+import { sanitizeDecimal } from '../../utils/inputValidation';
 
 export const ProfileScreen = () => {
     const { signOut } = useAuth();
@@ -322,7 +323,7 @@ export const ProfileScreen = () => {
                             <TextInput
                                 style={[styles.textInput, styles.weightInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
                                 value={inputWeight}
-                                onChangeText={setInputWeight}
+                                onChangeText={(val) => setInputWeight(sanitizeDecimal(val))}
                                 placeholder="e.g. 75.5"
                                 placeholderTextColor={colors.textMuted}
                                 keyboardType="decimal-pad"

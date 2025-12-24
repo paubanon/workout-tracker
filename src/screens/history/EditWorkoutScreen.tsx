@@ -17,6 +17,7 @@ import { WorkoutSession, SetLog } from '../../models';
 import { Ionicons } from '@expo/vector-icons';
 import { supabaseService } from '../../services/SupabaseDataService';
 import { useTheme } from '../../context/ThemeContext';
+import { sanitizeDecimal, parseDecimal, sanitizeInteger, parseInteger } from '../../utils/inputValidation';
 
 export const EditWorkoutScreen = () => {
     const route = useRoute<any>();
@@ -182,8 +183,11 @@ export const EditWorkoutScreen = () => {
                                                     <TextInput
                                                         style={[styles.setInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
                                                         value={set.loadKg?.toString() || ''}
-                                                        onChangeText={(text) => updateSet(globalIndex, 'loadKg', parseFloat(text) || 0)}
-                                                        keyboardType="numeric"
+                                                        onChangeText={(text) => {
+                                                            const sanitized = sanitizeDecimal(text);
+                                                            updateSet(globalIndex, 'loadKg', parseDecimal(sanitized));
+                                                        }}
+                                                        keyboardType="decimal-pad"
                                                         placeholderTextColor={colors.textMuted}
                                                     />
                                                 </View>
@@ -192,8 +196,11 @@ export const EditWorkoutScreen = () => {
                                                     <TextInput
                                                         style={[styles.setInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
                                                         value={set.reps?.toString() || ''}
-                                                        onChangeText={(text) => updateSet(globalIndex, 'reps', parseInt(text) || 0)}
-                                                        keyboardType="numeric"
+                                                        onChangeText={(text) => {
+                                                            const sanitized = sanitizeInteger(text);
+                                                            updateSet(globalIndex, 'reps', parseInteger(sanitized));
+                                                        }}
+                                                        keyboardType="number-pad"
                                                         placeholderTextColor={colors.textMuted}
                                                     />
                                                 </View>
@@ -202,9 +209,18 @@ export const EditWorkoutScreen = () => {
                                                     <TextInput
                                                         style={[styles.setInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
                                                         value={set.rpe?.toString() || ''}
-                                                        onChangeText={(text) => updateSet(globalIndex, 'rpe', parseFloat(text) || 0)}
-                                                        keyboardType="numeric"
+                                                        onChangeText={(text) => {
+                                                            const sanitized = sanitizeInteger(text);
+                                                            let val = parseInteger(sanitized);
+                                                            // Clamp RPE between 1 and 10 (0 means empty)
+                                                            if (val > 10) val = 10;
+                                                            if (val < 0) val = 0;
+                                                            updateSet(globalIndex, 'rpe', val === 0 ? undefined : val);
+                                                        }}
+                                                        keyboardType="number-pad"
                                                         placeholderTextColor={colors.textMuted}
+                                                        placeholder="1-10"
+                                                        maxLength={2}
                                                     />
                                                 </View>
                                             </View>

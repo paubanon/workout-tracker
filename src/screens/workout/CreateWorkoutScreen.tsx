@@ -8,6 +8,7 @@ import { Exercise, WorkoutTemplate, TemplateExercise, RepsType } from '../../mod
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
+import { sanitizeDecimal, parseDecimal, sanitizeInteger, parseInteger } from '../../utils/inputValidation';
 
 export const CreateWorkoutScreen = () => {
     const navigation = useNavigation<any>();
@@ -230,11 +231,16 @@ export const CreateWorkoutScreen = () => {
                             {metrics.includes('load') && (
                                 <TextInput
                                     style={[styles.input, { backgroundColor: colors.background, color: colors.text }]}
-                                    keyboardType="numeric"
+                                    keyboardType="decimal-pad"
                                     placeholder={set.targetLoad?.toString() || "-"}
                                     placeholderTextColor={colors.textMuted}
                                     value={set.targetLoad?.toString()}
-                                    onChangeText={v => index !== undefined && updateSet(index, setIndex, 'targetLoad', parseFloat(v))}
+                                    onChangeText={v => {
+                                        if (index !== undefined) {
+                                            const sanitized = sanitizeDecimal(v);
+                                            updateSet(index, setIndex, 'targetLoad', parseDecimal(sanitized));
+                                        }
+                                    }}
                                 />
                             )}
                             {metrics.includes('reps') && (
@@ -250,30 +256,50 @@ export const CreateWorkoutScreen = () => {
                             {showTempoCol && (
                                 <TextInput
                                     style={[styles.input, { backgroundColor: colors.background, color: colors.text }]}
+                                    keyboardType={isIsometric ? "number-pad" : "default"}
                                     placeholder={isIsometric ? (set.targetTime?.toString() || "-") : (set.targetTempo || "-")}
                                     placeholderTextColor={colors.textMuted}
                                     value={isIsometric ? set.targetTime?.toString() : set.targetTempo}
-                                    onChangeText={v => index !== undefined && updateSet(index, setIndex, isIsometric ? 'targetTime' : 'targetTempo', isIsometric ? parseFloat(v) : v)}
+                                    onChangeText={v => {
+                                        if (index !== undefined) {
+                                            if (isIsometric) {
+                                                const sanitized = sanitizeInteger(v);
+                                                updateSet(index, setIndex, 'targetTime', parseInteger(sanitized));
+                                            } else {
+                                                updateSet(index, setIndex, 'targetTempo', v);
+                                            }
+                                        }
+                                    }}
                                 />
                             )}
                             {metrics.includes('time') && (
                                 <TextInput
                                     style={[styles.input, { backgroundColor: colors.background, color: colors.text }]}
-                                    keyboardType="numeric"
+                                    keyboardType="number-pad"
                                     placeholder={set.targetTime?.toString() || "-"}
                                     placeholderTextColor={colors.textMuted}
                                     value={set.targetTime?.toString()}
-                                    onChangeText={v => index !== undefined && updateSet(index, setIndex, 'targetTime', parseFloat(v))}
+                                    onChangeText={v => {
+                                        if (index !== undefined) {
+                                            const sanitized = sanitizeInteger(v);
+                                            updateSet(index, setIndex, 'targetTime', parseInteger(sanitized));
+                                        }
+                                    }}
                                 />
                             )}
                             {metrics.includes('distance') && (
                                 <TextInput
                                     style={[styles.input, { backgroundColor: colors.background, color: colors.text }]}
-                                    keyboardType="numeric"
+                                    keyboardType="number-pad"
                                     placeholder={set.targetDistance?.toString() || "-"}
                                     placeholderTextColor={colors.textMuted}
                                     value={set.targetDistance?.toString()}
-                                    onChangeText={v => index !== undefined && updateSet(index, setIndex, 'targetDistance', parseFloat(v))}
+                                    onChangeText={v => {
+                                        if (index !== undefined) {
+                                            const sanitized = sanitizeInteger(v);
+                                            updateSet(index, setIndex, 'targetDistance', parseInteger(sanitized));
+                                        }
+                                    }}
                                 />
                             )}
 

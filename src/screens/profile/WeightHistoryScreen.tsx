@@ -7,6 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { GlowCard } from '../../components/GlowCard';
+import { sanitizeDecimal, parseDecimal } from '../../utils/inputValidation';
 
 interface WeightEntry {
     id: string;
@@ -190,7 +191,7 @@ export const WeightHistoryScreen = () => {
                             <TextInput
                                 style={[styles.textInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
                                 value={inputWeight}
-                                onChangeText={setInputWeight}
+                                onChangeText={(val) => setInputWeight(sanitizeDecimal(val))}
                                 placeholder="e.g. 75.5"
                                 placeholderTextColor={colors.textMuted}
                                 keyboardType="decimal-pad"
