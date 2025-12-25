@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -7,7 +7,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { GlowCard } from '../../components/GlowCard';
 import { supabaseService } from '../../services/SupabaseDataService';
 import { ExerciseGoal, MetricType } from '../../models';
-import { sanitizeDecimal, parseDecimal, sanitizeInteger, parseInteger } from '../../utils/inputValidation';
+import { sanitizeDecimal, parseDecimal, sanitizeInteger, parseInteger, sanitizeSignedDecimal, parseSignedDecimal } from '../../utils/inputValidation';
 
 const METRIC_CONFIG: Record<MetricType, { label: string; unit: string; field: keyof ExerciseGoal }> = {
     load: { label: 'Load', unit: 'kg', field: 'targetLoad' },
@@ -21,7 +21,7 @@ export const CreateGoalScreen = () => {
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
     const { colors } = useTheme();
-    const { exerciseId, exerciseName, enabledMetrics, goalToEdit, repsType } = route.params;
+    const { exerciseId, exerciseName, enabledMetrics, goalToEdit, repsType, trackBodyWeight } = route.params;
 
     const [name, setName] = useState(goalToEdit?.name || '');
     const [targetLoad, setTargetLoad] = useState(goalToEdit?.targetLoad?.toString() || '');
@@ -32,10 +32,24 @@ export const CreateGoalScreen = () => {
     const [targetIsometricTime, setTargetIsometricTime] = useState(goalToEdit?.targetIsometricTime?.toString() || '');
     const [targetTempo, setTargetTempo] = useState(goalToEdit?.targetTempo || '');
     const [saving, setSaving] = useState(false);
+    const [userWeight, setUserWeight] = useState<number>(0);
 
     const isEditing = !!goalToEdit;
     const isIsometric = repsType === 'isometric';
     const isTempo = repsType === 'tempo';
+
+    // Fetch user weight for body weight exercises
+    useEffect(() => {
+        if (trackBodyWeight) {
+            supabaseService.getUserProfile().then(profile => {
+                const history = profile?.weightHistory;
+                if (history && history.length > 0) {
+                    const latestWeight = history[history.length - 1].weightKg;
+                    setUserWeight(latestWeight);
+                }
+            });
+        }
+    }, [trackBodyWeight]);
 
     const handleSave = async () => {
         // Validate at least one target is set
@@ -51,7 +65,7 @@ export const CreateGoalScreen = () => {
             userId: '', // Will be set by service
             exerciseId,
             name: name.trim() || undefined,
-            targetLoad: targetLoad ? parseDecimal(targetLoad) : undefined,
+            targetLoad: targetLoad ? (trackBodyWeight ? parseSignedDecimal(targetLoad) : parseDecimal(targetLoad)) : undefined,
             targetReps: targetReps ? parseInteger(targetReps) : undefined,
             targetTime: targetTime ? parseInteger(targetTime) : undefined,
             targetDistance: targetDistance ? parseInteger(targetDistance) : undefined,
@@ -66,6 +80,10 @@ export const CreateGoalScreen = () => {
             await supabaseService.updateGoal({ ...goalData, id: goalToEdit.id, createdAt: goalToEdit.createdAt });
         } else {
             await supabaseService.addGoal(goalData);
+            // Call callback if provided (e.g., from PostWorkoutCreationGoalsScreen)
+            if (route.params?.onGoalSaved) {
+                route.params.onGoalSaved();
+            }
         }
 
         setSaving(false);
@@ -83,7 +101,10 @@ export const CreateGoalScreen = () => {
         switch (metric) {
             case 'load':
                 value = targetLoad;
-                setValue = (v) => setTargetLoad(sanitizeDecimal(v));
+                // Allow negative values for body weight exercises
+                setValue = trackBodyWeight
+                    ? (v) => setTargetLoad(sanitizeSignedDecimal(v))
+                    : (v) => setTargetLoad(sanitizeDecimal(v));
                 keyboardType = 'decimal-pad';
                 break;
             case 'reps':
@@ -105,19 +126,37 @@ export const CreateGoalScreen = () => {
                 break;
         }
 
+        const isBodyWeightLoad = metric === 'load' && trackBodyWeight && userWeight > 0;
+        const displayValue = isBodyWeightLoad && value
+            ? `${value} (+${userWeight})`
+            : isBodyWeightLoad && !value
+                ? `0 (+${userWeight})`
+                : value;
+
         return (
             <GlowCard key={metric} style={styles.inputCard} level="m">
                 <View style={styles.inputRow}>
                     <Text style={[styles.inputLabel, { color: colors.text }]}>
-                        {config.label} {config.unit && `(${config.unit})`}
+                        {metric === 'load' && trackBodyWeight ? 'Extra Load' : config.label} {config.unit && `(${config.unit})`}
                     </Text>
                     <TextInput
-                        style={[styles.input, { color: colors.text, backgroundColor: colors.background }]}
-                        placeholder="-"
+                        style={[
+                            styles.input,
+                            { color: colors.text, backgroundColor: colors.background },
+                            isBodyWeightLoad && { minWidth: 100 }
+                        ]}
+                        placeholder={isBodyWeightLoad ? `0 (+${userWeight})` : '-'}
                         placeholderTextColor={colors.textMuted}
                         keyboardType={keyboardType}
-                        value={value}
-                        onChangeText={setValue}
+                        value={isBodyWeightLoad && value ? `${value} (+${userWeight})` : value}
+                        onChangeText={(text) => {
+                            // For body weight, strip the ghost suffix if user pastes
+                            const cleanValue = isBodyWeightLoad
+                                ? text.replace(/ \(\+\d+\)$/, '').trim()
+                                : text;
+                            setValue(cleanValue);
+                        }}
+                        onFocus={isBodyWeightLoad ? () => { } : undefined}
                     />
                 </View>
             </GlowCard>
@@ -230,8 +269,12 @@ export const CreateGoalScreen = () => {
                                             style: "destructive",
                                             onPress: async () => {
                                                 if (goalToEdit?.id) {
-                                                    await supabaseService.deleteGoal(goalToEdit.id);
-                                                    navigation.goBack();
+                                                    try {
+                                                        await supabaseService.deleteGoal(goalToEdit.id);
+                                                        navigation.goBack();
+                                                    } catch (e) {
+                                                        Alert.alert('Error', 'Failed to delete goal. Please try again.');
+                                                    }
                                                 }
                                             }
                                         }
@@ -260,72 +303,84 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
     },
     cancelText: {
-        fontSize: 17,
+        ...Theme.Typography.body,
+        fontWeight: '400',
     },
     headerTitle: {
-        fontSize: Theme.Typography.scale.lg,
-        fontWeight: '600',
+        ...Theme.Typography.subtitle,
     },
     saveText: {
-        fontSize: 17,
+        ...Theme.Typography.body,
         fontWeight: '600',
     },
     content: {
-        padding: 16,
+        padding: Theme.Spacing.m,
     },
     exerciseLabel: {
         fontSize: 14,
         marginBottom: Theme.Spacing.m,
     },
     sectionTitle: {
-        fontSize: Theme.Typography.scale.lg,
+        ...Theme.Typography.body,
         fontWeight: '600',
-        marginTop: Theme.Spacing.l,
-        marginBottom: 16,
+        marginTop: Theme.Spacing.m,
+        marginBottom: Theme.Spacing.s,
     },
     hint: {
         fontSize: 13,
-        marginBottom: Theme.Spacing.m,
+        marginBottom: Theme.Spacing.s,
     },
     inputCard: {
-        borderRadius: 12,
+        borderRadius: Theme.BorderRadius.sm,
         marginBottom: Theme.Spacing.s,
     },
     inputRow: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: Theme.Spacing.m,
+        padding: Theme.Spacing.s + 4, // 12
     },
     inputLabel: {
-        fontSize: 16,
+        ...Theme.Typography.body,
         flex: 1,
     },
     input: {
         borderWidth: 1,
-        borderRadius: 12,
-        padding: 12,
-        fontSize: Theme.Typography.scale.md,
-        minWidth: 100,
+        borderRadius: Theme.BorderRadius.sm,
+        padding: Theme.Spacing.s + 2, // 10
+        ...Theme.Typography.body,
+        minWidth: 80,
         textAlign: 'center',
     },
+    ghostInput: {
+        ...Theme.Typography.body,
+        textAlign: 'center',
+        minWidth: 40,
+    },
+    ghostSuffix: {
+        fontSize: 14,
+        position: 'absolute',
+        right: 8,
+    },
     saveButton: {
-        padding: 16,
-        borderRadius: 12,
+        padding: Theme.Spacing.s + 6, // 14
+        borderRadius: Theme.BorderRadius.sm,
         alignItems: 'center',
-        marginTop: 8,
+        marginTop: Theme.Spacing.m,
     },
     saveButtonText: {
-        fontSize: Theme.Typography.scale.lg,
+        ...Theme.Typography.body,
         fontWeight: '600',
     },
     deleteButton: {
-        padding: 16,
-        borderRadius: 12,
+        padding: Theme.Spacing.s + 6, // 14
+        borderRadius: Theme.BorderRadius.sm,
         alignItems: 'center',
+        marginTop: Theme.Spacing.s,
     },
     deleteButtonText: {
-        fontSize: Theme.Typography.scale.lg,
+        ...Theme.Typography.body,
         fontWeight: '600',
     }
 });
+

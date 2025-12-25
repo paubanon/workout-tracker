@@ -332,6 +332,7 @@ export const ActiveSessionScreen = () => {
                 if (!updatedSet.loadKg && updatedSet.targetLoad) updatedSet.loadKg = updatedSet.targetLoad;
                 if (!updatedSet.reps && updatedSet.targetReps) updatedSet.reps = parseFloat(updatedSet.targetReps) || 0;
                 if (!updatedSet.timeSeconds && updatedSet.targetTime) updatedSet.timeSeconds = updatedSet.targetTime;
+                if (!updatedSet.timeSeconds && (updatedSet as any).targetIsometricTime) updatedSet.timeSeconds = (updatedSet as any).targetIsometricTime;
                 if (!updatedSet.distanceMeters && updatedSet.targetDistance) updatedSet.distanceMeters = updatedSet.targetDistance;
                 if (!updatedSet.romCm && updatedSet.targetRom) updatedSet.romCm = parseFloat(updatedSet.targetRom) || 0;
                 if (!updatedSet.tempo && updatedSet.targetTempo) updatedSet.tempo = updatedSet.targetTempo;
@@ -362,7 +363,17 @@ export const ActiveSessionScreen = () => {
         if (pendingSetId && session) {
             const set = session.sets.find(s => s.id === pendingSetId);
             if (set) {
-                const achievedGoalResult = await checkGoalAchievement(set, set.exerciseId);
+                // Apply ghost values for goal check (same logic as onSetComplete)
+                const updatedSet = { ...set, completed: true };
+                if (!updatedSet.loadKg && updatedSet.targetLoad) updatedSet.loadKg = updatedSet.targetLoad;
+                if (!updatedSet.reps && updatedSet.targetReps) updatedSet.reps = parseFloat(updatedSet.targetReps) || 0;
+                if (!updatedSet.timeSeconds && updatedSet.targetTime) updatedSet.timeSeconds = updatedSet.targetTime;
+                if (!updatedSet.timeSeconds && (updatedSet as any).targetIsometricTime) updatedSet.timeSeconds = (updatedSet as any).targetIsometricTime;
+                if (!updatedSet.distanceMeters && updatedSet.targetDistance) updatedSet.distanceMeters = updatedSet.targetDistance;
+                if (!updatedSet.romCm && updatedSet.targetRom) updatedSet.romCm = parseFloat(updatedSet.targetRom) || 0;
+                if (!updatedSet.tempo && updatedSet.targetTempo) updatedSet.tempo = updatedSet.targetTempo;
+
+                const achievedGoalResult = await checkGoalAchievement(updatedSet, set.exerciseId);
                 if (achievedGoalResult) {
                     const exercise = exercises.find(e => e.id === set.exerciseId);
                     setAchievedGoal(achievedGoalResult);
@@ -427,8 +438,14 @@ export const ActiveSessionScreen = () => {
 
         setIsSaving(false);
 
-        // Show Toast
-        setShowToast(true);
+        // Get unique exercise IDs from this session
+        const exerciseIds = [...new Set(sessionToSave.sets.map(s => s.exerciseId))];
+
+        // Navigate to Post-Workout Summary
+        navigation.replace('PostWorkoutSummary', {
+            sessionSets: sessionToSave.sets,
+            exerciseIds
+        });
     };
 
     if (!session) return null;

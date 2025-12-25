@@ -20,24 +20,7 @@ export const GoalAchievedToast: React.FC<GoalAchievedToastProps> = ({
     const { colors } = useTheme();
     const fadeAnim = React.useRef(new Animated.Value(0)).current;
 
-    // Track keyboard height
-    const [keyboardOffset, setKeyboardOffset] = React.useState(0);
-
-    useEffect(() => {
-        const showSubscription = Keyboard.addListener(
-            Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-            (e) => setKeyboardOffset(e.endCoordinates.height)
-        );
-        const hideSubscription = Keyboard.addListener(
-            Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
-            () => setKeyboardOffset(0)
-        );
-
-        return () => {
-            showSubscription.remove();
-            hideSubscription.remove();
-        };
-    }, []);
+    // No keyboard tracking needed - toast displays at top
 
     useEffect(() => {
         if (visible) {
@@ -64,14 +47,11 @@ export const GoalAchievedToast: React.FC<GoalAchievedToastProps> = ({
     const days = getDaysToComplete(goal.createdAt);
     const daysText = days === 0 ? 'today' : days === 1 ? 'in 1 day' : `in ${days} days`;
 
-    // Default bottom 100, or keyboardHeight + 20
-    const bottomPosition = keyboardOffset > 0 ? keyboardOffset + 20 : 100;
-
     return (
         <Animated.View
             style={[
                 styles.container,
-                { backgroundColor: colors.success, opacity: fadeAnim, bottom: bottomPosition }
+                { backgroundColor: colors.success, opacity: fadeAnim }
             ]}
         >
             <Text style={styles.emoji}>🎉</Text>
@@ -91,9 +71,10 @@ export const GoalAchievedToast: React.FC<GoalAchievedToastProps> = ({
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-        bottom: 100,
+        top: 60,
         left: 20,
         right: 20,
+        zIndex: 9999,
         flexDirection: 'row',
         alignItems: 'center',
         padding: 16,
@@ -102,7 +83,7 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
-        elevation: 8,
+        elevation: 9999,
     },
     emoji: {
         fontSize: 32,

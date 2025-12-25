@@ -22,6 +22,7 @@ import { GoalsListScreen } from '../screens/goals/GoalsListScreen';
 import { ExerciseGoalsScreen } from '../screens/goals/ExerciseGoalsScreen';
 import { CreateGoalScreen } from '../screens/goals/CreateGoalScreen';
 import { PostWorkoutCreationGoalsScreen } from '../screens/goals/PostWorkoutCreationGoalsScreen';
+import { PostWorkoutSummaryScreen } from '../screens/workout/PostWorkoutSummaryScreen';
 
 import { Ionicons } from '@expo/vector-icons';
 import { CreateScreen } from '../screens/create/CreateScreen';
@@ -187,6 +188,11 @@ export const RootNavigator = () => {
                                 name="PostWorkoutCreationGoals"
                                 component={PostWorkoutCreationGoalsScreen}
                                 options={{ presentation: 'modal' }}
+                            />
+                            <Stack.Screen
+                                name="PostWorkoutSummary"
+                                component={PostWorkoutSummaryScreen}
+                                options={{ presentation: 'fullScreenModal' }}
                             />
                         </>
                     )}

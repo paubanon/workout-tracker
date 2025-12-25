@@ -17,7 +17,7 @@ export const CreateWorkoutScreen = () => {
     const { templateToEdit } = route.params || {};
 
     const [name, setName] = useState(templateToEdit?.name || '');
-    const [selectedExercises, setSelectedExercises] = useState<(TemplateExercise & { name: string, enabledMetrics: string[], repsType?: RepsType, _id: string })[]>([]);
+    const [selectedExercises, setSelectedExercises] = useState<(TemplateExercise & { name: string, enabledMetrics: string[], repsType?: RepsType, trackBodyWeight?: boolean, _id: string })[]>([]);
     const [keyboardOffset, setKeyboardOffset] = useState(0);
 
     // Toast State
@@ -87,6 +87,7 @@ export const CreateWorkoutScreen = () => {
                 name: ex?.name || 'Unknown Exercise',
                 enabledMetrics: ex?.enabledMetrics || [],
                 repsType: ex?.repsType,
+                trackBodyWeight: ex?.trackBodyWeight,
                 sets,
                 _id: Math.random().toString(36).substr(2, 9)
             };
@@ -97,11 +98,12 @@ export const CreateWorkoutScreen = () => {
     const handleAddExercise = () => {
         navigation.navigate('ExerciseList', {
             onSelect: (ex: Exercise) => {
-                const newEx: TemplateExercise & { name: string, enabledMetrics: string[], repsType?: RepsType, _id: string } = {
+                const newEx: TemplateExercise & { name: string, enabledMetrics: string[], repsType?: RepsType, trackBodyWeight?: boolean, _id: string } = {
                     exerciseId: ex.id,
                     name: ex.name,
                     enabledMetrics: ex.enabledMetrics || [],
                     repsType: ex.repsType,
+                    trackBodyWeight: ex.trackBodyWeight,
                     sets: [{}],
                     _id: Math.random().toString(36).substr(2, 9)
                 };
@@ -162,7 +164,8 @@ export const CreateWorkoutScreen = () => {
             exerciseId: ex.exerciseId,
             exerciseName: ex.name,
             enabledMetrics: ex.enabledMetrics,
-            repsType: ex.repsType
+            repsType: ex.repsType,
+            trackBodyWeight: ex.trackBodyWeight
         }));
         navigation.replace('PostWorkoutCreationGoals', { exercises: exercisesForGoals });
     };

@@ -116,9 +116,9 @@ export const ExerciseGoalsScreen = () => {
                         <Text style={[styles.goalName, { color: colors.text }]}>
                             {getGoalDisplayName(goal)}
                         </Text>
-                        {goal.completed && goal.completedAt && (
+                        {goal.completed && (
                             <Text style={[styles.completedText, { color: colors.success }]}>
-                                ✓ Completed {new Date(goal.completedAt).toLocaleDateString()}
+                                ✓ Completed{goal.completedAt ? ` ${new Date(goal.completedAt).toLocaleDateString()}` : ''}
                             </Text>
                         )}
                         <View style={styles.metricsRow}>

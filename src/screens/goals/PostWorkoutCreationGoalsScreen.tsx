@@ -9,7 +9,7 @@ import { GlowCard } from '../../components/GlowCard';
 import { TemplateExercise, Exercise } from '../../models';
 
 interface PostWorkoutGoalsParams {
-    exercises: { exerciseId: string; exerciseName: string; enabledMetrics: string[]; repsType?: string }[];
+    exercises: { exerciseId: string; exerciseName: string; enabledMetrics: string[]; repsType?: string; trackBodyWeight?: boolean }[];
 }
 
 export const PostWorkoutCreationGoalsScreen = () => {
@@ -19,14 +19,17 @@ export const PostWorkoutCreationGoalsScreen = () => {
     const { exercises } = route.params as PostWorkoutGoalsParams;
     const [goalsAdded, setGoalsAdded] = useState<Set<string>>(new Set());
 
-    const handleAddGoal = (exercise: { exerciseId: string; exerciseName: string; enabledMetrics: string[]; repsType?: string }) => {
+    const handleAddGoal = (exercise: { exerciseId: string; exerciseName: string; enabledMetrics: string[]; repsType?: string; trackBodyWeight?: boolean }) => {
         navigation.navigate('CreateGoal', {
             exerciseId: exercise.exerciseId,
             exerciseName: exercise.exerciseName,
             enabledMetrics: exercise.enabledMetrics,
-            repsType: exercise.repsType
+            repsType: exercise.repsType,
+            trackBodyWeight: exercise.trackBodyWeight,
+            onGoalSaved: () => {
+                setGoalsAdded(prev => new Set(prev).add(exercise.exerciseId));
+            }
         });
-        setGoalsAdded(prev => new Set(prev).add(exercise.exerciseId));
     };
 
     const handleSkip = () => {

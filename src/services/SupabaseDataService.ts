@@ -526,7 +526,10 @@ class SupabaseDataService {
             .delete()
             .eq('id', id);
 
-        if (error) console.error('Error deleting goal:', error);
+        if (error) {
+            console.error('Error deleting goal:', error);
+            throw new Error('Failed to delete goal');
+        }
     }
 
     async markGoalCompleted(id: string): Promise<void> {
