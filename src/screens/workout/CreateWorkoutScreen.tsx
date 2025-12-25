@@ -156,7 +156,15 @@ export const CreateWorkoutScreen = () => {
         };
 
         await supabaseService.addTemplate(newTemplate);
-        setShowToast(true);
+
+        // Offer to set goals for exercises (both new and edited templates)
+        const exercisesForGoals = selectedExercises.map(ex => ({
+            exerciseId: ex.exerciseId,
+            exerciseName: ex.name,
+            enabledMetrics: ex.enabledMetrics,
+            repsType: ex.repsType
+        }));
+        navigation.replace('PostWorkoutCreationGoals', { exercises: exercisesForGoals });
     };
 
     const renderItem = ({ item, getIndex, drag, isActive }: RenderItemParams<any>) => {

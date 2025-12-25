@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Animated, Text, StyleSheet, ViewStyle, StyleProp } from 'react-native';
+import { Animated, Text, StyleSheet, ViewStyle, StyleProp, Keyboard, Platform, KeyboardEvent } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { Theme } from '../theme';
 
@@ -26,6 +26,25 @@ export const Toast: React.FC<ToastProps> = ({
 }) => {
     const { colors } = useTheme();
     const fadeAnim = useRef(new Animated.Value(0)).current;
+
+    // Track keyboard height to show toast above it
+    const [keyboardOffset, setKeyboardOffset] = React.useState(0);
+
+    useEffect(() => {
+        const showSubscription = Keyboard.addListener(
+            Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+            (e) => setKeyboardOffset(e.endCoordinates.height)
+        );
+        const hideSubscription = Keyboard.addListener(
+            Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+            () => setKeyboardOffset(0)
+        );
+
+        return () => {
+            showSubscription.remove();
+            hideSubscription.remove();
+        };
+    }, []);
 
     useEffect(() => {
         if (visible) {
@@ -54,11 +73,14 @@ export const Toast: React.FC<ToastProps> = ({
 
     if (!visible) return null;
 
+    // Calculate bottom position: default 40, or keyboardHeight + 20
+    const bottomPosition = keyboardOffset > 0 ? keyboardOffset + 20 : 40;
+
     return (
         <Animated.View
             style={[
                 styles.toast,
-                { opacity: fadeAnim, backgroundColor: colors.surface },
+                { opacity: fadeAnim, backgroundColor: colors.surface, bottom: bottomPosition },
                 style
             ]}
             accessibilityRole="alert"

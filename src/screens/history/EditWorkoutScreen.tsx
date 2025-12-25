@@ -18,6 +18,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabaseService } from '../../services/SupabaseDataService';
 import { useTheme } from '../../context/ThemeContext';
 import { sanitizeDecimal, parseDecimal, sanitizeInteger, parseInteger } from '../../utils/inputValidation';
+import { GoalAchievedToast } from '../../components/GoalAchievedToast';
+import { Toast } from '../../components/Toast';
+import { checkGoalAchievement } from '../../utils/goalHelper';
+import { ExerciseGoal } from '../../models';
 
 export const EditWorkoutScreen = () => {
     const route = useRoute<any>();
@@ -29,6 +33,11 @@ export const EditWorkoutScreen = () => {
     const [workoutDate, setWorkoutDate] = useState(new Date(session.date).toISOString().split('T')[0]);
     const [sets, setSets] = useState<SetLog[]>(session.sets);
     const [saving, setSaving] = useState(false);
+
+    // Toast State
+    const [achievedGoal, setAchievedGoal] = useState<ExerciseGoal | null>(null);
+    const [achievedGoalExName, setAchievedGoalExName] = useState<string>('');
+    const [showSuccessToast, setShowSuccessToast] = useState(false);
 
     const [exerciseNames, setExerciseNames] = useState<{ [key: string]: string }>({});
 
@@ -51,10 +60,32 @@ export const EditWorkoutScreen = () => {
         };
 
         await supabaseService.updateWorkoutSession(updatedSession);
+
+        // Check for goal achievements in the updated session (Parallelized)
+        // We map each set to a promise check
+        const checks = await Promise.all(sets.map(async (set) => {
+            const setWithCompletion = { ...set, completed: true };
+            return checkGoalAchievement(setWithCompletion, set.exerciseId);
+        }));
+
+        // Find the first achieved goal
+        const achievedFn = checks.find(g => g !== null);
+
+        if (achievedFn) {
+            setAchievedGoal(achievedFn);
+            setAchievedGoalExName(exerciseNames[achievedFn.exerciseId] || 'Exercise');
+        }
+
         setSaving(false);
-        Alert.alert('Success', 'Workout updated successfully', [
-            { text: 'OK', onPress: () => navigation.goBack() }
-        ]);
+
+        if (!achievedFn) {
+            setShowSuccessToast(true);
+        }
+
+        // Navigate back quickly (reduced delay)
+        setTimeout(() => {
+            navigation.goBack();
+        }, 800);
     };
 
     const updateSet = (index: number, field: keyof SetLog, value: any) => {
@@ -262,6 +293,23 @@ export const EditWorkoutScreen = () => {
                     </TouchableOpacity>
                 </ScrollView>
             </KeyboardAvoidingView>
+
+            <Toast
+                visible={showSuccessToast}
+                message="Workout updated successfully"
+                onHide={() => setShowSuccessToast(false)}
+            />
+
+            {
+                achievedGoal && (
+                    <GoalAchievedToast
+                        visible={true}
+                        goal={achievedGoal}
+                        exerciseName={achievedGoalExName}
+                        onHide={() => setAchievedGoal(null)}
+                    />
+                )
+            }
         </SafeAreaView>
     );
 };

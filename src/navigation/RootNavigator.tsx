@@ -18,6 +18,10 @@ import { CreateWorkoutScreen } from '../screens/workout/CreateWorkoutScreen';
 import { HistoryScreen } from '../screens/history/HistoryScreen';
 import { WorkoutHistoryDetailScreen } from '../screens/history/WorkoutHistoryDetailScreen';
 import { EditWorkoutScreen } from '../screens/history/EditWorkoutScreen';
+import { GoalsListScreen } from '../screens/goals/GoalsListScreen';
+import { ExerciseGoalsScreen } from '../screens/goals/ExerciseGoalsScreen';
+import { CreateGoalScreen } from '../screens/goals/CreateGoalScreen';
+import { PostWorkoutCreationGoalsScreen } from '../screens/goals/PostWorkoutCreationGoalsScreen';
 
 import { Ionicons } from '@expo/vector-icons';
 import { CreateScreen } from '../screens/create/CreateScreen';
@@ -163,6 +167,26 @@ export const RootNavigator = () => {
                                 name="WeightHistory"
                                 component={WeightHistoryScreen}
                                 options={{ title: 'Weight History' }}
+                            />
+                            <Stack.Screen
+                                name="GoalsList"
+                                component={GoalsListScreen}
+                                options={{ presentation: 'modal' }}
+                            />
+                            <Stack.Screen
+                                name="ExerciseGoals"
+                                component={ExerciseGoalsScreen}
+                                options={{ presentation: 'modal' }}
+                            />
+                            <Stack.Screen
+                                name="CreateGoal"
+                                component={CreateGoalScreen}
+                                options={{ presentation: 'modal' }}
+                            />
+                            <Stack.Screen
+                                name="PostWorkoutCreationGoals"
+                                component={PostWorkoutCreationGoalsScreen}
+                                options={{ presentation: 'modal' }}
                             />
                         </>
                     )}

@@ -47,6 +47,6 @@ app-example
 /keys/
 
 # ai-notes
-/ai-notes/
-BUILD_APK_GUIDE.md
-.agent/
+# /ai-notes/
+# BUILD_APK_GUIDE.md
+#.agent/

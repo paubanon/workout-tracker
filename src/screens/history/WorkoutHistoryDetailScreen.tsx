@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { Theme } from '../../theme';
-import { WorkoutSession, SetLog, MetricType } from '../../models';
+import { WorkoutSession, SetLog, MetricType, Exercise } from '../../models';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { supabaseService } from '../../services/SupabaseDataService';
@@ -14,16 +14,37 @@ export const WorkoutHistoryDetailScreen = () => {
     const { session } = route.params as { session: WorkoutSession };
     const { colors, isDark, formatDate } = useTheme();
     const [menuVisible, setMenuVisible] = useState(false);
+    const [currentSession, setCurrentSession] = useState<WorkoutSession | null>(session);
 
-    if (!session) return null;
+    React.useEffect(() => {
+        if (session) setCurrentSession(session);
+    }, [session]);
 
-    const date = formatDate(session.date);
+    useFocusEffect(
+        React.useCallback(() => {
+            let isActive = true;
+            const fetchSession = async () => {
+                if (session?.id) {
+                    const refreshed = await supabaseService.getWorkoutSession(session.id);
+                    if (isActive && refreshed) {
+                        setCurrentSession(refreshed);
+                    }
+                }
+            };
+            fetchSession();
+            return () => { isActive = false; };
+        }, [session?.id])
+    );
+
+    if (!currentSession) return null;
+
+    const date = formatDate(currentSession.date);
 
     // Group sets by exercise
     const groupedSets: { [key: string]: SetLog[] } = {};
     const exercisesOrder: string[] = [];
 
-    session.sets.forEach(set => {
+    currentSession.sets.forEach(set => {
         if (!groupedSets[set.exerciseId]) {
             groupedSets[set.exerciseId] = [];
             exercisesOrder.push(set.exerciseId);
@@ -31,35 +52,33 @@ export const WorkoutHistoryDetailScreen = () => {
         groupedSets[set.exerciseId].push(set);
     });
 
-    const [exerciseNames, setExerciseNames] = React.useState<{ [key: string]: string }>({});
+    const [exercisesMap, setExercisesMap] = useState<{ [key: string]: Exercise }>({});
 
     React.useEffect(() => {
-        import('../../services/SupabaseDataService').then(mod => {
-            mod.supabaseService.getExercises().then(all => {
-                const map: any = {};
-                all.forEach(e => map[e.id] = e.name);
-                setExerciseNames(map);
-            });
+        supabaseService.getExercises().then(all => {
+            const map: { [key: string]: Exercise } = {};
+            all.forEach(e => map[e.id] = e);
+            setExercisesMap(map);
         });
     }, []);
 
     const handleEdit = () => {
         setMenuVisible(false);
-        navigation.navigate('EditWorkout', { session });
+        navigation.navigate('EditWorkout', { session: currentSession });
     };
 
     const handleDelete = () => {
         setMenuVisible(false);
         Alert.alert(
             "Delete Workout",
-            `Are you sure you want to delete "${session.name || 'Untitled Workout'}"?`,
+            `Are you sure you want to delete "${currentSession.name || 'Untitled Workout'}"?`,
             [
                 { text: "Cancel", style: "cancel" },
                 {
                     text: "Delete",
                     style: "destructive",
                     onPress: async () => {
-                        await supabaseService.deleteWorkoutSession(session.id);
+                        await supabaseService.deleteWorkoutSession(currentSession.id);
                         navigation.goBack();
                     }
                 }
@@ -68,8 +87,18 @@ export const WorkoutHistoryDetailScreen = () => {
     };
 
     const renderSetGroup = (exerciseId: string, sets: SetLog[]) => {
-        const name = exerciseNames[exerciseId] || 'Loading...';
+        const exercise = exercisesMap[exerciseId];
+        const name = exercise ? exercise.name : 'Loading...';
         const note = sets[0]?.notes;
+
+        // Determine columns based on enabled metrics
+        const metrics = exercise?.enabledMetrics || ['load', 'reps'];
+        const showLoad = metrics.includes('load');
+        const showReps = metrics.includes('reps');
+        const showTime = metrics.includes('time') || exercise?.repsType === 'isometric';
+        const showDist = metrics.includes('distance');
+        const showTempo = exercise?.repsType === 'tempo';
+        const showRpe = true; // Always show RPE if logged
 
         return (
             <View key={exerciseId} style={[styles.card, { backgroundColor: colors.surface }]}>
@@ -79,9 +108,12 @@ export const WorkoutHistoryDetailScreen = () => {
                 {/* Header */}
                 <View style={styles.row}>
                     <Text style={[styles.col, styles.headerText, { color: colors.textMuted }]}>SET</Text>
-                    <Text style={[styles.col, styles.headerText, { color: colors.textMuted }]}>KG</Text>
-                    <Text style={[styles.col, styles.headerText, { color: colors.textMuted }]}>REPS</Text>
-                    <Text style={[styles.col, styles.headerText, { color: colors.textMuted }]}>RPE</Text>
+                    {showLoad && <Text style={[styles.col, styles.headerText, { color: colors.textMuted }]}>KG</Text>}
+                    {showReps && <Text style={[styles.col, styles.headerText, { color: colors.textMuted }]}>REPS</Text>}
+                    {showTime && <Text style={[styles.col, styles.headerText, { color: colors.textMuted }]}>TIME</Text>}
+                    {showDist && <Text style={[styles.col, styles.headerText, { color: colors.textMuted }]}>DIST</Text>}
+                    {showTempo && <Text style={[styles.col, styles.headerText, { color: colors.textMuted }]}>TEMPO</Text>}
+                    {showRpe && <Text style={[styles.col, styles.headerText, { color: colors.textMuted }]}>RPE</Text>}
                 </View>
 
                 {sets.map((set, i) => (
@@ -91,9 +123,12 @@ export const WorkoutHistoryDetailScreen = () => {
                                 <Text style={[styles.badgeText, { color: colors.textMuted }]}>{i + 1}</Text>
                             </View>
                         </View>
-                        <Text style={[styles.col, styles.cellText, { color: colors.text }]}>{set.loadKg || '-'}</Text>
-                        <Text style={[styles.col, styles.cellText, { color: colors.text }]}>{set.reps || '-'}</Text>
-                        <Text style={[styles.col, styles.cellText, { color: colors.text }]}>{set.rpe || '-'}</Text>
+                        {showLoad && <Text style={[styles.col, styles.cellText, { color: colors.text }]}>{set.loadKg !== undefined && set.loadKg !== null ? set.loadKg : '-'}</Text>}
+                        {showReps && <Text style={[styles.col, styles.cellText, { color: colors.text }]}>{set.reps !== undefined && set.reps !== null ? set.reps : '-'}</Text>}
+                        {showTime && <Text style={[styles.col, styles.cellText, { color: colors.text }]}>{set.timeSeconds ? `${set.timeSeconds}s` : '-'}</Text>}
+                        {showDist && <Text style={[styles.col, styles.cellText, { color: colors.text }]}>{set.distanceMeters ? `${set.distanceMeters}m` : '-'}</Text>}
+                        {showTempo && <Text style={[styles.col, styles.cellText, { color: colors.text }]}>{set.tempo || '-'}</Text>}
+                        {showRpe && <Text style={[styles.col, styles.cellText, { color: colors.text }]}>{set.rpe || '-'}</Text>}
                     </View>
                 ))}
             </View>
@@ -145,7 +180,7 @@ export const WorkoutHistoryDetailScreen = () => {
             )}
 
             <ScrollView contentContainerStyle={styles.content}>
-                <Text style={[styles.title, { color: colors.text }]}>{session.name || 'Untitled Workout'}</Text>
+                <Text style={[styles.title, { color: colors.text }]}>{currentSession.name || 'Untitled Workout'}</Text>
                 <Text style={[styles.date, { color: colors.textMuted }]}>{date}</Text>
 
                 {/* Stats Summary */}
@@ -153,12 +188,12 @@ export const WorkoutHistoryDetailScreen = () => {
                     <View style={[styles.statBox, { backgroundColor: colors.surface }]}>
                         <Text style={[styles.statLabel, { color: colors.textMuted }]}>Volume</Text>
                         <Text style={[styles.statValue, { color: colors.primary }]}>
-                            {session.sets.reduce((acc, s) => acc + (s.loadKg || 0) * (s.reps || 0), 0)} kg
+                            {currentSession.sets.reduce((acc, s) => acc + (s.loadKg || 0) * (s.reps || 0), 0)} kg
                         </Text>
                     </View>
                     <View style={[styles.statBox, { backgroundColor: colors.surface }]}>
                         <Text style={[styles.statLabel, { color: colors.textMuted }]}>Sets</Text>
-                        <Text style={[styles.statValue, { color: colors.primary }]}>{session.sets.length}</Text>
+                        <Text style={[styles.statValue, { color: colors.primary }]}>{currentSession.sets.length}</Text>
                     </View>
                 </View>
 

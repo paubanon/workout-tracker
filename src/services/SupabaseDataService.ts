@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { Exercise, WorkoutTemplate, WorkoutSession, UserProfile, WeightEntry } from '../models';
+import { Exercise, WorkoutTemplate, WorkoutSession, UserProfile, WeightEntry, ExerciseGoal, SetLog } from '../models';
 
 class SupabaseDataService {
     // --- Exercises ---
@@ -56,6 +56,35 @@ class SupabaseDataService {
             .eq('id', exercise.id);
 
         if (error) console.error('Error updating exercise:', error);
+    }
+
+    async getUsedExerciseIds(): Promise<string[]> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return [];
+
+        // Fetch all sets from all sessions (optimized query)
+        // Since we store sets as JSONB, we have to fetch and parse.
+        // For scalability, this should eventually be an RPC or normalized table.
+        const { data, error } = await supabase
+            .from('workout_sessions')
+            .select('sets')
+            .eq('user_id', user.id);
+
+        if (error) {
+            console.error('Error fetching history for used exercises:', error);
+            return [];
+        }
+
+        const usedIds = new Set<string>();
+        data?.forEach((session: any) => {
+            if (Array.isArray(session.sets)) {
+                session.sets.forEach((s: any) => {
+                    if (s.exerciseId) usedIds.add(s.exerciseId);
+                });
+            }
+        });
+
+        return Array.from(usedIds);
     }
 
     // --- Templates ---
@@ -296,6 +325,30 @@ class SupabaseDataService {
             preSessionFatigue: s.pre_session_fatigue,
             durationSeconds: s.duration_seconds
         }));
+
+    }
+
+    async getWorkoutSession(id: string): Promise<WorkoutSession | null> {
+        const { data, error } = await supabase
+            .from('workout_sessions')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error || !data) {
+            console.error('Error fetching session:', error);
+            return null;
+        }
+
+        return {
+            id: data.id,
+            date: data.date,
+            name: data.name,
+            sets: data.sets || [],
+            painEntries: data.pain_entries || [],
+            preSessionFatigue: data.pre_session_fatigue,
+            durationSeconds: data.duration_seconds
+        };
     }
 
     async addWorkoutSession(session: WorkoutSession): Promise<void> {
@@ -340,39 +393,152 @@ class SupabaseDataService {
 
         if (error) console.error('Error deleting session:', error);
     }
-    async getExerciseHistory(exerciseId: string): Promise<WorkoutSession[]> {
+    // --- Exercise Goals ---
+    async getGoals(): Promise<ExerciseGoal[]> {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return [];
 
-        // Fetch all sessions. 
-        // OPTIMIZATION: In the future, we might want to filter by date range or use a distinct query
-        // but for now, we fetch all to perform client-side filtering/aggregation.
-        // We select 'sets' to check for exerciseId inclusion.
         const { data, error } = await supabase
-            .from('workout_sessions')
-            .select('id, date, name, sets, duration_seconds')
+            .from('exercise_goals')
+            .select('*')
             .eq('user_id', user.id)
-            .order('date', { ascending: true });
+            .order('created_at', { ascending: false });
 
         if (error) {
-            console.error('Error fetching exercise history:', error);
+            console.error('Error fetching goals:', error);
             return [];
         }
 
-        // Filter sessions that actually contain the exercise
-        const relevantSessions = (data || []).filter((s: any) =>
-            Array.isArray(s.sets) && s.sets.some((set: any) => set.exerciseId === exerciseId)
-        );
-
-        return relevantSessions.map((s: any) => ({
-            id: s.id,
-            date: s.date,
-            name: s.name,
-            sets: s.sets || [],
-            painEntries: [], // distinct query didn't fetch this
-            preSessionFatigue: 0,
-            durationSeconds: s.duration_seconds
+        return (data || []).map((g: any) => ({
+            id: g.id,
+            userId: g.user_id,
+            exerciseId: g.exercise_id,
+            name: g.name,
+            targetLoad: g.target_load,
+            targetReps: g.target_reps,
+            targetTime: g.target_time,
+            targetDistance: g.target_distance,
+            targetRom: g.target_rom,
+            completed: g.completed,
+            completedAt: g.completed_at,
+            createdAt: g.created_at
         }));
+    }
+
+    async getGoalsForExercise(exerciseId: string): Promise<ExerciseGoal[]> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return [];
+
+        const { data, error } = await supabase
+            .from('exercise_goals')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('exercise_id', exerciseId)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching goals for exercise:', error);
+            return [];
+        }
+
+        return (data || []).map((g: any) => ({
+            id: g.id,
+            userId: g.user_id,
+            exerciseId: g.exercise_id,
+            name: g.name,
+            targetLoad: g.target_load,
+            targetReps: g.target_reps,
+            targetTime: g.target_time,
+            targetDistance: g.target_distance,
+            targetRom: g.target_rom,
+            completed: g.completed,
+            completedAt: g.completed_at,
+            createdAt: g.created_at
+        }));
+    }
+
+    async addGoal(goal: Omit<ExerciseGoal, 'id' | 'createdAt'>): Promise<ExerciseGoal | null> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return null;
+
+        const { data, error } = await supabase
+            .from('exercise_goals')
+            .insert({
+                user_id: user.id,
+                exercise_id: goal.exerciseId,
+                name: goal.name,
+                target_load: goal.targetLoad,
+                target_reps: goal.targetReps,
+                target_time: goal.targetTime,
+                target_distance: goal.targetDistance,
+                target_rom: goal.targetRom,
+                target_isometric_time: goal.targetIsometricTime,
+                target_tempo: goal.targetTempo,
+                completed: false
+            })
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Error adding goal:', error);
+            return null;
+        }
+
+        return {
+            id: data.id,
+            userId: data.user_id,
+            exerciseId: data.exercise_id,
+            name: data.name,
+            targetLoad: data.target_load,
+            targetReps: data.target_reps,
+            targetTime: data.target_time,
+            targetDistance: data.target_distance,
+            targetRom: data.target_rom,
+            targetIsometricTime: data.target_isometric_time,
+            targetTempo: data.target_tempo,
+            completed: data.completed,
+            completedAt: data.completed_at,
+            createdAt: data.created_at
+        };
+    }
+
+    async updateGoal(goal: ExerciseGoal): Promise<void> {
+        const { error } = await supabase
+            .from('exercise_goals')
+            .update({
+                name: goal.name,
+                target_load: goal.targetLoad,
+                target_reps: goal.targetReps,
+                target_time: goal.targetTime,
+                target_distance: goal.targetDistance,
+                target_rom: goal.targetRom,
+                target_isometric_time: goal.targetIsometricTime,
+                target_tempo: goal.targetTempo
+            })
+            .eq('id', goal.id);
+
+        if (error) console.error('Error updating goal:', error);
+    }
+
+    async deleteGoal(id: string): Promise<void> {
+        const { error } = await supabase
+            .from('exercise_goals')
+            .delete()
+            .eq('id', id);
+
+        if (error) console.error('Error deleting goal:', error);
+    }
+
+    async markGoalCompleted(id: string): Promise<void> {
+        const { error } = await supabase
+            .from('exercise_goals')
+            .update({
+                completed: true,
+                completed_at: new Date().toISOString()
+            })
+            .eq('id', id);
+
+        if (error) console.error('Error marking goal completed:', error);
     }
     // --- Data Management ---
     async exportAllUserData(): Promise<any> {
@@ -455,6 +621,35 @@ class SupabaseDataService {
                 if (error) console.error("Import Sessions Error", error);
             }
         }
+    }
+
+    async getExerciseHistory(exerciseId: string): Promise<SetLog[]> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return [];
+
+        const { data, error } = await supabase
+            .from('workout_sessions')
+            .select('sets, date')
+            .eq('user_id', user.id)
+            .contains('sets', JSON.stringify([{ exerciseId }]));
+
+        if (error) {
+            console.error('Error fetching exercise history:', error);
+            return [];
+        }
+
+        const allSets: SetLog[] = [];
+        data?.forEach((session: any) => {
+            if (Array.isArray(session.sets)) {
+                // Attach the date to the set for reference (optional, but useful)
+                const matchingSets = session.sets
+                    .filter((s: SetLog) => s.exerciseId === exerciseId)
+                    .map((s: SetLog) => ({ ...s, completedAt: session.date }));
+                allSets.push(...matchingSets);
+            }
+        });
+
+        return allSets;
     }
 
     async deleteUserAccount(password: string): Promise<{ error: any }> {

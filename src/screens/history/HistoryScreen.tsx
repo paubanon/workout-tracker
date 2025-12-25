@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
 import { supabaseService } from '../../services/SupabaseDataService';
 import { WorkoutSession } from '../../models';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { GlowCard } from '../../components/GlowCard';
@@ -18,9 +18,12 @@ export const HistoryScreen = () => {
     const [hasMore, setHasMore] = useState(true);
     const LIMIT = 20;
 
-    useEffect(() => {
-        loadHistory(0);
-    }, []);
+    useFocusEffect(
+        React.useCallback(() => {
+            setPage(0);
+            loadHistory(0);
+        }, [])
+    );
 
     const loadHistory = async (offset: number) => {
         if (loading) return; // Only prevent if already loading

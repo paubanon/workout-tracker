@@ -10,6 +10,9 @@ import { supabaseService } from '../../services/SupabaseDataService';
 import { performSetUpdate, toggleSetComplete, handleSaveRpe } from '../../utils/setLogicHelper';
 import { useTheme } from '../../context/ThemeContext';
 import { sanitizeDecimal, parseDecimal, sanitizeInteger, parseInteger, sanitizeSignedDecimal, parseSignedDecimal } from '../../utils/inputValidation';
+import { checkGoalAchievement } from '../../utils/goalHelper';
+import { GoalAchievedToast } from '../../components/GoalAchievedToast';
+import { ExerciseGoal } from '../../models';
 
 // Helper to generate a new set
 const createSet = (exerciseId: string, setNumber: number, defaults?: {
@@ -68,6 +71,10 @@ export const ActiveSessionScreen = () => {
 
     // Loading state for save button
     const [isSaving, setIsSaving] = useState(false);
+
+    // Goal achievement state
+    const [achievedGoal, setAchievedGoal] = useState<ExerciseGoal | null>(null);
+    const [achievedGoalExName, setAchievedGoalExName] = useState('');
 
     const loadProfilePrefs = async () => {
         const profile = await supabaseService.getUserProfile();
@@ -302,7 +309,7 @@ export const ActiveSessionScreen = () => {
         performSetUpdate(session, setSession, setId, completed, additionalUpdates);
     };
 
-    const onToggleSetComplete = (setId: string, currentCompleted: boolean) => {
+    const onToggleSetComplete = async (setId: string, currentCompleted: boolean) => {
         toggleSetComplete({
             setId,
             currentCompleted,
@@ -313,19 +320,56 @@ export const ActiveSessionScreen = () => {
             session,
             setSession
         });
+
+        // Check for goal achievement when marking a set as complete
+        // Only if RPE tracking is OFF (otherwise onSaveRpe handles it)
+        if (!currentCompleted && session && !trackRpePreference) {
+            const set = session.sets.find(s => s.id === setId);
+            if (set) {
+                // Construct updated set with Ghost Values (same logic as setLogicHelper)
+                // This simulates the completed state for validation
+                const updatedSet = { ...set, completed: true };
+                if (!updatedSet.loadKg && updatedSet.targetLoad) updatedSet.loadKg = updatedSet.targetLoad;
+                if (!updatedSet.reps && updatedSet.targetReps) updatedSet.reps = parseFloat(updatedSet.targetReps) || 0;
+                if (!updatedSet.timeSeconds && updatedSet.targetTime) updatedSet.timeSeconds = updatedSet.targetTime;
+                if (!updatedSet.distanceMeters && updatedSet.targetDistance) updatedSet.distanceMeters = updatedSet.targetDistance;
+                if (!updatedSet.romCm && updatedSet.targetRom) updatedSet.romCm = parseFloat(updatedSet.targetRom) || 0;
+                if (!updatedSet.tempo && updatedSet.targetTempo) updatedSet.tempo = updatedSet.targetTempo;
+
+                const achievedGoalResult = await checkGoalAchievement(updatedSet, set.exerciseId);
+                if (achievedGoalResult) {
+                    const exercise = exercises.find(e => e.id === set.exerciseId);
+                    setAchievedGoal(achievedGoalResult);
+                    setAchievedGoalExName(exercise?.name || 'Exercise');
+                }
+            }
+        }
     };
 
-    const onSaveRpe = () => {
+    const onSaveRpe = async () => {
         handleSaveRpe({
             pendingSetId,
             currentRpe,
             handleUpdateSet,
-            performSetUpdate, // Passed but unused in simplified version
+            performSetUpdate,
             setShowRpeModal,
             setPendingSetId,
             session,
             setSession
         });
+
+        // Check for goal achievement after RPE is saved
+        if (pendingSetId && session) {
+            const set = session.sets.find(s => s.id === pendingSetId);
+            if (set) {
+                const achievedGoalResult = await checkGoalAchievement(set, set.exerciseId);
+                if (achievedGoalResult) {
+                    const exercise = exercises.find(e => e.id === set.exerciseId);
+                    setAchievedGoal(achievedGoalResult);
+                    setAchievedGoalExName(exercise?.name || 'Exercise');
+                }
+            }
+        }
     };
 
     const handleFinish = async () => {
@@ -540,8 +584,19 @@ export const ActiveSessionScreen = () => {
                                                     placeholderTextColor={colors.textMuted}
                                                     value={set.loadKg === 0 ? '' : set.loadKg?.toString()}
                                                     onChangeText={(val) => {
-                                                        const sanitized = sanitizeDecimal(val);
-                                                        handleUpdateSet(set.id, 'loadKg', parseDecimal(sanitized));
+                                                        // Allow negative for BW exercises (assistance bands)
+                                                        const sanitized = exercise.trackBodyWeight
+                                                            ? sanitizeSignedDecimal(val)
+                                                            : sanitizeDecimal(val);
+                                                        let parsed = exercise.trackBodyWeight
+                                                            ? parseSignedDecimal(sanitized)
+                                                            : parseDecimal(sanitized);
+
+                                                        // Limit negative to bodyweight (can't have total load < 0)
+                                                        if (exercise.trackBodyWeight && parsed < 0 && userWeight > 0) {
+                                                            parsed = Math.max(parsed, -userWeight);
+                                                        }
+                                                        handleUpdateSet(set.id, 'loadKg', parsed);
                                                     }}
                                                 />
                                             )}
@@ -757,6 +812,12 @@ export const ActiveSessionScreen = () => {
                     style={styles.modalOverlay}
                 >
                     <View style={[styles.modalContent, surfaceStyle]}>
+                        <TouchableOpacity
+                            style={{ position: 'absolute', top: 12, right: 12, padding: 4 }}
+                            onPress={() => setShowRpeModal(false)}
+                        >
+                            <Ionicons name="close" size={24} color={colors.textMuted} />
+                        </TouchableOpacity>
                         <Text style={[styles.modalTitle, textStyle]}>Rate RPE (1-10)</Text>
                         <Text style={{ fontSize: 13, color: colors.textMuted, marginBottom: 16, textAlign: 'center' }}>
                             1 = Very Easy, 10 = Max Effort
@@ -788,17 +849,20 @@ export const ActiveSessionScreen = () => {
                             ))}
                         </View>
 
-                        <View style={styles.modalActions}>
-                            <TouchableOpacity style={styles.cancelButton} onPress={() => setShowRpeModal(false)}>
-                                <Text style={[styles.cancelButtonText, textMutedStyle]}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={onSaveRpe}>
-                                <Text style={styles.saveButtonText}>Save</Text>
-                            </TouchableOpacity>
-                        </View>
+                        <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary, width: '100%' }]} onPress={onSaveRpe}>
+                            <Text style={styles.saveButtonText}>Save</Text>
+                        </TouchableOpacity>
                     </View>
                 </KeyboardAvoidingView>
             </Modal>
+
+            {/* Goal Achievement Toast */}
+            <GoalAchievedToast
+                goal={achievedGoal!}
+                exerciseName={achievedGoalExName}
+                visible={!!achievedGoal}
+                onHide={() => setAchievedGoal(null)}
+            />
         </SafeAreaView >
     );
 };

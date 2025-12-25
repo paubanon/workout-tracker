@@ -198,6 +198,26 @@ export const ProfileScreen = () => {
                     </TouchableOpacity>
                 </GlowCard>
 
+                {/* My Goals */}
+                <Text style={[styles.sectionTitle, textMutedStyle]}>GOALS</Text>
+                <GlowCard style={[styles.metricsCard, { marginBottom: Theme.Spacing.l }]} level="m">
+                    <TouchableOpacity
+                        style={styles.metricRow}
+                        onPress={() => navigation.navigate('GoalsList')}
+                        accessibilityRole="button"
+                        accessibilityLabel="View my goals"
+                    >
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Ionicons name="flag-outline" size={24} color={colors.primary} style={{ marginRight: Theme.Spacing.m }} />
+                            <View>
+                                <Text style={[styles.metricLabel, textMutedStyle]}>My Goals</Text>
+                                <Text style={[styles.metricValueSmall, textStyle]}>Track your progress</Text>
+                            </View>
+                        </View>
+                        <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+                    </TouchableOpacity>
+                </GlowCard>
+
                 {/* Recent Workouts */}
                 <Text style={[styles.sectionTitle, textMutedStyle]}>RECENT WORKOUTS</Text>
                 <GlowCard style={styles.historyList} level="m">

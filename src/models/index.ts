@@ -83,8 +83,26 @@ export interface UserProfile {
         trackRpe?: boolean;
         theme?: 'light' | 'dark';
         dateFormat?: 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD';
+        romDirections?: Record<string, 'maximize' | 'minimize' | 'both'>; // Per-exercise ROM direction
     };
     weightHistory: WeightEntry[];
+}
+
+export interface ExerciseGoal {
+    id: string;
+    userId: string;
+    exerciseId: string;
+    name?: string; // Optional custom name
+    targetLoad?: number;
+    targetReps?: number;
+    targetTime?: number;
+    targetDistance?: number;
+    targetRom?: number;
+    targetIsometricTime?: number; // For isometric rep exercises
+    targetTempo?: string; // For tempo rep exercises (e.g. "3010")
+    completed: boolean;
+    completedAt?: string; // ISO date
+    createdAt: string; // ISO date
 }
 
 export interface TemplateSet {
